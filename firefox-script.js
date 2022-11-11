@@ -9,10 +9,10 @@ document.addEventListener("blue-blocker-event", function (e) {
 	}
 
 	// retrieve option
-	chrome.storage.sync.get({
+	browser.storage.sync.get({
 		// by default, spare the people we follow from getting blocked
 		blockFollowing: false,
-	}, items => {
+	}).then(items => {
 		SetBlockFollowing(items.blockFollowing);
 		const body = JSON.parse(e.detail.body);
 

@@ -19,5 +19,5 @@ extension has been added to the chrome webstore, but is pending review.
 ```
 
 ```
-firefox support is in progress!
+extension has been added to the firefox addons website, but is pending review.
 ```

@@ -1,7 +1,7 @@
 function saveBlockFollowing() {
 	const blockFollowing = document.getElementById("block-following").checked;
 
-	chrome.storage.sync.set({
+	browser.storage.sync.set({
 		blockFollowing,
 	}, () => {
 		// Update status to let user know options were saved.
@@ -13,7 +13,7 @@ function saveBlockFollowing() {
   
 // restore state from storage
 function loadOptions() {
-	chrome.storage.sync.get({
+	browser.storage.sync.get({
 		// by default, spare the people we follow from getting blocked
 		blockFollowing: false,
 	}, items => document.getElementById("block-following").checked = items.blockFollowing);
