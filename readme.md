@@ -7,11 +7,7 @@ Nothing! Just install and say goodbye to all the paid blue checkmarks!
 
 By default, Blue Blocker does not block users you follow who have purchased Twitter Blue. You can enable this from the extension settings.
 
-## Install
-[![Available in the Chrome Web Store](assets/chrome.png)](https://chrome.google.com/webstore/detail/blue-blocker/jgpjphkbfjhlbajmmcoknjjppoamhpmm)
-[![Available from Firefox Add-ons](assets/firefox.png)](https://addons.mozilla.org/en-US/firefox/addon/blue-blocker/)
-
-## Development
+## Installation
 ### Chrome
 1. Visit the [releases page](https://github.com/kheina-com/Blue-Blocker/releases) and download the latest release .zip file
 2. Unzip the downloaded .zip file
@@ -30,3 +26,11 @@ By default, Blue Blocker does not block users you follow who have purchased Twit
 5. Click `Load Temporary Add-on` in the top right and select `manifest.json` in the unzipped folder
 
 NOTE: You may need to replace instances of `browser.storage.sync` with `browser.storage.local` for local firefox development.
+
+```
+extension has been added to the chrome webstore, but is pending review.
+```
+
+```
+extension has been added to the firefox addons website, but is pending review.
+```
