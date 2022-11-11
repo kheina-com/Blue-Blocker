@@ -1,0 +1,132 @@
+html {
+	--transition: ease;
+	--fadetime: 0.15s;
+	--icolor: #1da1f2;
+	--bg0color: #000000;
+	--bg1color: #1e1f25;
+	--bg2color: #151416;
+	--bg3color: var(--bordercolor);
+	--blockquote: var(--bordercolor);
+	--textcolor: #DDD;
+	--bordercolor: #2D333A;
+	--linecolor: var(--bordercolor);
+	--borderhover: var(--icolor);
+	--subtle: #EEEEEE80;
+	--shadowcolor: #00000080;
+	--activeshadowcolor: #000000B3;
+	--screen-cover: #00000080;
+	--border-size: 1px;
+	--border-radius: 3px;
+
+	font-size: 1.3rem;
+}
+html * {
+	font-family: Bitstream Vera Sans, DejaVu Sans, Arial, Helvetica, sans-serif;
+}
+html, body {
+	background: var(--bg1color);
+	color: var(--textcolor);
+}
+
+body {
+	width: 20em;
+	margin: 25px;
+	padding: 0;
+}
+
+/* popup title */
+h2 {
+	text-align: center;
+}
+/* Blue Blocker logo in the popup title */
+h2 img {
+	height: 1.2em;
+	margin-bottom: -0.15em;
+}
+
+a, input, label, textarea {
+	cursor: pointer;
+	pointer-events: all;
+	text-decoration: none;
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
+}
+
+p {
+	text-align: center;
+	margin: 0;
+}
+
+div.option {
+	display: flex;
+	justify-content: space-between;
+}
+
+input {
+	position: absolute;
+	display: none;
+	top: -100vh;
+	opacity: 0;
+	height: 0;
+	width: 0;
+}
+label {
+	cursor: pointer;
+	margin: 0;
+	display: inline-flex;
+	white-space: nowrap;
+	align-items: center;
+}
+label:hover, label:active, label:focus {
+	color: var(--icolor);
+}
+
+label.border {
+	display: inline-flex;
+	padding: 0.5em 1em;
+	border: var(--border-size) solid var(--bordercolor);
+	background: var(--bg2color);
+	box-shadow: 0 2px 3px 1px var(--shadowcolor);
+	border-radius: var(--border-radius);
+}
+label.border:hover, label.border:active, label.border:focus {
+	border-color: var(--borderhover);
+	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
+}
+label div.checkmark {
+	position: relative;
+	display: block;
+	left: 0;
+	padding: 0;
+	margin: 0 0.5em 0 -0.3em;
+	height: 1.2em;
+	width: 1.2em;
+	border-radius: var(--border-radius);
+	background: var(--bg2color);
+	pointer-events: none;
+}
+label div.checkmark div {
+	border: solid 0 #0000;
+	border-width: 0;
+	position: absolute;
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
+}
+label div.checkmark div {
+	left: 0.35em;
+	top: 0.15em;
+	width: 0.3em;
+	height: 0.55em;
+}
+
+input:checked + label div.checkmark div, label.checked div.checkmark div {
+	border-color: var(--icolor);
+	border-width: 0 0.1875em 0.1875em 0;
+	-webkit-transform: rotate(45deg);
+	-ms-transform: rotate(45deg);
+	transform: rotate(45deg);
+}
