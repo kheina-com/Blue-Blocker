@@ -2,10 +2,10 @@
 <html>
 	<head>
 		<title>Blue Blocker</title>
-		<link href="style.css" rel="stylesheet">
+		<link href="../style.css" rel="stylesheet">
 	</head>
 	<body>
-		<h2><img src="assets/icon.png" alt="🅱️">lue Blocker</h2>
+		<h2><img src="../assets/icon.png" alt="🅱️">lue Blocker</h2>
 		<div class="option">
 			<input type="checkbox" id="block-following">
 			<label ref="label" for="block-following" >
@@ -15,6 +15,16 @@
 				<p>allow blocking of people I follow</p>
 			</label>
 			<span id="block-following-status"></span>
+		</div>
+		<div class="last option">
+			<input type="checkbox" id="skip-verified">
+			<label ref="label" for="skip-verified" >
+				<div class="checkmark">
+					<div></div>
+				</div>
+				<p>skip users verified by other means</p>
+			</label>
+			<span id="skip-verified-status"></span>
 		</div>
 	</body>
 	<script src="options.js"></script>

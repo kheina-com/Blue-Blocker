@@ -60,9 +60,14 @@ p {
 	margin: 0;
 }
 
-div.option {
+.option {
 	display: flex;
+	margin-bottom: 1em;
 	justify-content: space-between;
+}
+
+.last {
+	margin-bottom: 0;
 }
 
 input {
@@ -79,6 +84,7 @@ label {
 	display: inline-flex;
 	white-space: nowrap;
 	align-items: center;
+	padding-left: 0.29em;
 }
 label:hover, label:active, label:focus {
 	color: var(--icolor);

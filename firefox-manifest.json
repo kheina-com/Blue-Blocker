@@ -1,13 +1,13 @@
 {
 	"manifest_version": 2,
 	"name": "Blue Blocker",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"description": "Blocks all Twitter Blue verified users on twitter.com",
 	"icons": {
 		"128": "assets/icon-128.png"
 	},
 	"web_accessible_resources": [
-		"script.js",
+		"firefox/script.js",
 		"shared.js",
 		"inject.js"
 ],
@@ -17,7 +17,7 @@
 			"128": "assets/icon-128.png"
 		},
 		"default_title": "Blue Blocker",
-		"default_popup": "firefox.html"
+		"default_popup": "firefox/popup.html"
 	},
 	"permissions": [
 		"storage"
@@ -28,7 +28,7 @@
 				"*://*.twitter.com/*",
 				"*://twitter.com/*"
 			],
-			"js": ["firefox.js"]
+			"js": ["firefox/main.js"]
 		}
 	]
 }

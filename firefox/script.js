@@ -1,6 +1,6 @@
-import { RequestRegex, SetBlockFollowing, HandleInstructionsResponse, HandleHomeTimeline } from './shared.js';
+import { RequestRegex, SetOptions, HandleInstructionsResponse, HandleHomeTimeline } from '../shared.js';
 
-// TODO: add other request types for search, replies, etc
+// TODO: add other request types for search, replies, quote tweets, "you might like", "who to follow", etc
 document.addEventListener("blue-blocker-event", function (e) {
 	// determine if request is a timeline/tweet-returning request
 	const urlParse = RequestRegex.exec(e.detail.url);
@@ -12,8 +12,9 @@ document.addEventListener("blue-blocker-event", function (e) {
 	browser.storage.sync.get({
 		// by default, spare the people we follow from getting blocked
 		blockFollowing: false,
+		skipVerified: true,
 	}).then(items => {
-		SetBlockFollowing(items.blockFollowing);
+		SetOptions(items);
 		const body = JSON.parse(e.detail.body);
 
 		switch (urlParse[1]) {

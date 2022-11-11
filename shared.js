@@ -48,12 +48,13 @@ export const Headers = [
 	"x-twitter-client-language",
 ];
 
-var blockFollowing = null;
-export function SetBlockFollowing(bf) {
-	blockFollowing = bf;
+var options = { };
+export function SetOptions(items) {
+	options = items;
 }
 
 export function BlockUser(user, user_id, headers, attempt=1) {
+	// TODO: create a cache of recently-blocked users so that we don't try to block the same user multiple times from the same block of tweets
 	const url = "https://twitter.com/i/api/1.1/blocks/create.json";
 
 	const formdata = new FormData();
@@ -81,12 +82,20 @@ export function BlockUser(user, user_id, headers, attempt=1) {
 export function BlockBlueVerified(user, headers) {
 	// since we can be fairly certain all user objects will be the same, break this into a separate function
 	if (user.is_blue_verified) {
-		if (blockFollowing || (!user.legacy.following && !user.super_following)) {
-			// if they are a twitter blue user and we don't alredy follow them, send a request to the twitter api to block the user
-			BlockUser(user, String(user.rest_id), headers);
+		if (
+			// group for block-following option
+			!(options.blockFollowing || (!user.legacy.following && !user.super_following))
+		) {
+			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
+		}
+		else if (
+			// group for skip-verified option
+			!(!options.skipVerified || !user.legacy.verified)
+		) {
+			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through other means.`);
 		}
 		else {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
+			BlockUser(user, String(user.rest_id), headers);
 		}
 	}
 }
@@ -167,6 +176,7 @@ export function HandleHomeTimeline(e, body) {
 				name: user.name,
 				screen_name: user.screen_name,
 				following: user?.following,
+				verified: user?.verified,
 			},
 			super_following: user.ext?.superFollowMetadata?.r?.ok?.superFollowing,
 			rest_id: user_id,
