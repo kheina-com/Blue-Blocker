@@ -36,7 +36,6 @@ NOTE: You may need to replace instances of `browser.storage.sync` with `browser.
 ## TODO
 1. Missing support for these requests
 	- search (all types)
-	- tweet replies
 	- quote tweets (the quoted tweet)
 	- "you might like" column
 	- "who to follow" sections

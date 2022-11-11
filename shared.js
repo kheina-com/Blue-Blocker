@@ -8,7 +8,7 @@ s.type = "text/javascript";
 (document.head || document.documentElement).appendChild(s);
 
 // this is the magic regex to determine if its a request we need. add new urls below
-export const RequestRegex = /^https?:\/\/(?:\w+\.)?twitter.com\/[\w\/]+\/(HomeLatestTimeline|UserTweets|timeline\/home\.json)(?:$|\?)/;
+export const RequestRegex = /^https?:\/\/(?:\w+\.)?twitter.com\/[\w\/]+\/(HomeLatestTimeline|UserTweets|timeline\/home\.json|TweetDetail)(?:$|\?)/;
 
 // when parsing a timeline response body, these are the paths to navigate in the json to retrieve the "instructions" object
 // the key to this object is the capture group from the request regex
@@ -25,6 +25,11 @@ export const InstructionsPaths = {
 		"result",
 		"timeline_v2",
 		"timeline",
+		"instructions",
+	],
+	TweetDetail: [
+		"data",
+		"threaded_conversation_with_injections_v2",
 		"instructions",
 	],
 };
