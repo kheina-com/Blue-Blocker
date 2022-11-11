@@ -1,6 +1,5 @@
 import { RequestRegex, SetOptions, HandleInstructionsResponse, HandleHomeTimeline } from '../shared.js';
 
-// TODO: add other request types for search, replies, quote tweets, "you might like", "who to follow", etc
 document.addEventListener("blue-blocker-event", function (e) {
 	// determine if request is a timeline/tweet-returning request
 	const urlParse = RequestRegex.exec(e.detail.url);
