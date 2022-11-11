@@ -105,11 +105,11 @@ function ParseTimelineTweet(tweet, headers) {
 	BlockBlueVerified(user, headers)
 }
 
-function HandleInstructionsResponse(e, body) {
-	// pull the "instructions" object from the tweeet
+function HandleInstructionsResponse(e, endpoint, body) {
+	// pull the "instructions" object from the tweet
 	let tweets = body;
 	try {
-		for (const key of InstructionsPaths[urlParse[1]]) {
+		for (const key of InstructionsPaths[endpoint]) {
 			tweets = tweets[key];
 		}
 	}
@@ -170,12 +170,11 @@ document.addEventListener("blue-blocker-event", function (e) {
 		blockFollowing: false,
 	}, items => {
 		blockFollowing = items.blockFollowing
-		console.log("blockFollowing:", blockFollowing);
 
 		// parse e.detail for the message body
 		const body = JSON.parse(e.detail.body)
 		if (InstructionsPaths.hasOwnProperty(urlParse[1])) {
-			return HandleInstructionsResponse(e, body);
+			return HandleInstructionsResponse(e, urlParse[1], body);
 		}
 
 		switch (urlParse[1]) {
