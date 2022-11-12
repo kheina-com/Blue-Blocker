@@ -1,20 +1,17 @@
+import { DefaultOptions } from '../shared.js';
+
 // restore state from storage
 document.addEventListener("DOMContentLoaded", () => {
-	chrome.storage.sync.get({
-		// by default, spare the people we follow from getting blocked
-		blockFollowing: false,
-		skipVerified: true,
-	}, items => {
+	chrome.storage.sync.get(DefaultOptions, items => {
 		document.getElementById("block-following").checked = items.blockFollowing;
 		document.getElementById("skip-verified").checked = items.skipVerified;
+		document.getElementById("block-nft-avatars").checked = items.blockNftAvatars;
 	});
 });
 
 document.getElementById("block-following").addEventListener("input", () => {
-	const blockFollowing = document.getElementById("block-following").checked;
-
 	chrome.storage.sync.set({
-		blockFollowing,
+		blockFollowing: document.getElementById("block-following").checked,
 	}, () => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("block-following-status");
@@ -24,13 +21,22 @@ document.getElementById("block-following").addEventListener("input", () => {
 });
 
 document.getElementById("skip-verified").addEventListener("input", () => {
-	const skipVerified = document.getElementById("skip-verified").checked;
-
 	chrome.storage.sync.set({
-		skipVerified,
+		skipVerified: document.getElementById("skip-verified").checked,
 	}, () => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("skip-verified-status");
+		status.textContent = "saved";
+		setTimeout(() => status.textContent = null, 1000);
+	});
+});
+
+document.getElementById("block-nft-avatars").addEventListener("input", () => {
+	chrome.storage.sync.set({
+		blockNftAvatars: document.getElementById("block-nft-avatars").checked,
+	}, () => {
+		// Update status to let user know options were saved.
+		const status = document.getElementById("block-nft-avatars-status");
 		status.textContent = "saved";
 		setTimeout(() => status.textContent = null, 1000);
 	});

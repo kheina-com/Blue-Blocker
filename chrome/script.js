@@ -1,6 +1,8 @@
-import { RequestRegex, SetOptions, HandleInstructionsResponse, HandleHomeTimeline } from '../shared.js';
+import { ClearCache, DefaultOptions, RequestRegex, SetOptions, HandleInstructionsResponse, HandleHomeTimeline } from '../shared.js';
 
 document.addEventListener("blue-blocker-event", function (e) {
+	ClearCache();
+
 	// determine if request is a timeline/tweet-returning request
 	const urlParse = RequestRegex.exec(e.detail.url);
 	if (!urlParse) {
@@ -8,11 +10,7 @@ document.addEventListener("blue-blocker-event", function (e) {
 	}
 
 	// retrieve option
-	chrome.storage.sync.get({
-		// by default, spare the people we follow from getting blocked
-		blockFollowing: false,
-		skipVerified: true,
-	}, items => {
+	chrome.storage.sync.get(DefaultOptions, items => {
 		SetOptions(items);
 		const body = JSON.parse(e.detail.body);
 

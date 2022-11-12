@@ -9,6 +9,12 @@ s.type = "text/javascript";
 
 // this is the magic regex to determine if its a request we need. add new urls below
 export const RequestRegex = /^https?:\/\/(?:\w+\.)?twitter.com\/[\w\/]+\/(HomeLatestTimeline|UserTweets|timeline\/home\.json|TweetDetail)(?:$|\?)/;
+export const DefaultOptions = {
+	// by default, spare the people we follow from getting blocked
+	blockFollowing: false,
+	skipVerified: true,
+	blockNftAvatars: false,
+};
 
 // when parsing a timeline response body, these are the paths to navigate in the json to retrieve the "instructions" object
 // the key to this object is the capture group from the request regex
@@ -58,26 +64,40 @@ export function SetOptions(items) {
 	options = items;
 }
 
-export function BlockUser(user, user_id, headers, attempt=1) {
-	// TODO: create a cache of recently-blocked users so that we don't try to block the same user multiple times from the same block of tweets
-	const url = "https://twitter.com/i/api/1.1/blocks/create.json";
+const ReasonBlueVerified = 1;
+const ReasonNftAvatar = 1;
+
+const ReasonMap = {
+	[ReasonBlueVerified]: "Twitter Blue verified",
+	[ReasonNftAvatar]: "NFT avatar",
+};
+
+const BlockCache = new Set();
+export function ClearCache() {
+	BlockCache.clear();
+}
+
+export function BlockUser(user, user_id, headers, reason, attempt=1) {
+	if (BlockCache.has(user_id))
+	{ return; }
+	BlockCache.add(user_id);
 
 	const formdata = new FormData();
 	formdata.append("user_id", user_id);
 
 	const ajax = new XMLHttpRequest();
 
-	ajax.addEventListener('load', (event) => console.log(`blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to Twitter Blue verified.`), false);
-	ajax.addEventListener('error', (error) => {
+	ajax.addEventListener('load', event => console.log(`blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`), false);
+	ajax.addEventListener('error', error => {
 		console.error('error:', error);
 
 		if (attempt < 3)
-		{ BlockUser(user_id, headers, attempt + 1) }
+		{ BlockUser(user_id, headers, reason, attempt + 1) }
 		else
 		{ console.error(`failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user); }
 	}, false);
 
-	ajax.open('POST', url);
+	ajax.open('POST', "https://twitter.com/i/api/1.1/blocks/create.json");
 	for (const header of Headers) {
 		ajax.setRequestHeader(header, headers[header]);
 	}
@@ -100,7 +120,18 @@ export function BlockBlueVerified(user, headers) {
 			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through other means.`);
 		}
 		else {
-			BlockUser(user, String(user.rest_id), headers);
+			BlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
+		}
+	}
+	if (options.blockNftAvatars && user.has_nft_avatar) {
+		if (
+			// group for block-following option
+			!(options.blockFollowing || (!user.legacy.following && !user.super_following))
+		) {
+			console.log(`did not block user with NFT avatar ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
+		}
+		else {
+			BlockUser(user, String(user.rest_id), headers, ReasonNftAvatar);
 		}
 	}
 }
@@ -113,7 +144,7 @@ export function ParseTimelineTweet(tweet, headers) {
 	}
 
 	if (user.__typename !== "User") {
-		console.error("could not parse tweet", tweet, e);
+		console.error("could not parse tweet", tweet);
 		return;
 	}
 
@@ -177,6 +208,7 @@ export function HandleHomeTimeline(e, body) {
 		// the user object is a bit different, so reshape it a little
 		BlockBlueVerified({
 			is_blue_verified: user.ext_is_blue_verified,
+			has_nft_avatar: user.ext_has_nft_avatar,
 			legacy: {
 				name: user.name,
 				screen_name: user.screen_name,
