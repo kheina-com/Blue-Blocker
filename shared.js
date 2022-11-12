@@ -8,7 +8,6 @@ s.type = "text/javascript";
 (document.head || document.documentElement).appendChild(s);
 
 // this is the magic regex to determine if its a request we need. add new urls below
-export const RequestRegex = /^https?:\/\/(?:\w+\.)?twitter.com\/[\w\/]+\/(HomeLatestTimeline|UserTweets|timeline\/home\.json|TweetDetail)(?:$|\?)/;
 export const DefaultOptions = {
 	// by default, spare the people we follow from getting blocked
 	blockFollowing: false,
@@ -17,7 +16,7 @@ export const DefaultOptions = {
 };
 
 // when parsing a timeline response body, these are the paths to navigate in the json to retrieve the "instructions" object
-// the key to this object is the capture group from the request regex
+// the key to this object is the capture group from the request regex in inject.js
 export const InstructionsPaths = {
 	HomeLatestTimeline: [
 		"data",
@@ -92,7 +91,7 @@ export function BlockUser(user, user_id, headers, reason, attempt=1) {
 		console.error('error:', error);
 
 		if (attempt < 3)
-		{ BlockUser(user_id, headers, reason, attempt + 1) }
+		{ BlockUser(user, user_id, headers, reason, attempt + 1) }
 		else
 		{ console.error(`failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user); }
 	}, false);
@@ -151,11 +150,11 @@ export function ParseTimelineTweet(tweet, headers) {
 	BlockBlueVerified(user, headers)
 }
 
-export function HandleInstructionsResponse(e, endpoint, body) {
+export function HandleInstructionsResponse(e, body) {
 	// pull the "instructions" object from the tweet
 	let tweets = body;
 	try {
-		for (const key of InstructionsPaths[endpoint]) {
+		for (const key of InstructionsPaths[e.detail.parsedUrl[1]]) {
 			tweets = tweets[key];
 		}
 	}

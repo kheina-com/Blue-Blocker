@@ -1,24 +1,18 @@
-import { ClearCache, DefaultOptions, RequestRegex, SetOptions, HandleInstructionsResponse, HandleHomeTimeline } from '../shared.js';
+import { ClearCache, DefaultOptions, SetOptions, HandleInstructionsResponse, HandleHomeTimeline } from '../shared.js';
 
 document.addEventListener("blue-blocker-event", function (e) {
 	ClearCache();
-
-	// determine if request is a timeline/tweet-returning request
-	const urlParse = RequestRegex.exec(e.detail.url);
-	if (!urlParse) {
-		return;
-	}
 
 	// retrieve option
 	chrome.storage.sync.get(DefaultOptions, items => {
 		SetOptions(items);
 		const body = JSON.parse(e.detail.body);
 
-		switch (urlParse[1]) {
+		switch (e.detail.parsedUrl[1]) {
 			case "HomeLatestTimeline":
 			case "UserTweets":
 			case "TweetDetail":
-				return HandleInstructionsResponse(e, urlParse[1], body);
+				return HandleInstructionsResponse(e, body);
 			case "timeline/home.json":
 				return HandleHomeTimeline(e, body);
 			default:

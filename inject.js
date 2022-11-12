@@ -1,3 +1,5 @@
+const RequestRegex = /^https:\/\/(?:\w+\.)?twitter.com\/[\w\/]+\/(HomeLatestTimeline|UserTweets|timeline\/home\.json|TweetDetail)(?:$|\?)/;
+
 (function(xhr) {
 	let XHR = XMLHttpRequest.prototype;
 	let open = XHR.open;
@@ -16,8 +18,10 @@
 	};
 	XHR.send = function(postData) {
 		this.addEventListener("load", function() {
-			if(this._url && this._url.indexOf("https://twitter.com") === 0) {
-				document.dispatchEvent(new CustomEvent("blue-blocker-event", { detail: { url : this._url, body: this.response, request: { headers: this._requestHeaders } } }));
+			// determine if request is a timeline/tweet-returning request
+			const parsedUrl = RequestRegex.exec(this._url);
+			if(this._url && parsedUrl) {
+				document.dispatchEvent(new CustomEvent("blue-blocker-event", { detail: { url : this._url, parsedUrl, body: this.response, request: { headers: this._requestHeaders } } }));
 			}
 		});
 		return send.apply(this, arguments);
