@@ -15,21 +15,19 @@ extension has been added to the chrome webstore, but is pending review.
 
 ## Development
 ### Chrome
-1. Visit the [releases page](https://github.com/kheina-com/Blue-Blocker/releases) and download the latest release .zip file
-2. Unzip the downloaded .zip file
-3. Visit the [chrome extentions page](chrome://extensions/)
+1. Clone the repository
+2. Visit the [chrome extentions page](chrome://extensions/)
 	(or enter `chrome://extensions/` in the Chrome url bar)
-4. Enable `Developer mode` in the top right
-5. Click `Load unpacked` in the top left and select the newly unzipped directory
+3. Enable `Developer mode` in the top right
+4. Click `Load unpacked` in the top left and select the cloned directory
 
 ### Firefox
-1. Visit the [releases page](https://github.com/kheina-com/Blue-Blocker/releases) and download the latest release .zip file
-2. Unzip the downloaded .zip file
-3. Rename `firefox-manifest.json` to `manifest.json`
+1. Clone the repository
+2. Rename `firefox-manifest.json` to `manifest.json`
 	(feel free to delete or rename the other `manifest.json`)
-4. Visit the [firefox addon debugging page](about:debugging#/runtime/this-firefox)
+3. Visit the [firefox addon debugging page](about:debugging#/runtime/this-firefox)
 	(or enter `about:debugging#/runtime/this-firefox` in the Firefox url bar)
-5. Click `Load Temporary Add-on` in the top right and select `manifest.json` in the unzipped folder
+4. Click `Load Temporary Add-on` in the top right and select `manifest.json` in the cloned directory
 
 NOTE: You may need to replace instances of `browser.storage.sync` with `browser.storage.local` for local firefox development.
 
