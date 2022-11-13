@@ -36,3 +36,4 @@ NOTE: You may need to replace instances of `browser.storage.sync` with `browser.
 	- "you might like" column
 	- "who to follow" sections
 2. Remove the blocked users from the dom
+3. Look into an issue where users can be missed
