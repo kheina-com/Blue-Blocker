@@ -8,9 +8,7 @@ Nothing! Just install and say goodbye to all the paid blue checkmarks!
 By default, Blue Blocker does not block users you follow who have purchased Twitter Blue. You can enable this from the extension settings.
 
 ## Install
-```
-extension has been added to the chrome webstore, but is pending review.
-```
+[![Available from Chrome Webstore](assets/chrome.png)](https://chrome.google.com/webstore/detail/blue-blocker/jgpjphkbfjhlbajmmcoknjjppoamhpmm)
 [![Available from Firefox Add-ons](assets/firefox.png)](https://addons.mozilla.org/en-US/firefox/addon/blue-blocker/)
 
 ## Development
@@ -37,4 +35,4 @@ NOTE: You may need to replace instances of `browser.storage.sync` with `browser.
 	- quote tweets (the quoted tweet)
 	- "you might like" column
 	- "who to follow" sections
-2. cache of recently-blocked users so that we don't try to block the same user multiple times
+2. Remove the blocked users from the dom

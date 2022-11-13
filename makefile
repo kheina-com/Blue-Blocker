@@ -1,4 +1,4 @@
-VERSION := $(shell cat firefox-manifest.json | jq .version)
+VERSION := $(shell cat manifest.json | jq .version)
 
 
 .PHONY: firefox
