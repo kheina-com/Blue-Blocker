@@ -64,7 +64,7 @@ export function SetOptions(items) {
 }
 
 const ReasonBlueVerified = 1;
-const ReasonNftAvatar = 1;
+const ReasonNftAvatar = 2;
 
 const ReasonMap = {
 	[ReasonBlueVerified]: "Twitter Blue verified",
@@ -153,6 +153,7 @@ export function ParseTimelineTweet(tweet, headers) {
 export function HandleInstructionsResponse(e, body) {
 	// pull the "instructions" object from the tweet
 	let tweets = body;
+	
 	try {
 		for (const key of InstructionsPaths[e.detail.parsedUrl[1]]) {
 			tweets = tweets[key];
@@ -170,7 +171,6 @@ export function HandleInstructionsResponse(e, body) {
 			break;
 		}
 	}
-
 	if (tweets.type !== "TimelineAddEntries") {
 		console.error('response object does not contain "TimelineAddEntries"', body);
 		return;
@@ -185,13 +185,13 @@ export function HandleInstructionsResponse(e, body) {
 				break;
 
 			case "TimelineTimelineItem":
-				return ParseTimelineTweet(tweet.content.itemContent, e.detail.request.headers);
-			
+				ParseTimelineTweet(tweet.content.itemContent, e.detail.request.headers);
+				break;
 			case "TimelineTimelineModule":
 				for (const innerTweet of tweet.content.items) {
 					ParseTimelineTweet(innerTweet.item.itemContent, e.detail.request.headers)
 				}
-				return;
+				break;
 
 			default:
 				if (!IgnoreTweetTypes.has(tweet.content.entryType)) {
