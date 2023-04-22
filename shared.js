@@ -18,7 +18,7 @@ export const DefaultOptions = {
 // when parsing a timeline response body, these are the paths to navigate in the json to retrieve the "instructions" object
 // the key to this object is the capture group from the request regex in inject.js
 export const InstructionsPaths = {
-	HomeLatestTimeline: [
+	HomeTimeline: [
 		"data",
 		"home",
 		"home_timeline_urt",
@@ -64,7 +64,7 @@ export function SetOptions(items) {
 }
 
 const ReasonBlueVerified = 1;
-const ReasonNftAvatar = 1;
+const ReasonNftAvatar = 2;
 
 const ReasonMap = {
 	[ReasonBlueVerified]: "Twitter Blue verified",

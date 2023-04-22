@@ -9,7 +9,7 @@ document.addEventListener("blue-blocker-event", function (e) {
 		const body = JSON.parse(e.detail.body);
 
 		switch (e.detail.parsedUrl[1]) {
-			case "HomeLatestTimeline":
+			case "HomeTimeline":
 			case "UserTweets":
 			case "TweetDetail":
 				return HandleInstructionsResponse(e, body);
