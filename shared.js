@@ -63,7 +63,7 @@ export function SetOptions(items) {
 	options = items;
 }
 
-const ReasonBlueVerified = 1;
+const ReasonBlueVerified = 0;
 const ReasonNftAvatar = 1;
 
 const ReasonMap = {
@@ -120,6 +120,7 @@ export function BlockBlueVerified(user, headers) {
 		}
 		else {
 			BlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
+			return;
 		}
 	}
 	if (options.blockNftAvatars && user.has_nft_avatar) {
