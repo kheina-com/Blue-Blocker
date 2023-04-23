@@ -257,7 +257,7 @@ export function HandleHomeTimeline(e, body) {
 	// So if the user has set the "skip users verified by other means" options,
 	// this function must be skipped, however, it is still mostly covered by the
 	// instructions responses
-	if (options.skipVerified) return;
+	if (options.skipAffiliated) return;
 
 	// so this url straight up gives us an array of users, so just use that lmao
 	for (const [user_id, user] of Object.entries(body.globalObjects.users)) {
