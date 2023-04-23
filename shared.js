@@ -80,29 +80,52 @@ const ReasonMap = {
 	[ReasonNftAvatar]: "NFT avatar",
 };
 
+const BlockQueue = [];
 const BlockCache = new Set();
+let BlockInterval = undefined;
+
 export function ClearCache() {
 	BlockCache.clear();
 }
 
-export function BlockUser(user, user_id, headers, reason, attempt=1) {
-	if (BlockCache.has(user_id))
-	{ return; }
+function QueueBlockUser(user, user_id, headers, reason) {
+	if (BlockCache.has(user_id)) {
+		return;
+	}
 	BlockCache.add(user_id);
+	BlockQueue.push({user, user_id, headers, reason});
+	console.log(`queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
+	
+	if (BlockInterval === undefined) {
+		BlockInterval = setInterval(CheckBlockQueue, 5000);
+	}
+}
 
+function CheckBlockQueue() {
+	if (BlockQueue.length === 0) {
+		clearInterval(BlockInterval);
+		BlockInterval = undefined;
+		return;
+	}
+	const {user, user_id, headers, reason} = BlockQueue.shift();
+	BlockUser(user, user_id, headers, reason);
+}
+
+function BlockUser(user, user_id, headers, reason, attempt=1) {
 	const formdata = new FormData();
 	formdata.append("user_id", user_id);
 
 	const ajax = new XMLHttpRequest();
 
-	ajax.addEventListener('load', event => console.log(`blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`), false);
+	ajax.addEventListener('load', event => console.log(new Date(), `blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`), false);
 	ajax.addEventListener('error', error => {
 		console.error('error:', error);
 
-		if (attempt < 3)
-		{ BlockUser(user, user_id, headers, reason, attempt + 1) }
-		else
-		{ console.error(`failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user); }
+		if (attempt < 3) {
+			BlockUser(user, user_id, headers, reason, attempt + 1);
+		} else {
+			console.error(`failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user);
+		}
 	}, false);
 
 	ajax.open('POST', "https://twitter.com/i/api/1.1/blocks/create.json");
@@ -149,7 +172,7 @@ export function BlockBlueVerified(user, headers) {
 			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they have over a million followers and Elon is an idiot.`);
 		}
 		else {
-			BlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
+			QueueBlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
 		}
 	}
 	if (options.blockNftAvatars && user.has_nft_avatar) {
@@ -166,7 +189,7 @@ export function BlockBlueVerified(user, headers) {
 			console.log(`did not block user with NFT avatar ${user.legacy.name} (@${user.legacy.screen_name}) because they follow you.`);
 		}
 		else {
-			BlockUser(user, String(user.rest_id), headers, ReasonNftAvatar);
+			QueueBlockUser(user, String(user.rest_id), headers, ReasonNftAvatar);
 		}
 	}
 }
