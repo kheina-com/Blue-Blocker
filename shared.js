@@ -105,6 +105,7 @@ export function BlockUser(user, user_id, headers, reason, attempt=1) {
 
 export function BlockBlueVerified(user, headers) {
 	// since we can be fairly certain all user objects will be the same, break this into a separate function
+	//console.log(user);
 	if (user.is_blue_verified) {
 		if (
 			// group for block-following option
@@ -117,6 +118,18 @@ export function BlockBlueVerified(user, headers) {
 			!(!options.skipVerified || !user.legacy.verified)
 		) {
 			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through other means.`);
+		}
+		else if (
+			// verified via an affiliated organization instead of blue
+			user.affiliates_highlighted_label.label
+		) {
+			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through an affiliated organization.`);
+		}
+		else if (
+			// verified by follower count
+			user.legacy.followers_count >= 1000000
+		) {
+			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they have over a million followers.`);
 		}
 		else {
 			BlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
@@ -143,7 +156,7 @@ export function ParseTimelineTweet(tweet, headers) {
 	}
 
 	if (user.__typename !== "User") {
-		console.error("could not parse tweet", tweet);
+		//console.error("could not parse tweet", tweet);
 		return;
 	}
 
