@@ -143,7 +143,7 @@ export function BlockBlueVerified(user, headers) {
 	if (options.blockNftAvatars && user.has_nft_avatar) {
 		if (
 			// group for block-following option
-			!(options.blockFollowing || (!user.legacy.following && !user.super_following))
+			!options.blockFollowing && (user.legacy.following || user.super_following)
 		) {
 			console.log(`did not block user with NFT avatar ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
 		}
