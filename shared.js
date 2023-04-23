@@ -11,8 +11,10 @@ s.type = "text/javascript";
 export const DefaultOptions = {
 	// by default, spare the people we follow from getting blocked
 	blockFollowing: false,
+	blockFollowers: false,
 	skipVerified: true,
 	blockNftAvatars: false,
+	skip1Mplus: true,
 };
 
 // when parsing a timeline response body, these are the paths to navigate in the json to retrieve the "instructions" object
@@ -69,8 +71,8 @@ export function SetOptions(items) {
 	options = items;
 }
 
-const ReasonBlueVerified = 1;
-const ReasonNftAvatar = 2;
+const ReasonBlueVerified = 0;
+const ReasonNftAvatar = 1;
 
 const ReasonMap = {
 	[ReasonBlueVerified]: "Twitter Blue verified",
@@ -115,6 +117,7 @@ export function BlockBlueVerified(user, headers) {
         return;
 	}
 	if (user.is_blue_verified) {
+	
 		if (
 			// group for block-following option
 			!options.blockFollowing && (user.legacy.following || user.super_following)
@@ -122,10 +125,16 @@ export function BlockBlueVerified(user, headers) {
 			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
 		}
 		else if (
+			// group for block-followers option
+			!options.blockFollowers && user.legacy.followed_by
+		) {
+			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they follow you.`);
+		}
+		else if (
 			// group for skip-verified option
 			options.skipVerified && user.legacy.verified
 		) {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through other means.`);
+			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they follow you.`);
 		}
 		else if (
 			// verified via an affiliated organisation instead of blue
@@ -135,9 +144,9 @@ export function BlockBlueVerified(user, headers) {
 		}
 		else if (
 			// verified by follower count
-			options.skipVerified && user.legacy.followers_count >= 1000000
+			options.skip1Mplus && (user.legacy.followers_count > 1000000 || !user.legacy.followers_count)
 		) {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they have over a million followers and Elmo is a clown.`);
+			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they have over a million followers and Elmo is an idiot.`);
 		}
 		else {
 			BlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
@@ -157,14 +166,49 @@ export function BlockBlueVerified(user, headers) {
 }
 
 export function ParseTimelineTweet(tweet, headers) {
-	let user = tweet;
-	for (const key of UserObjectPath) {
-		if (user.hasOwnProperty(key))
-		{ user = user[key]; }
+	if(tweet.itemType=="TimelineTimelineCursor") {
+		return;
+	}
+	
+	// Handle retweets and quoted tweets - check the other user, too
+	let user;
+	if(tweet?.tweet_results?.result?.quoted_status_result) {
+		let user2 = tweet;
+		for (const key of UserObjectPath) {
+			if (user2.hasOwnProperty(key)) {
+				user2 = user2[key];
+			}
+		}
+		if (user.__typename !== "User") {
+			console.error("could not parse qrt", tweet);
+			return;
+		}
+		BlockBlueVerified(user2, headers);
+		user = tweet.tweet_results.result.quoted_status_result.result;
+	} else if(tweet?.tweet_results?.result?.legacy?.retweeted_status_result) {
+		let user2 = tweet;
+		for (const key of UserObjectPath) {
+			if (user2.hasOwnProperty(key)) {
+				user2 = user2[key];
+			}
+		}
+		if (user.__typename !== "User") {
+			console.error("could not parse rt", tweet);
+			return;
+		}
+		BlockBlueVerified(user2, headers);
+		user = tweet.tweet_results.result.legacy.retweeted_status_result.result;
+	} else {
+		user = tweet;
 	}
 
+	for (const key of UserObjectPath) {
+		if (user.hasOwnProperty(key)) {
+			user = user[key];
+		}
+	}
 	if (user.__typename !== "User") {
-		//console.error("could not parse tweet", tweet);
+		console.error("could not parse tweet", tweet);
 		return;
 	}
 
@@ -206,7 +250,9 @@ export function HandleInstructionsResponse(e, body) {
 				break;
 
 			case "TimelineTimelineItem":
-				ParseTimelineTweet(tweet.content.itemContent, e.detail.request.headers);
+				if (tweet.content.itemContent.itemType=="TimelineTweet") {
+					ParseTimelineTweet(tweet.content.itemContent, e.detail.request.headers);
+				}
 				break;
 			case "TimelineTimelineModule":
 				for (const innerTweet of tweet.content.items) {
