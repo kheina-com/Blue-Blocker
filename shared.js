@@ -111,6 +111,10 @@ export function BlockUser(user, user_id, headers, reason, attempt=1) {
 
 export function BlockBlueVerified(user, headers) {
 	// since we can be fairly certain all user objects will be the same, break this into a separate function
+	console.log(user);
+	if (user.legacy.blocking) {
+        return;
+	}
 	if (user.is_blue_verified) {
 		if (
 			// group for block-following option
