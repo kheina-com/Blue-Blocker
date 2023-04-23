@@ -112,7 +112,7 @@ export function BlockBlueVerified(user, headers) {
 	if(user.legacy.blocking) return;
 	if (user.is_blue_verified) {
 
-		if(skip1Mplus && (user.legacy.followers_count > 1000000 || !user.legacy.followers_count)) {
+		if(options.skip1Mplus && (user.legacy.followers_count > 1000000 || !user.legacy.followers_count)) {
 			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because Elon is an idiot.`);
 			return;
 		}		
