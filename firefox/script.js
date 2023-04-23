@@ -10,6 +10,7 @@ document.addEventListener("blue-blocker-event", function (e) {
 
 		switch (e.detail.parsedUrl[1]) {
 			case "HomeLatestTimeline":
+			case "HomeTimeline":
 			case "UserTweets":
 			case "TweetDetail":
 				return HandleInstructionsResponse(e, body);

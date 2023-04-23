@@ -24,6 +24,12 @@ export const InstructionsPaths = {
 		"home_timeline_urt",
 		"instructions",
 	],
+	HomeTimeline: [
+		"data",
+		"home",
+		"home_timeline_urt",
+		"instructions",
+	],
 	UserTweets: [
 		"data",
 		"user",
@@ -105,7 +111,6 @@ export function BlockUser(user, user_id, headers, reason, attempt=1) {
 
 export function BlockBlueVerified(user, headers) {
 	// since we can be fairly certain all user objects will be the same, break this into a separate function
-	//console.log(user);
 	if (user.is_blue_verified) {
 		if (
 			// group for block-following option
@@ -129,7 +134,7 @@ export function BlockBlueVerified(user, headers) {
 			// verified by follower count
 			user.legacy.followers_count >= 1000000
 		) {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they have over a million followers.`);
+			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they have over a million followers and Elmo is a clown.`);
 		}
 		else {
 			BlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);

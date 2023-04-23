@@ -1,4 +1,4 @@
-const RequestRegex = /^https:\/\/(?:\w+\.)?twitter.com\/[\w\/]+\/(HomeLatestTimeline|UserTweets|timeline\/home\.json|TweetDetail)(?:$|\?)/;
+const RequestRegex = /^https:\/\/(?:\w+\.)?twitter.com\/[\w\/]+\/(HomeLatestTimeline|HomeTimeline|UserTweets|timeline\/home\.json|TweetDetail)(?:$|\?)/;
 
 (function(xhr) {
 	let XHR = XMLHttpRequest.prototype;
