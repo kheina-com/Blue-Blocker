@@ -6,8 +6,9 @@ document.addEventListener("DOMContentLoaded", () => {
 		document.getElementById("block-following").checked = items.blockFollowing;
 		document.getElementById("block-followers").checked = items.blockFollowers;
 		document.getElementById("skip-verified").checked = items.skipVerified;
-		document.getElementById("block-nft-avatars").checked = items.blockNftAvatars;
+		document.getElementById("skip-affiliated").checked = items.skipAffiliated;
 		document.getElementById("skip-1mplus").checked = items.skip1Mplus;
+		document.getElementById("block-nft-avatars").checked = items.blockNftAvatars;
 	});
 });
 
@@ -44,12 +45,12 @@ document.getElementById("skip-verified").addEventListener("input", () => {
 	});
 });
 
-document.getElementById("block-nft-avatars").addEventListener("input", () => {
+document.getElementById("skip-affiliated").addEventListener("input", () => {
 	chrome.storage.sync.set({
-		blockNftAvatars: document.getElementById("block-nft-avatars").checked,
+		skipAffiliated: document.getElementById("skip-affiliated").checked,
 	}, () => {
 		// Update status to let user know options were saved.
-		const status = document.getElementById("block-nft-avatars-status");
+		const status = document.getElementById("skip-affiliated-status");
 		status.textContent = "saved";
 		setTimeout(() => status.textContent = null, 1000);
 	});
@@ -61,6 +62,17 @@ document.getElementById("skip-1mplus").addEventListener("input", () => {
 	}, () => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("skip-1mplus-status");
+		status.textContent = "saved";
+		setTimeout(() => status.textContent = null, 1000);
+	});
+});
+
+document.getElementById("block-nft-avatars").addEventListener("input", () => {
+	chrome.storage.sync.set({
+		blockNftAvatars: document.getElementById("block-nft-avatars").checked,
+	}, () => {
+		// Update status to let user know options were saved.
+		const status = document.getElementById("block-nft-avatars-status");
 		status.textContent = "saved";
 		setTimeout(() => status.textContent = null, 1000);
 	});

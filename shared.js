@@ -7,14 +7,15 @@ s.type = "text/javascript";
 // };
 (document.head || document.documentElement).appendChild(s);
 
-// this is the magic regex to determine if its a request we need. add new urls below
 export const DefaultOptions = {
-	// by default, spare the people we follow from getting blocked
+	// by default, spare as many people as possible
+	// let the user decide if they want to be stricter
 	blockFollowing: false,
 	blockFollowers: false,
 	skipVerified: true,
-	blockNftAvatars: false,
+	skipAffiliated: true,
 	skip1Mplus: true,
+	blockNftAvatars: false
 };
 
 // when parsing a timeline response body, these are the paths to navigate in the json to retrieve the "instructions" object
@@ -114,7 +115,7 @@ export function BlockUser(user, user_id, headers, reason, attempt=1) {
 export function BlockBlueVerified(user, headers) {
 	// since we can be fairly certain all user objects will be the same, break this into a separate function
 	if (user.legacy.blocking) {
-        return;
+		return;
 	}
 	if (user.is_blue_verified) {	
 		if (
@@ -137,7 +138,7 @@ export function BlockBlueVerified(user, headers) {
 		}
 		else if (
 			// verified via an affiliated organisation instead of blue
-			options.skipVerified && user.affiliates_highlighted_label.label
+			options.skipAffiliated && user.affiliates_highlighted_label.label
 		) {
 			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through an affiliated organisation.`);
 		}
