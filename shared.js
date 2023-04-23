@@ -224,11 +224,11 @@ export function ParseTimelineTweet(tweet, headers) {
 
 export function HandleInstructionsResponse(e, body) {
 	// pull the "instructions" object from the tweet
-	let tweets = body;
+	let instructions = body;
 	
 	try {
 		for (const key of InstructionsPaths[e.detail.parsedUrl[1]]) {
-			tweets = tweets[key];
+			instructions = instructions[key];
 		}
 	}
 	catch (e) {
@@ -237,15 +237,28 @@ export function HandleInstructionsResponse(e, body) {
 	}
 
 	// "instructions" should be an array, we need to iterate over it to find the "TimelineAddEntries" type
-	for (const value of tweets) {
-		if (value.type === "TimelineAddEntries") {
+	let tweets = undefined;
+	let isAddToModule = false;
+	for (const value of instructions) {
+		if (value.type === "TimelineAddEntries" || value.type === "TimelineAddToModule") {
 			tweets = value;
+			isAddToModule = value.type === "TimelineAddToModule";
 			break;
 		}
 	}
-	if (tweets.type !== "TimelineAddEntries") {
-		console.error('response object does not contain "TimelineAddEntries"', body);
+	if (tweets === undefined) {
+		console.error("response object does not contain an instruction to add entries", body);
 		return;
+	}
+
+	if (isAddToModule) {
+		// wrap AddToModule info so the handler can treat it the same (and unwrap it below)
+		tweets.entries = [{
+			content: {
+				entryType: "TimelineTimelineModule",
+				items: tweets.moduleItems
+			}
+		}];
 	}
 
 	// tweets object should now contain an array of all returned tweets
@@ -272,6 +285,11 @@ export function HandleInstructionsResponse(e, body) {
 					console.error(`unexpected tweet type found: ${tweet.content.entryType}`, tweet);
 				}
 		}
+	}
+
+	if (isAddToModule) {
+		tweets.moduleItems = tweets.entries[0]?.content?.items || [];
+		delete tweets.entries;
 	}
 }
 
