@@ -114,25 +114,25 @@ export function BlockBlueVerified(user, headers) {
 	if (user.is_blue_verified) {
 		if (
 			// group for block-following option
-			!(options.blockFollowing || (!user.legacy.following && !user.super_following))
+			!options.blockFollowing && (user.legacy.following || user.super_following)
 		) {
 			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
 		}
 		else if (
 			// group for skip-verified option
-			!(!options.skipVerified || !user.legacy.verified)
+			options.skipVerified && user.legacy.verified
 		) {
 			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through other means.`);
 		}
 		else if (
 			// verified via an affiliated organisation instead of blue
-			user.affiliates_highlighted_label.label
+			options.skipVerified && user.affiliates_highlighted_label.label
 		) {
 			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through an affiliated organisation.`);
 		}
 		else if (
 			// verified by follower count
-			user.legacy.followers_count >= 1000000
+			options.skipVerified && user.legacy.followers_count >= 1000000
 		) {
 			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they have over a million followers and Elmo is a clown.`);
 		}
