@@ -116,8 +116,7 @@ export function BlockBlueVerified(user, headers) {
 	if (user.legacy.blocking) {
         return;
 	}
-	if (user.is_blue_verified) {
-	
+	if (user.is_blue_verified) {	
 		if (
 			// group for block-following option
 			!options.blockFollowing && (user.legacy.following || user.super_following)
@@ -132,9 +131,9 @@ export function BlockBlueVerified(user, headers) {
 		}
 		else if (
 			// group for skip-verified option
-			options.skipVerified && user.legacy.verified
+			options.skipVerified && (user.legacy.verified || user.legacy.verified_type)
 		) {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they follow you.`);
+			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through other means.`);
 		}
 		else if (
 			// verified via an affiliated organisation instead of blue
@@ -272,6 +271,7 @@ export function HandleHomeTimeline(e, body) {
 				name: user.name,
 				screen_name: user.screen_name,
 				verified: user.verified,
+				verified_type: user.ext_verified_type,
 			},
 			super_following: user.ext?.superFollowMetadata?.r?.ok?.superFollowing,
 			rest_id: user_id,
