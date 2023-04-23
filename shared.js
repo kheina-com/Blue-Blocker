@@ -146,7 +146,7 @@ export function BlockBlueVerified(user, headers) {
 			// verified by follower count
 			options.skip1Mplus && (user.legacy.followers_count > 1000000 || !user.legacy.followers_count)
 		) {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they have over a million followers and Elmo is an idiot.`);
+			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they have over a million followers and Elon is an idiot.`);
 		}
 		else {
 			BlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
@@ -158,6 +158,12 @@ export function BlockBlueVerified(user, headers) {
 			!options.blockFollowing && (user.legacy.following || user.super_following)
 		) {
 			console.log(`did not block user with NFT avatar ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
+		}
+		else if (
+			// group for block-followers option
+			!options.blockFollowers && user.legacy.followed_by
+		) {
+			console.log(`did not block user with NFT avatar ${user.legacy.name} (@${user.legacy.screen_name}) because they follow you.`);
 		}
 		else {
 			BlockUser(user, String(user.rest_id), headers, ReasonNftAvatar);
