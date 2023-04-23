@@ -213,13 +213,15 @@ export function HandleInstructionsResponse(e, body) {
 				break;
 
 			case "TimelineTimelineItem":
-				return ParseTimelineTweet(tweet.content.itemContent, e.detail.request.headers);
+				if(tweet.content.itemContent.itemType=="TimelineTweet")
+					ParseTimelineTweet(tweet.content.itemContent, e.detail.request.headers);
+				break;
 			
 			case "TimelineTimelineModule":
 				for (const innerTweet of tweet.content.items) {
 					ParseTimelineTweet(innerTweet.item.itemContent, e.detail.request.headers)
 				}
-				return;
+				break;
 
 			default:
 				if (!IgnoreTweetTypes.has(tweet.content.entryType)) {
