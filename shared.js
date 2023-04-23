@@ -11,8 +11,10 @@ s.type = "text/javascript";
 export const DefaultOptions = {
 	// by default, spare the people we follow from getting blocked
 	blockFollowing: false,
+	blockFollowers: false,
 	skipVerified: true,
 	blockNftAvatars: false,
+	skip1Mplus: true,
 };
 
 // when parsing a timeline response body, these are the paths to navigate in the json to retrieve the "instructions" object
@@ -110,7 +112,7 @@ export function BlockBlueVerified(user, headers) {
 	if(user.legacy.blocking) return;
 	if (user.is_blue_verified) {
 
-		if(user.legacy.followers_count > 1000000 || !user.legacy.followers_count) {
+		if(skip1Mplus && (user.legacy.followers_count > 1000000 || !user.legacy.followers_count)) {
 			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because Elon is an idiot.`);
 			return;
 		}		
@@ -121,10 +123,16 @@ export function BlockBlueVerified(user, headers) {
 			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
 		}
 		else if (
+			// group for block-followers option
+			!(options.blockFollowers || !user.legacy.followed_by)
+		) {
+			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
+		}
+		else if (
 			// group for skip-verified option
 			!(!options.skipVerified || !user.legacy.verified)
 		) {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through other means.`);
+			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they follow you.`);
 		}
 		else {
 			BlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
