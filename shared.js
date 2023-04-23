@@ -117,7 +117,7 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 
 	const ajax = new XMLHttpRequest();
 
-	ajax.addEventListener('load', event => console.log(new Date(), `blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`), false);
+	ajax.addEventListener('load', event => console.log(`blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`), false);
 	ajax.addEventListener('error', error => {
 		console.error('error:', error);
 
@@ -195,7 +195,7 @@ export function BlockBlueVerified(user, headers) {
 }
 
 function HandleTweetObject(obj, headers) {
-    let ptr = obj;
+	let ptr = obj;
 	for (const key of UserObjectPath) {
 		if (ptr.hasOwnProperty(key)) {
 			ptr = ptr[key];
