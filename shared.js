@@ -144,12 +144,32 @@ export function BlockBlueVerified(user, headers) {
 }
 
 export function ParseTimelineTweet(tweet, headers) {
-	let user = tweet;
+	if(tweet.itemType=="TimelineTimelineCursor") return;
+	let user;
+	if(tweet?.tweet_results?.result?.quoted_status_result) {
+		let user2 = tweet
+		for (const key of UserObjectPath) {
+			if (user2.hasOwnProperty(key))
+			{ user2 = user2[key]; }
+		}
+		BlockBlueVerified(user2, headers)
+		user = tweet.tweet_results.result.quoted_status_result.result;
+	} else if(tweet?.tweet_results?.result?.legacy?.retweeted_status_result) {
+		let user2 = tweet
+		for (const key of UserObjectPath) {
+			if (user2.hasOwnProperty(key))
+			{ user2 = user2[key]; }
+		}
+		BlockBlueVerified(user2, headers)
+		user = tweet.tweet_results.result.legacy.retweeted_status_result.result;
+	} else {
+		user = tweet;
+	}
+
 	for (const key of UserObjectPath) {
 		if (user.hasOwnProperty(key))
 		{ user = user[key]; }
 	}
-
 	if (user.__typename !== "User") {
 		console.error("could not parse tweet", tweet);
 		return;
