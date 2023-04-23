@@ -220,12 +220,12 @@ export function HandleInstructionsResponse(e, body) {
 }
 
 export function HandleHomeTimeline(e, body) {
-    // This API endpoint currently does not deliver information required for
-    // block filters (in particular, it's missing affiliates_highlighted_label).
-    // So if the user has set the "skip users verified by other means" options,
-    // this function must be skipped, however, it is still mostly covered by the
-    // instructions responses
-    if (options.skipVerified) return;
+	// This API endpoint currently does not deliver information required for
+	// block filters (in particular, it's missing affiliates_highlighted_label).
+	// So if the user has set the "skip users verified by other means" options,
+	// this function must be skipped, however, it is still mostly covered by the
+	// instructions responses
+	if (options.skipVerified) return;
 
 	// so this url straight up gives us an array of users, so just use that lmao
 	for (const [user_id, user] of Object.entries(body.globalObjects.users)) {
