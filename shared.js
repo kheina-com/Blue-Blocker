@@ -172,16 +172,17 @@ export function BlockBlueVerified(user, headers) {
 }
 
 function HandleTweetObject(obj, headers) {
+    let ptr = obj;
 	for (const key of UserObjectPath) {
-		if (obj.hasOwnProperty(key)) {
-			obj = obj[key];
+		if (ptr.hasOwnProperty(key)) {
+			ptr = ptr[key];
 		}
 	}
-	if (obj.__typename !== "User") {
-		console.error("could not parse tweet", tweet);
+	if (ptr.__typename !== "User") {
+		console.error("could not parse tweet", obj);
 		return;
 	}
-	BlockBlueVerified(obj, headers);
+	BlockBlueVerified(ptr, headers);
 }
 
 export function ParseTimelineTweet(tweet, headers) {
