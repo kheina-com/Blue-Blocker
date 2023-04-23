@@ -171,54 +171,31 @@ export function BlockBlueVerified(user, headers) {
 	}
 }
 
+function HandleTweetObject(obj, headers) {
+	for (const key of UserObjectPath) {
+		if (obj.hasOwnProperty(key)) {
+			obj = obj[key];
+		}
+	}
+	if (obj.__typename !== "User") {
+		console.error("could not parse tweet", tweet);
+		return;
+	}
+	BlockBlueVerified(obj, headers);
+}
+
 export function ParseTimelineTweet(tweet, headers) {
 	if(tweet.itemType=="TimelineTimelineCursor") {
 		return;
 	}
 	
-	// Handle retweets and quoted tweets - check the other user, too
-	let user;
+	// Handle retweets and quoted tweets (check the retweeted user, too)
 	if(tweet?.tweet_results?.result?.quoted_status_result) {
-		let user2 = tweet;
-		for (const key of UserObjectPath) {
-			if (user2.hasOwnProperty(key)) {
-				user2 = user2[key];
-			}
-		}
-		if (user.__typename !== "User") {
-			console.error("could not parse qrt", tweet);
-			return;
-		}
-		BlockBlueVerified(user2, headers);
-		user = tweet.tweet_results.result.quoted_status_result.result;
+		HandleTweetObject(tweet.tweet_results.result.quoted_status_result.result, headers);
 	} else if(tweet?.tweet_results?.result?.legacy?.retweeted_status_result) {
-		let user2 = tweet;
-		for (const key of UserObjectPath) {
-			if (user2.hasOwnProperty(key)) {
-				user2 = user2[key];
-			}
-		}
-		if (user.__typename !== "User") {
-			console.error("could not parse rt", tweet);
-			return;
-		}
-		BlockBlueVerified(user2, headers);
-		user = tweet.tweet_results.result.legacy.retweeted_status_result.result;
-	} else {
-		user = tweet;
+		HandleTweetObject(tweet.tweet_results.result.legacy.retweeted_status_result.result, headers);
 	}
-
-	for (const key of UserObjectPath) {
-		if (user.hasOwnProperty(key)) {
-			user = user[key];
-		}
-	}
-	if (user.__typename !== "User") {
-		console.error("could not parse tweet", tweet);
-		return;
-	}
-
-	BlockBlueVerified(user, headers)
+	HandleTweetObject(tweet, headers);
 }
 
 export function HandleInstructionsResponse(e, body) {
