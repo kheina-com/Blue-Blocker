@@ -1,6 +1,8 @@
 ![Blue Blocker Marquee](assets/marquee.png)
-# Blue Blocker
-Blocks all Verified Twitter Blue users on twitter.com
+# unendorsed Blue Blocker fork
+Blocks all Verified Twitter Blue users on twitter.com  
+@shinmai added quick & dirty support for RTs & QRTs, made the setting to ignore followed accounts also ignore followers, and made the extension ignore users with 1M+ followers for now
+due to Elon Musk's recent shenanigans.
 
 ## Usage
 Nothing! Just install and say goodbye to all the paid blue checkmarks!
@@ -32,7 +34,6 @@ NOTE: You may need to replace instances of `browser.storage.sync` with `browser.
 ## TODO
 1. Missing support for these requests
 	- search (all types)
-	- quote tweets (the quoted tweet)
 	- "you might like" column
 	- "who to follow" sections
 2. Remove the blocked users from the dom
