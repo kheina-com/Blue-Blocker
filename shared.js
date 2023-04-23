@@ -105,7 +105,15 @@ export function BlockUser(user, user_id, headers, reason, attempt=1) {
 
 export function BlockBlueVerified(user, headers) {
 	// since we can be fairly certain all user objects will be the same, break this into a separate function
+
+	// don't hammer the API for blocked users
+	if(user.legacy.blocking) return;
 	if (user.is_blue_verified) {
+
+		if(user.legacy.followers_count > 1000000 || !user.legacy.followers_count) {
+			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because Elon is an idiot.`);
+			return;
+		}		
 		if (
 			// group for block-following option
 			!(options.blockFollowing || (!user.legacy.following && !user.super_following))
