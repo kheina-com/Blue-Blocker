@@ -63,7 +63,7 @@ export function SetOptions(items) {
 	options = items;
 }
 
-const ReasonBlueVerified = 1;
+const ReasonBlueVerified = 0;
 const ReasonNftAvatar = 1;
 
 const ReasonMap = {
