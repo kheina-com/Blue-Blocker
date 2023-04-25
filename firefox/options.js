@@ -4,6 +4,7 @@ import { DefaultOptions } from '../shared.js';
 document.addEventListener("DOMContentLoaded", () => {
 	browser.storage.sync.get(DefaultOptions).then(items => {
 		document.getElementById("block-following").checked = items.blockFollowing;
+		document.getElementById("block-affiliated").checked = items.blockAffiliated;
 		document.getElementById("skip-verified").checked = items.skipVerified;
 		document.getElementById("block-nft-avatars").checked = items.blockNftAvatars;
 	});
@@ -15,6 +16,17 @@ document.getElementById("block-following").addEventListener("input", () => {
 	}).then(() => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("block-following-status");
+		status.textContent = "saved";
+		setTimeout(() => status.textContent = null, 1000);
+	});
+});
+
+document.getElementById("block-affiliated").addEventListener("input", () => {
+	browser.storage.sync.set({
+		blockAffiliated: document.getElementById("block-affiliated").checked,
+	}).then(() => {
+		// Update status to let user know options were saved.
+		const status = document.getElementById("block-affiliated-status");
 		status.textContent = "saved";
 		setTimeout(() => status.textContent = null, 1000);
 	});
