@@ -80,7 +80,11 @@ const ReasonMap = {
 	[ReasonNftAvatar]: "NFT avatar",
 };
 
-const BlockQueue = [];
+var BlockQueue = null;
+export function SetBlockQueue(queue) {
+	BlockQueue = queue;
+}
+
 const BlockCache = new Set();
 let BlockInterval = undefined;
 
@@ -95,20 +99,22 @@ function QueueBlockUser(user, user_id, headers, reason) {
 	BlockCache.add(user_id);
 	BlockQueue.push({user, user_id, headers, reason});
 	console.log(`queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
-	
+
 	if (BlockInterval === undefined) {
 		BlockInterval = setInterval(CheckBlockQueue, 5000);
 	}
 }
 
 function CheckBlockQueue() {
-	if (BlockQueue.length === 0) {
-		clearInterval(BlockInterval);
-		BlockInterval = undefined;
-		return;
-	}
-	const {user, user_id, headers, reason} = BlockQueue.shift();
-	BlockUser(user, user_id, headers, reason);
+	BlockQueue.shift().then(item => {
+		if (item === undefined) {
+			clearInterval(BlockInterval);
+			BlockInterval = undefined;
+			return;
+		}
+		const {user, user_id, headers, reason} = item;
+		BlockUser(user, user_id, headers, reason);
+	});
 }
 
 function BlockUser(user, user_id, headers, reason, attempt=1) {
