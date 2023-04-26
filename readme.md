@@ -27,12 +27,9 @@ By default, Blue Blocker does not block users you follow who have purchased Twit
 	(or enter `about:debugging#/runtime/this-firefox` in the Firefox url bar)
 4. Click `Load Temporary Add-on` in the top right and select `manifest.json` in the cloned directory
 
-NOTE: You may need to replace instances of `browser.storage.sync` with `browser.storage.local` for local firefox development.
-
 ## TODO
 1. Missing support for these requests
 	- search (all types)
-	- quote tweets (the quoted tweet)
 	- "you might like" column
 	- "who to follow" sections
 2. Remove the blocked users from the dom
