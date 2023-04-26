@@ -15,6 +15,7 @@ export const DefaultOptions = {
 	skipVerified: true,
 	skipAffiliated: true,
 	skip1Mplus: true,
+	skipSWs: true,
 	blockNftAvatars: false
 };
 
@@ -66,6 +67,26 @@ export const Headers = [
 	"x-twitter-auth-type",
 	"x-twitter-client-language",
 ];
+export const SexWorkerStrings = [
+	"onlyfans",
+	"OF",
+	"spicy site",
+	"linktr",
+	"NSFW",
+	"nsfw",
+	"\u{1f3f3}\u{fe0f}\u{200d}\u{26a7}\u{fe0f}", // trans flag
+	"nudes",
+	"18+",
+	"\u{1f51e}", // no one under 18 symbol
+];
+export function IncludesAny(haystack, needles) {
+	for (var needle of needles) {
+		if (haystack.includes(needle)) {
+			return true;
+		}
+	}
+	return false;
+}
 
 var options = { };
 export function SetOptions(items) {
@@ -170,6 +191,12 @@ export function BlockBlueVerified(user, headers) {
 			options.skip1Mplus && (user.legacy.followers_count > 1000000 || !user.legacy.followers_count)
 		) {
 			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they have over a million followers and Elon is an idiot.`);
+		}
+		else if (
+			// check for sex worker
+			options.skipSWs && IncludesAny(user.legacy.description, SexWorkerStrings)
+		) {
+			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they appear to be a sex worker <3`);
 		}
 		else {
 			QueueBlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
