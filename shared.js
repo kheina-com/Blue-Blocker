@@ -80,7 +80,48 @@ const ReasonMap = {
 	[ReasonNftAvatar]: "NFT avatar",
 };
 
-const BlockQueue = [];
+export class BlockQueue {
+	// queue must be defined with push and shift functions
+	constructor(storage) {
+		this.storage = storage;
+		this.queue = [];
+		this.timeout = null;
+	}
+	async sync() {
+		// sync simply adds the in-memory queue to the stored queue
+		const items = await this.storage.get({ BlockQueue: [] });
+		items.BlockQueue.push(...this.queue);
+		await this.storage.set(items);
+		this.queue.length = 0;
+		this.timeout = null;
+	}
+	async push(item) {
+		this.queue.push(item);
+		if (this.timeout) {
+			clearTimeout(this.timeout);
+		}
+		this.timeout = setTimeout(() => this.sync(), 100);
+	}
+	async shift() {
+		// shift halts any modifications to the local storage queue, removes an item, and saves it, and restarts sync
+		if (this.timeout) {
+			clearTimeout(this.timeout);
+		}
+		const items = await this.storage.get({ BlockQueue: [] });
+		const item = items.BlockQueue.shift();
+		if (item !== undefined) {
+			await this.storage.set(items);
+		}
+		this.timeout = setTimeout(() => this.sync(), 100);
+		return item;
+	}
+}
+
+var queue = null;
+export function SetBlockQueue(q) {
+	queue = q;
+}
+
 const BlockCache = new Set();
 let BlockInterval = undefined;
 
@@ -93,22 +134,24 @@ function QueueBlockUser(user, user_id, headers, reason) {
 		return;
 	}
 	BlockCache.add(user_id);
-	BlockQueue.push({user, user_id, headers, reason});
+	queue.push({user, user_id, headers, reason});
 	console.log(`queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
-	
+
 	if (BlockInterval === undefined) {
 		BlockInterval = setInterval(CheckBlockQueue, 5000);
 	}
 }
 
 function CheckBlockQueue() {
-	if (BlockQueue.length === 0) {
-		clearInterval(BlockInterval);
-		BlockInterval = undefined;
-		return;
-	}
-	const {user, user_id, headers, reason} = BlockQueue.shift();
-	BlockUser(user, user_id, headers, reason);
+	queue.shift().then(item => {
+		if (item === undefined) {
+			clearInterval(BlockInterval);
+			BlockInterval = undefined;
+			return;
+		}
+		const {user, user_id, headers, reason} = item;
+		BlockUser(user, user_id, headers, reason);
+	});
 }
 
 function BlockUser(user, user_id, headers, reason, attempt=1) {
