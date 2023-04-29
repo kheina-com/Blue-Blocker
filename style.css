@@ -36,7 +36,7 @@ body {
 
 /* popup title */
 h2 {
-	margin-top: 0;
+	margin: 0;
 	text-align: center;
 }
 /* Blue Blocker logo in the popup title */
@@ -136,4 +136,12 @@ input:checked + label div.checkmark div, label.checked div.checkmark div {
 	-webkit-transform: rotate(45deg);
 	-ms-transform: rotate(45deg);
 	transform: rotate(45deg);
+}
+
+.blocked-users-count {
+	text-align: center;
+	color: var(--subtle);
+	font-size: 0.9em;
+	margin-top: 0;
+	margin-bottom: 2em;
 }

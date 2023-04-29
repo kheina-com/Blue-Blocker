@@ -1,4 +1,4 @@
-import { DefaultOptions } from '../shared.js';
+import { DefaultOptions, commafy } from '../shared.js';
 
 // restore state from storage
 document.addEventListener("DOMContentLoaded", () => {
@@ -11,6 +11,12 @@ document.addEventListener("DOMContentLoaded", () => {
 		document.getElementById("block-nft-avatars").checked = items.blockNftAvatars;
 	});
 });
+
+const setBlockedUsersCounter = () => {
+	chrome.storage.local.get({ BlockCounter: 0 }).then(items => document.getElementById("blocked-users-count").innerText = commafy(items.BlockCounter));
+};
+setBlockedUsersCounter(); // set it immediately
+setInterval(setBlockedUsersCounter, 5000);
 
 document.getElementById("block-following").addEventListener("input", () => {
 	chrome.storage.sync.set({
