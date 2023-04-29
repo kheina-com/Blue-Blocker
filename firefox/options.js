@@ -12,11 +12,20 @@ document.addEventListener("DOMContentLoaded", () => {
 	});
 });
 
-const setBlockedUsersCounter = () => {
-	browser.storage.local.get({ BlockCounter: 0 }).then(items => document.getElementById("blocked-users-count").innerText = commafy(items.BlockCounter));
-};
-setBlockedUsersCounter(); // set it immediately
-setInterval(setBlockedUsersCounter, 5000);
+// set the block value immediately
+browser.storage.local.get({ BlockCounter: 0, BlockQueue: 0 }).then(items => {
+	document.getElementById("blocked-users-count").innerText = commafy(items.BlockCounter);
+	document.getElementById("blocked-user-queue-length").innerText = commafy(items.BlockQueue.length);
+});
+browser.storage.local.onChanged.addListener(items => {
+	if (items.hasOwnProperty('BlockCounter')) {
+		document.getElementById("blocked-users-count").innerText = commafy(items.BlockCounter.newValue);
+	}
+	if (items.hasOwnProperty('BlockQueue')) {
+		document.getElementById("blocked-user-queue-length").innerText = commafy(items.BlockQueue.newValue.length);
+	}
+	// if we want to add other values, add them here
+});
 
 document.getElementById("block-following").addEventListener("input", () => {
 	browser.storage.sync.set({

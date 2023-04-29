@@ -12,11 +12,20 @@ document.addEventListener("DOMContentLoaded", () => {
 	});
 });
 
-const setBlockedUsersCounter = () => {
-	chrome.storage.local.get({ BlockCounter: 0 }).then(items => document.getElementById("blocked-users-count").innerText = commafy(items.BlockCounter));
-};
-setBlockedUsersCounter(); // set it immediately
-setInterval(setBlockedUsersCounter, 5000);
+// set the block value immediately
+chrome.storage.local.get({ BlockCounter: 0, BlockQueue: 0 }).then(items => {
+	document.getElementById("blocked-users-count").innerText = commafy(items.BlockCounter);
+	document.getElementById("blocked-user-queue-length").innerText = commafy(items.BlockQueue.length);
+});
+chrome.storage.local.onChanged.addListener(items => {
+	if (items.hasOwnProperty('BlockCounter')) {
+		document.getElementById("blocked-users-count").innerText = commafy(items.BlockCounter.newValue);
+	}
+	if (items.hasOwnProperty('BlockQueue')) {
+		document.getElementById("blocked-user-queue-length").innerText = commafy(items.BlockQueue.newValue.length);
+	}
+	// if we want to add other values, add them here
+});
 
 document.getElementById("block-following").addEventListener("input", () => {
 	chrome.storage.sync.set({
