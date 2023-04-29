@@ -32,7 +32,9 @@
 				"*://*.twitter.com/*",
 				"*://twitter.com/*"
 			],
-			"js": ["chrome/main.js"]
+			"js": [
+				"chrome/main.js"
+			]
 		}
 	]
 }

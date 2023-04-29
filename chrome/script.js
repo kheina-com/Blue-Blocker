@@ -1,5 +1,6 @@
-import { ClearCache, DefaultOptions, BlockQueue, SetBlockQueue, SetOptions, HandleInstructionsResponse, HandleHomeTimeline } from '../shared.js';
+import { ClearCache, DefaultOptions, BlockCounter, BlockQueue, SetBlockCounter, SetBlockQueue, SetOptions, HandleInstructionsResponse, HandleHomeTimeline } from '../shared.js';
 SetBlockQueue(new BlockQueue(chrome.storage.local));
+SetBlockCounter(new BlockCounter(chrome.storage.local));
 
 
 document.addEventListener("blue-blocker-event", function (e) {
