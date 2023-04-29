@@ -1,7 +1,7 @@
 {
 	"manifest_version": 3,
 	"name": "Blue Blocker",
-	"version": "0.2",
+	"version": "0.2.1",
 	"description": "Blocks all Twitter Blue verified users on twitter.com",
 	"icons": {
 		"128": "assets/icon-128.png"
@@ -32,7 +32,9 @@
 				"*://*.twitter.com/*",
 				"*://twitter.com/*"
 			],
-			"js": ["chrome/main.js"]
+			"js": [
+				"chrome/main.js"
+			]
 		}
 	]
 }

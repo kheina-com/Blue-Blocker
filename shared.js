@@ -67,6 +67,17 @@ export const Headers = [
 	"x-twitter-client-language",
 ];
 
+// 64bit refid
+const MaxId = 0xffffffffffffffff;
+const RefId = () => Math.round(Math.random() * MaxId);
+
+export function commafy(x)
+{ // from https://stackoverflow.com/a/2901298
+	let parts = x.toString().split('.');
+	parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+	return parts.join('.');
+}
+
 var options = { };
 export function SetOptions(items) {
 	options = items;
@@ -80,7 +91,103 @@ const ReasonMap = {
 	[ReasonNftAvatar]: "NFT avatar",
 };
 
-const BlockQueue = [];
+export class BlockQueue {
+	// queue must be defined with push and shift functions
+	constructor(storage) {
+		this.storage = storage;
+		this.queue = [];
+		this.timeout = null;
+	}
+	async sync() {
+		// sync simply adds the in-memory queue to the stored queue
+		const items = await this.storage.get({ BlockQueue: [] });
+		items.BlockQueue.push(...this.queue);
+		await this.storage.set(items);
+		this.queue.length = 0;
+		this.timeout = null;
+	}
+	async push(item) {
+		this.queue.push(item);
+		if (this.timeout) {
+			clearTimeout(this.timeout);
+		}
+		this.timeout = setTimeout(() => this.sync(), 100);
+	}
+	async shift() {
+		// shift halts any modifications to the local storage queue, removes an item, and saves it, and restarts sync
+		if (this.timeout) {
+			clearTimeout(this.timeout);
+		}
+		const items = await this.storage.get({ BlockQueue: [] });
+		const item = items.BlockQueue.shift();
+		if (item !== undefined) {
+			await this.storage.set(items);
+		}
+		this.timeout = setTimeout(() => this.sync(), 100);
+		return item;
+	}
+}
+
+var queue = null;
+export function SetBlockQueue(q) {
+	queue = q;
+}
+
+export class BlockCounter {
+	// this class provides functionality to update and maintain a counter on badge text in an accurate way via async functions
+	constructor(storage) {
+		this.storage = storage;
+		this.value = 0;
+		this.timeout = null;
+
+		// we need to make sure the critical point is empty on launch. this has a very low chance of causing conflict between tabs, but
+		// prevents the possibility of a bunch of bugs caused by issues in retrieving the critical point. ideally we wouldn't have this
+		this.releaseCriticalPoint();
+	}
+	async getCriticalPoint() {
+		const key = "blockCounterCriticalPoint";
+		const refId = RefId();
+		let value = null;
+		do {
+			value = (await this.storage.get({ [key]: null }))[key];
+			if (!value) {
+				// try to access the critical point
+				await this.storage.set({ [key]: refId });
+				value = (await this.storage.get({ [key]: null }))[key];
+			}
+			else {
+				// sleep for a little bit to let the other tab(s) release the critical point
+				await new Promise(r => setTimeout(r, 50));
+			}
+		} while (value !== refId)
+	}
+	async releaseCriticalPoint() {
+		// this should only be called AFTER getCriticalPoint
+		const key = "blockCounterCriticalPoint";
+		await this.storage.set({ [key]: null });
+	}
+	async sync() {
+		await this.getCriticalPoint();
+		const items = await this.storage.get({ BlockCounter: 0 });
+		items.BlockCounter += this.value;
+		this.value = 0;
+		await this.storage.set(items);
+		this.releaseCriticalPoint();
+	}
+	async increment(value = 1) {
+		this.value += value;
+		if (this.timeout) {
+			clearTimeout(this.timeout);
+		}
+		this.timeout = setTimeout(() => this.sync(), 100);
+	}
+}
+
+var blockCounter = null;
+export function SetBlockCounter(t) {
+	blockCounter = t;
+}
+
 const BlockCache = new Set();
 let BlockInterval = undefined;
 
@@ -93,22 +200,24 @@ function QueueBlockUser(user, user_id, headers, reason) {
 		return;
 	}
 	BlockCache.add(user_id);
-	BlockQueue.push({user, user_id, headers, reason});
+	queue.push({user, user_id, headers, reason});
 	console.log(`queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
-	
+
 	if (BlockInterval === undefined) {
 		BlockInterval = setInterval(CheckBlockQueue, 5000);
 	}
 }
 
 function CheckBlockQueue() {
-	if (BlockQueue.length === 0) {
-		clearInterval(BlockInterval);
-		BlockInterval = undefined;
-		return;
-	}
-	const {user, user_id, headers, reason} = BlockQueue.shift();
-	BlockUser(user, user_id, headers, reason);
+	queue.shift().then(item => {
+		if (item === undefined) {
+			clearInterval(BlockInterval);
+			BlockInterval = undefined;
+			return;
+		}
+		const {user, user_id, headers, reason} = item;
+		BlockUser(user, user_id, headers, reason);
+	});
 }
 
 function BlockUser(user, user_id, headers, reason, attempt=1) {
@@ -117,7 +226,10 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 
 	const ajax = new XMLHttpRequest();
 
-	ajax.addEventListener('load', event => console.log(`blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`), false);
+	ajax.addEventListener('load', event => {
+		blockCounter.increment();
+		console.log(`blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`);
+	}, false);
 	ajax.addEventListener('error', error => {
 		console.error('error:', error);
 
@@ -167,7 +279,7 @@ export function BlockBlueVerified(user, headers) {
 		}
 		else if (
 			// verified by follower count
-			options.skip1Mplus && (user.legacy.followers_count > 1000000 || !user.legacy.followers_count)
+			options.skip1Mplus && user.legacy.followers_count > 1000000
 		) {
 			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they have over a million followers and Elon is an idiot.`);
 		}
