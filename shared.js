@@ -184,7 +184,7 @@ export class BlockCounter {
 const queue = new BlockQueue(api.storage.local);
 const blockCounter = new BlockCounter(api.storage.local);
 const BlockCache = new Set();
-let BlockInterval = null;
+let BlockInterval = setInterval(CheckBlockQueue, 5000);
 
 export function ClearCache() {
 	BlockCache.clear();
@@ -203,7 +203,7 @@ function QueueBlockUser(user, user_id, headers, reason) {
 	}
 }
 
-function CheckBlockQueue() {
+function C() {
 	queue.shift().then(item => {
 		if (item === undefined) {
 			clearInterval(BlockInterval);
@@ -249,6 +249,7 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 }
 
 export function BlockBlueVerified(user, headers) {
+	
 	// since we can be fairly certain all user objects will be the same, break this into a separate function
 	if (user.legacy.blocking) {
 		return;

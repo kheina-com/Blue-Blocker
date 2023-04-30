@@ -6,6 +6,7 @@ document.addEventListener("blue-blocker-event", function (e) {
 	// retrieve option
 	api.storage.sync.get(DefaultOptions, items => {
 		SetOptions(items);
+	
 		const body = JSON.parse(e.detail.body);
 
 		switch (e.detail.parsedUrl[1]) {
