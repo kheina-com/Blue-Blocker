@@ -13,14 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
 	});
 });
 
-try {
-	let _ = api === browser;
-}
-catch (ReferenceError) {
-	// browser is undefined, therefore we're running on chrome
-	document.body.style = "font-size: 1.1rem";
-}
-
 // set the block value immediately
 api.storage.local.get({ BlockCounter: 0, BlockQueue: [] }).then(items => {
 	document.getElementById("blocked-users-count").innerText = commafy(items.BlockCounter);
