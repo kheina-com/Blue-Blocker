@@ -1,5 +1,7 @@
+export const api = chrome || browser;
+
 var s = document.createElement("script");
-s.src = chrome.runtime.getURL("inject.js");
+s.src = api.runtime.getURL("inject.js");
 s.id = "injected-blue-block-xhr";
 s.type = "text/javascript";
 // s.onload = function() {
@@ -128,11 +130,6 @@ export class BlockQueue {
 	}
 }
 
-var queue = null;
-export function SetBlockQueue(q) {
-	queue = q;
-}
-
 export class BlockCounter {
 	// this class provides functionality to update and maintain a counter on badge text in an accurate way via async functions
 	constructor(storage) {
@@ -183,13 +180,10 @@ export class BlockCounter {
 	}
 }
 
-var blockCounter = null;
-export function SetBlockCounter(t) {
-	blockCounter = t;
-}
-
+const queue = new BlockQueue(api.storage.local);
+const blockCounter = new BlockCounter(api.storage.local);
 const BlockCache = new Set();
-let BlockInterval = undefined;
+let BlockInterval = null;
 
 export function ClearCache() {
 	BlockCache.clear();
@@ -203,7 +197,7 @@ function QueueBlockUser(user, user_id, headers, reason) {
 	queue.push({user, user_id, headers, reason});
 	console.log(`queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
 
-	if (BlockInterval === undefined) {
+	if (BlockInterval === null) {
 		BlockInterval = setInterval(CheckBlockQueue, 5000);
 	}
 }
@@ -212,7 +206,7 @@ function CheckBlockQueue() {
 	queue.shift().then(item => {
 		if (item === undefined) {
 			clearInterval(BlockInterval);
-			BlockInterval = undefined;
+			BlockInterval = null;
 			return;
 		}
 		const {user, user_id, headers, reason} = item;
