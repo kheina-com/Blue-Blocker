@@ -24,8 +24,7 @@
 		"default_icon": "assets/icon.png"
 	},
 	"permissions": [
-		"storage",
-		"activeTab"
+		"storage"
 	],
 	"content_scripts": [
 		{
