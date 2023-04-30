@@ -1,7 +1,16 @@
 // we can't import things from shared, so re-initialize the api
-const api = chrome || browser;
+let _api = null;
+try {
+	_api = browser;
+	// manifest v2 has the action api stored in browserAction, so manually assign it to action
+	_api.action = browser.browserAction;
+}
+catch (ReferenceError) {
+	_api = chrome;
+}
+const api = _api;
 
-export function abbreviate(value) {
+function abbreviate(value) {
 	if (value >= 1000000000)
 	{ return `${Math.round(value / 100000000) / 10}B`; }
 	if (value >= 1000000)
