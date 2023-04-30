@@ -203,7 +203,7 @@ function QueueBlockUser(user, user_id, headers, reason) {
 	}
 }
 
-function C() {
+function CheckBlockQueue() {
 	queue.shift().then(item => {
 		if (item === undefined) {
 			clearInterval(BlockInterval);
@@ -249,7 +249,6 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 }
 
 export function BlockBlueVerified(user, headers) {
-	
 	// since we can be fairly certain all user objects will be the same, break this into a separate function
 	if (user.legacy.blocking) {
 		return;
