@@ -185,12 +185,6 @@ const blockCounter = new BlockCounter(api.storage.local);
 const BlockCache = new Set();
 let BlockInterval = null;
 
-api.storage.local.get({ BlockQueue: [] }).then(items => {
-	if (items.BlockQueue.length && !BlockInterval) {
-		BlockInterval = setInterval(CheckBlockQueue, 5000);
-	}
-});
-
 export function ClearCache() {
 	BlockCache.clear();
 }
@@ -203,7 +197,7 @@ function QueueBlockUser(user, user_id, headers, reason) {
 	queue.push({user, user_id, headers, reason});
 	console.log(`queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
 
-	if (!BlockInterval) {
+	if (BlockInterval === null) {
 		BlockInterval = setInterval(CheckBlockQueue, 5000);
 	}
 }
