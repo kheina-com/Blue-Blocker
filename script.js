@@ -1,7 +1,4 @@
-import { api, ClearCache, DefaultOptions, BlockCounter, BlockQueue, SetBlockCounter, SetBlockQueue, SetOptions, HandleInstructionsResponse, HandleHomeTimeline } from '../shared.js';
-SetBlockQueue(new BlockQueue(api.storage.local));
-SetBlockCounter(new BlockCounter(api.storage.local));
-
+import { api, ClearCache, DefaultOptions, SetOptions, HandleInstructionsResponse, HandleHomeTimeline } from '../shared.js';
 
 document.addEventListener("blue-blocker-event", function (e) {
 	ClearCache();

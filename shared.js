@@ -130,11 +130,6 @@ export class BlockQueue {
 	}
 }
 
-var queue = null;
-export function SetBlockQueue(q) {
-	queue = q;
-}
-
 export class BlockCounter {
 	// this class provides functionality to update and maintain a counter on badge text in an accurate way via async functions
 	constructor(storage) {
@@ -185,13 +180,16 @@ export class BlockCounter {
 	}
 }
 
-var blockCounter = null;
-export function SetBlockCounter(t) {
-	blockCounter = t;
-}
-
+const queue = new BlockQueue(api.storage.local);
+const blockCounter = new BlockCounter(api.storage.local);
 const BlockCache = new Set();
-let BlockInterval = undefined;
+let BlockInterval = null;
+
+api.storage.local.get({ BlockQueue: [] }).then(items => {
+	if (items.BlockQueue.length && !BlockInterval) {
+		BlockInterval = setInterval(CheckBlockQueue, 5000);
+	}
+});
 
 export function ClearCache() {
 	BlockCache.clear();
@@ -205,7 +203,7 @@ function QueueBlockUser(user, user_id, headers, reason) {
 	queue.push({user, user_id, headers, reason});
 	console.log(`queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
 
-	if (BlockInterval === undefined) {
+	if (!BlockInterval) {
 		BlockInterval = setInterval(CheckBlockQueue, 5000);
 	}
 }
@@ -214,7 +212,7 @@ function CheckBlockQueue() {
 	queue.shift().then(item => {
 		if (item === undefined) {
 			clearInterval(BlockInterval);
-			BlockInterval = undefined;
+			BlockInterval = null;
 			return;
 		}
 		const {user, user_id, headers, reason} = item;

@@ -11,18 +11,14 @@ export function abbreviate(value) {
 	return `${value}`;
 }
 
+api.action.setBadgeBackgroundColor({ color: "#666" });
+api.action.setBadgeTextColor({ color: "#fff" });
+
 api.storage.local.onChanged.addListener(items => {
 	if (items.hasOwnProperty('BlockCounter')) {
 		// TODO: replace this tabs.query call to something more stable. this doesn't work when twitter is not the focused window
-		api.tabs.query({active: true, currentWindow: true}).then(tabs => {
-			if (tabs.length === 0) {
-				return;
-			}
-			const tab = tabs[0];
-			api.action.setBadgeText({
-				tabId: tab.id,
-				text: abbreviate(items.BlockCounter.newValue),
-			});
+		api.action.setBadgeText({
+			text: abbreviate(items.BlockCounter.newValue),
 		});
 	}
 });

@@ -39,7 +39,7 @@
 		}
 	],
 	"background": {
-		"service_worker": "service_worker.js",
+		"scripts": ["service_worker.js"],
 		"type": "module"
 	},
 	"browser_specific_settings": {
