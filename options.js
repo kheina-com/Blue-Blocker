@@ -1,8 +1,9 @@
-import { api, DefaultOptions, commafy } from '../shared.js';
+import { api, DefaultOptions, commafy } from './shared.js';
 
 // restore state from storage
 document.addEventListener("DOMContentLoaded", () => {
 	api.storage.sync.get(DefaultOptions, items => {
+		document.getElementById("mute-instead-of-block").checked = items.mute;
 		document.getElementById("block-following").checked = items.blockFollowing;
 		document.getElementById("block-followers").checked = items.blockFollowers;
 		document.getElementById("skip-verified").checked = items.skipVerified;
@@ -33,6 +34,17 @@ api.storage.local.onChanged.addListener(items => {
 		document.getElementById("blocked-user-queue-length").innerText = commafy(items.BlockQueue.newValue.length);
 	}
 	// if we want to add other values, add them here
+});
+
+document.getElementById("mute-instead-of-block").addEventListener("input", () => {
+	api.storage.sync.set({
+		mute: document.getElementById("mute-instead-of-block").checked,
+	}, () => {
+		// Update status to let user know options were saved.
+		const status = document.getElementById("mute-instead-of-block-status");
+		status.textContent = "saved";
+		setTimeout(() => status.textContent = null, 1000);
+	});
 });
 
 document.getElementById("block-following").addEventListener("input", () => {

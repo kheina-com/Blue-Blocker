@@ -17,7 +17,8 @@ export const DefaultOptions = {
 	skipVerified: true,
 	skipAffiliated: true,
 	skip1Mplus: true,
-	blockNftAvatars: false
+	blockNftAvatars: false,
+	mute: false,
 };
 
 // when parsing a timeline response body, these are the paths to navigate in the json to retrieve the "instructions" object
@@ -234,7 +235,13 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 		}
 	}, false);
 
-	ajax.open('POST', "https://twitter.com/i/api/1.1/blocks/create.json");
+	if (options.mute) {
+		ajax.open('POST', "https://twitter.com/i/api/1.1/mutes/users/create.json");
+	}
+	else {
+		ajax.open('POST', "https://twitter.com/i/api/1.1/blocks/create.json");
+	}
+
 	for (const header of Headers) {
 		ajax.setRequestHeader(header, headers[header]);
 	}

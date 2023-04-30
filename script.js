@@ -1,4 +1,4 @@
-import { api, ClearCache, DefaultOptions, SetOptions, HandleInstructionsResponse, HandleHomeTimeline } from '../shared.js';
+import { api, ClearCache, DefaultOptions, SetOptions, HandleInstructionsResponse, HandleHomeTimeline } from './shared.js';
 
 document.addEventListener("blue-blocker-event", function (e) {
 	ClearCache();
