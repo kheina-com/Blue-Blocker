@@ -1,12 +1,16 @@
-export const api = chrome || browser;
+let _api = null;
+try {
+	_api = browser;
+}
+catch (ReferenceError) {
+	_api = chrome;
+}
+export const api = _api;
 
 var s = document.createElement("script");
 s.src = api.runtime.getURL("inject.js");
 s.id = "injected-blue-block-xhr";
 s.type = "text/javascript";
-// s.onload = function() {
-// 	this.remove();
-// };
 (document.head || document.documentElement).appendChild(s);
 
 export const DefaultOptions = {
