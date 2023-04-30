@@ -170,19 +170,26 @@ input:checked + label div.checkmark div, label.checked div.checkmark div {
 	-webkit-transition: ease var(--fadetime);
 	-moz-transition: ease var(--fadetime);
 	transition: ease var(--fadetime);
-	border-radius: 0.125em;
+	border-radius: 0.25em;
 	outline: none;
 }
 .slider input:hover {
 	opacity: 1;
 }
-.slider input::-webkit-slider-thumb, .slider input::-moz-range-thumb {
+.slider input::-webkit-slider-thumb {
 	-webkit-appearance: none;
-	-moz-appearance: none;
 	appearance: none;
 	width: 1em;
 	height: 1.5em;
 	background: var(--interact);
 	cursor: pointer;
 	border-radius: 0.5em;
+}
+.slider input::-moz-range-thumb {
+	outline: none;
+	width: 1em;
+	height: 1.5em;
+	background: var(--interact);
+	cursor: pointer;
+	border-radius: 1em;
 }
