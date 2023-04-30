@@ -1,6 +1,8 @@
 let _api = null;
 try {
 	_api = browser;
+	// manifest v2 has the action api stored in browserAction, so manually assign it to action
+	_api.action = browser.browserAction;
 }
 catch (ReferenceError) {
 	_api = chrome;
@@ -23,6 +25,7 @@ export const DefaultOptions = {
 	skip1Mplus: true,
 	blockNftAvatars: false,
 	mute: false,
+	blockInterval: 10,
 };
 
 // when parsing a timeline response body, these are the paths to navigate in the json to retrieve the "instructions" object
@@ -68,7 +71,6 @@ export const IgnoreTweetTypes = new Set([
 ]);
 export const Headers = [
 	"authorization",
-	"x-csrf-token",
 	"x-twitter-active-user",
 	"x-twitter-auth-type",
 	"x-twitter-client-language",
@@ -85,10 +87,13 @@ export function commafy(x)
 	return parts.join('.');
 }
 
-var options = { };
+var options = { ...DefaultOptions };
 export function SetOptions(items) {
 	options = items;
 }
+
+// retrieve settings immediately on startup
+api.storage.sync.get(DefaultOptions).then(SetOptions);
 
 const ReasonBlueVerified = 0;
 const ReasonNftAvatar = 1;
@@ -188,7 +193,7 @@ export class BlockCounter {
 const queue = new BlockQueue(api.storage.local);
 const blockCounter = new BlockCounter(api.storage.local);
 const BlockCache = new Set();
-let BlockInterval = null;
+let BlockTimeout = null;
 
 export function ClearCache() {
 	BlockCache.clear();
@@ -202,23 +207,27 @@ function QueueBlockUser(user, user_id, headers, reason) {
 	queue.push({user, user_id, headers, reason});
 	console.log(`queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
 
-	if (BlockInterval === null) {
-		BlockInterval = setInterval(CheckBlockQueue, 5000);
+	if (BlockTimeout === null) {
+		BlockTimeout = setTimeout(CheckBlockQueue, options.blockInterval * 1000);
 	}
 }
 
 function CheckBlockQueue() {
 	queue.shift().then(item => {
 		if (item === undefined) {
-			clearInterval(BlockInterval);
-			BlockInterval = null;
+			BlockTimeout = null;
 			return;
 		}
-		const {user, user_id, headers, reason} = item;
-		BlockUser(user, user_id, headers, reason);
+		api.storage.sync.get(DefaultOptions).then(items => {
+			SetOptions(items);
+			BlockTimeout = setTimeout(CheckBlockQueue, options.blockInterval * 1000);
+			const {user, user_id, headers, reason} = item;
+			BlockUser(user, user_id, headers, reason);
+		});
 	});
 }
 
+const CsrfTokenRegex = /ct0=\s*(\w+);/;
 function BlockUser(user, user_id, headers, reason, attempt=1) {
 	const formdata = new FormData();
 	formdata.append("user_id", user_id);
@@ -248,6 +257,16 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 
 	for (const header of Headers) {
 		ajax.setRequestHeader(header, headers[header]);
+	}
+
+	// attempt to manually set the csrf token to the current active cookie
+	const csrf = CsrfTokenRegex.exec(document.cookie);
+	if (csrf) {
+		ajax.setRequestHeader("x-csrf-token", csrf[1]);
+	}
+	else {
+		// default to the request's csrf token
+		ajax.setRequestHeader("x-csrf-token", headers["x-csrf-token"]);
 	}
 	ajax.send(formdata);
 }

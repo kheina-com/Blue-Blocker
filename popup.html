@@ -68,7 +68,7 @@
 			</label>
 			<span id="skip-1mplus-status"></span>
 		</div>
-		<div class="last option">
+		<div class="option">
 			<input type="checkbox" id="block-nft-avatars">
 			<label ref="label" for="block-nft-avatars" >
 				<div class="checkmark">
@@ -77,6 +77,16 @@
 				<p>block users with NFT avatars</p>
 			</label>
 			<span id="block-nft-avatars-status"></span>
+		</div>
+		<div class="last">
+			<div class="last option">
+				<p>block interval</p>
+				<span id="block-interval-status"></span>
+			</div>
+			<div class="slider">
+				<input type="range" min="5" max="60" value="5" id="block-interval">
+				<span id="block-interval-value"></span>
+			</div>
 		</div>
 	</body>
 	<script src="options.js" type="module"></script>

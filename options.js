@@ -10,6 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
 		document.getElementById("skip-affiliated").checked = items.skipAffiliated;
 		document.getElementById("skip-1mplus").checked = items.skip1Mplus;
 		document.getElementById("block-nft-avatars").checked = items.blockNftAvatars;
+		document.getElementById("block-interval").value = items.blockInterval;
+		document.getElementById("block-interval-value").innerText = items.blockInterval.toString() + "s";
 	});
 });
 
@@ -19,18 +21,18 @@ api.storage.local.get({ BlockCounter: 0, BlockQueue: [] }).then(items => {
 	document.getElementById("blocked-user-queue-length").innerText = commafy(items.BlockQueue.length);
 });
 api.storage.local.onChanged.addListener(items => {
-	if (items.hasOwnProperty('BlockCounter')) {
+	if (items.hasOwnProperty("BlockCounter")) {
 		document.getElementById("blocked-users-count").innerText = commafy(items.BlockCounter.newValue);
 	}
-	if (items.hasOwnProperty('BlockQueue')) {
+	if (items.hasOwnProperty("BlockQueue")) {
 		document.getElementById("blocked-user-queue-length").innerText = commafy(items.BlockQueue.newValue.length);
 	}
 	// if we want to add other values, add them here
 });
 
-document.getElementById("mute-instead-of-block").addEventListener("input", () => {
+document.getElementById("mute-instead-of-block").addEventListener("input", e => {
 	api.storage.sync.set({
-		mute: document.getElementById("mute-instead-of-block").checked,
+		mute: e.target.checked,
 	}, () => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("mute-instead-of-block-status");
@@ -39,9 +41,9 @@ document.getElementById("mute-instead-of-block").addEventListener("input", () =>
 	});
 });
 
-document.getElementById("block-following").addEventListener("input", () => {
+document.getElementById("block-following").addEventListener("input", e => {
 	api.storage.sync.set({
-		blockFollowing: document.getElementById("block-following").checked,
+		blockFollowing: e.target.checked,
 	}, () => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("block-following-status");
@@ -50,9 +52,9 @@ document.getElementById("block-following").addEventListener("input", () => {
 	});
 });
 
-document.getElementById("block-followers").addEventListener("input", () => {
+document.getElementById("block-followers").addEventListener("input", e => {
 	api.storage.sync.set({
-		blockFollowers: document.getElementById("block-followers").checked,
+		blockFollowers: e.target.checked,
 	}, () => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("block-followers-status");
@@ -61,9 +63,9 @@ document.getElementById("block-followers").addEventListener("input", () => {
 	});
 });
 
-document.getElementById("skip-verified").addEventListener("input", () => {
+document.getElementById("skip-verified").addEventListener("input", e => {
 	api.storage.sync.set({
-		skipVerified: document.getElementById("skip-verified").checked,
+		skipVerified: e.target.checked,
 	}, () => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("skip-verified-status");
@@ -72,9 +74,9 @@ document.getElementById("skip-verified").addEventListener("input", () => {
 	});
 });
 
-document.getElementById("skip-affiliated").addEventListener("input", () => {
+document.getElementById("skip-affiliated").addEventListener("input", e => {
 	api.storage.sync.set({
-		skipAffiliated: document.getElementById("skip-affiliated").checked,
+		skipAffiliated: e.target.checked,
 	}, () => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("skip-affiliated-status");
@@ -83,9 +85,9 @@ document.getElementById("skip-affiliated").addEventListener("input", () => {
 	});
 });
 
-document.getElementById("skip-1mplus").addEventListener("input", () => {
+document.getElementById("skip-1mplus").addEventListener("input", e => {
 	api.storage.sync.set({
-		skip1Mplus: document.getElementById("skip-1mplus").checked,
+		skip1Mplus: e.target.checked,
 	}, () => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("skip-1mplus-status");
@@ -94,12 +96,28 @@ document.getElementById("skip-1mplus").addEventListener("input", () => {
 	});
 });
 
-document.getElementById("block-nft-avatars").addEventListener("input", () => {
+document.getElementById("block-nft-avatars").addEventListener("input", e => {
 	api.storage.sync.set({
-		blockNftAvatars: document.getElementById("block-nft-avatars").checked,
+		blockNftAvatars: e.target.checked,
 	}, () => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("block-nft-avatars-status");
+		status.textContent = "saved";
+		setTimeout(() => status.textContent = null, 1000);
+	});
+});
+
+const blockIntervalValueElement = document.getElementById("block-interval-value");
+document.getElementById("block-interval").addEventListener("input", e => {
+	blockIntervalValueElement.innerText = e.target.value.toString() + "s";
+});
+
+document.getElementById("block-interval").addEventListener("change", e => {
+	api.storage.sync.set({
+		blockInterval: parseInt(e.target.value),
+	}, () => {
+		// Update status to let user know options were saved.
+		const status = document.getElementById("block-interval-status");
 		status.textContent = "saved";
 		setTimeout(() => status.textContent = null, 1000);
 	});
