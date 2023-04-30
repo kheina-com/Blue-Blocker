@@ -24,8 +24,13 @@
 		"default_icon": "assets/icon.png"
 	},
 	"permissions": [
-		"storage"
+		"storage",
+		"action"
 	],
+	"background": {
+		"service_worker": "background.js",
+    "type": "module"
+	},
 	"content_scripts": [
 		{
 			"matches": [

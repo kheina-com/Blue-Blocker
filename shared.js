@@ -117,7 +117,13 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 
 	const ajax = new XMLHttpRequest();
 
-	ajax.addEventListener('load', event => console.log(`blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`), false);
+	ajax.addEventListener('load', event => {
+		console.log(`blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`);
+		if (chrome) {
+			chrome.runtime.sendMessage({type: 'USER_BLOCKED_MESSAGE'});
+		}
+	}, false);
+
 	ajax.addEventListener('error', error => {
 		console.error('error:', error);
 
