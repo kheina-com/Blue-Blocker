@@ -17,8 +17,6 @@ html {
 	--screen-cover: #00000080;
 	--border-size: 1px;
 	--border-radius: 3px;
-
-	font-size: 1.3rem;
 }
 html * {
 	font-family: Bitstream Vera Sans, DejaVu Sans, Arial, Helvetica, sans-serif;
@@ -32,6 +30,7 @@ body {
 	width: 25em;
 	margin: 25px;
 	padding: 0;
+	font-size: 1.1rem;
 }
 
 /* popup title */

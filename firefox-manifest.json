@@ -1,26 +1,31 @@
 {
-	"manifest_version": 2,
+	"manifest_version": 3,
 	"name": "Blue Blocker",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"description": "Blocks all Twitter Blue verified users on twitter.com",
 	"icons": {
 		"128": "assets/icon-128.png"
 	},
 	"web_accessible_resources": [
-		"firefox/script.js",
-		"shared.js",
-		"inject.js"
+		{
+			"resources": [
+				"script.js",
+				"shared.js",
+				"inject.js"
+			],
+			"matches": [
+				"*://*.twitter.com/*",
+				"*://twitter.com/*"
+			]
+		}
 	],
-	"browser_action": {
-		"browser_style": true,
-		"default_icon": {
-			"128": "assets/icon-128.png"
-		},
-		"default_title": "Blue Blocker",
-		"default_popup": "firefox/popup.html"
+	"action": {
+		"default_popup": "popup.html",
+		"default_icon": "assets/icon.png"
 	},
 	"permissions": [
-		"storage"
+		"storage",
+		"activeTab"
 	],
 	"content_scripts": [
 		{
@@ -29,10 +34,14 @@
 				"*://twitter.com/*"
 			],
 			"js": [
-				"firefox/main.js"
+				"main.js"
 			]
 		}
 	],
+	"background": {
+		"scripts": ["service_worker.js"],
+		"type": "module"
+	},
 	"browser_specific_settings": {
 		"gecko": {
 			"id": "{119be3f3-597c-4f6a-9caf-627ee431d374}"
