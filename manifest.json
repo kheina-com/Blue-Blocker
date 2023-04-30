@@ -24,7 +24,8 @@
 		"default_icon": "assets/icon.png"
 	},
 	"permissions": [
-		"storage"
+		"storage",
+		"activeTab"
 	],
 	"content_scripts": [
 		{
@@ -36,5 +37,9 @@
 				"chrome/main.js"
 			]
 		}
-	]
+	],
+	"background": {
+		"service_worker": "service_worker.js",
+		"type": "module"
+	}
 }
