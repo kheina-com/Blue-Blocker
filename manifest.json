@@ -9,7 +9,7 @@
 	"web_accessible_resources": [
 		{
 			"resources": [
-				"chrome/script.js",
+				"script.js",
 				"shared.js",
 				"inject.js"
 			],
@@ -20,7 +20,7 @@
 		}
 	],
 	"action": {
-		"default_popup": "chrome/popup.html",
+		"default_popup": "popup.html",
 		"default_icon": "assets/icon.png"
 	},
 	"permissions": [
@@ -34,7 +34,7 @@
 				"*://twitter.com/*"
 			],
 			"js": [
-				"chrome/main.js"
+				"main.js"
 			]
 		}
 	],

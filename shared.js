@@ -1,5 +1,7 @@
+export const api = chrome || browser;
+
 var s = document.createElement("script");
-s.src = chrome.runtime.getURL("inject.js");
+s.src = api.runtime.getURL("inject.js");
 s.id = "injected-blue-block-xhr";
 s.type = "text/javascript";
 // s.onload = function() {

@@ -1,13 +1,13 @@
-import { ClearCache, DefaultOptions, BlockCounter, BlockQueue, SetBlockCounter, SetBlockQueue, SetOptions, HandleInstructionsResponse, HandleHomeTimeline } from '../shared.js';
-SetBlockQueue(new BlockQueue(browser.storage.local));
-SetBlockCounter(new BlockCounter(browser.storage.local));
+import { api, ClearCache, DefaultOptions, BlockCounter, BlockQueue, SetBlockCounter, SetBlockQueue, SetOptions, HandleInstructionsResponse, HandleHomeTimeline } from '../shared.js';
+SetBlockQueue(new BlockQueue(api.storage.local));
+SetBlockCounter(new BlockCounter(api.storage.local));
 
 
 document.addEventListener("blue-blocker-event", function (e) {
 	ClearCache();
 
 	// retrieve option
-	browser.storage.sync.get(DefaultOptions).then(items => {
+	api.storage.sync.get(DefaultOptions, items => {
 		SetOptions(items);
 		const body = JSON.parse(e.detail.body);
 
