@@ -8,6 +8,7 @@ catch (ReferenceError) {
 	_api = chrome;
 }
 export const api = _api;
+export const logstr = "[Blue Blocker]";
 
 var s = document.createElement("script");
 s.src = api.runtime.getURL("inject.js");
@@ -205,7 +206,7 @@ function QueueBlockUser(user, user_id, headers, reason) {
 	}
 	BlockCache.add(user_id);
 	queue.push({user, user_id, headers, reason});
-	console.log(`queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
+	console.log(logstr, `queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
 
 	if (BlockTimeout === null) {
 		BlockTimeout = setTimeout(CheckBlockQueue, options.blockInterval * 1000);
@@ -241,25 +242,26 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 			clearTimeout(BlockTimeout);
 			BlockTimeout = null;
 			queue.push({user, user_id, headers, reason});
+			console.log(logstr, "user is logged out, queue consumer has been ceased.");
 			return;
 		}
 		else if (event.target.status >= 300) {
 			queue.push({user, user_id, headers, reason});
-			console.error(`failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user);
+			console.error(logstr, `failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user);
 		}
 		else {
 			blockCounter.increment();
-			console.log(`blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`);
+			console.log(logstr, `blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`);
 		}
 	});
 	ajax.addEventListener('error', error => {
-		console.error('error:', error);
+		console.error(logstr, 'error:', error);
 
 		if (attempt < 3) {
 			BlockUser(user, user_id, headers, reason, attempt + 1);
 		} else {
 			queue.push({user, user_id, headers, reason});
-			console.error(`failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user);
+			console.error(logstr, `failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user);
 		}
 	});
 
@@ -296,31 +298,31 @@ export function BlockBlueVerified(user, headers) {
 			// group for block-following option
 			!options.blockFollowing && (user.legacy.following || user.super_following)
 		) {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
 		}
 		else if (
 			// group for block-followers option
 			!options.blockFollowers && user.legacy.followed_by
 		) {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they follow you.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they follow you.`);
 		}
 		else if (
 			// group for skip-verified option
 			options.skipVerified && (user.legacy.verified || user.legacy.verified_type)
 		) {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through other means.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through other means.`);
 		}
 		else if (
 			// verified via an affiliated organisation instead of blue
 			options.skipAffiliated && user.affiliates_highlighted_label.label
 		) {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through an affiliated organisation.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through an affiliated organisation.`);
 		}
 		else if (
 			// verified by follower count
 			options.skip1Mplus && user.legacy.followers_count > 1000000
 		) {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they have over a million followers and Elon is an idiot.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they have over a million followers and Elon is an idiot.`);
 		}
 		else {
 			QueueBlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
@@ -331,13 +333,13 @@ export function BlockBlueVerified(user, headers) {
 			// group for block-following option
 			!options.blockFollowing && (user.legacy.following || user.super_following)
 		) {
-			console.log(`did not block user with NFT avatar ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
+			console.log(logstr, `did not block user with NFT avatar ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
 		}
 		else if (
 			// group for block-followers option
 			!options.blockFollowers && user.legacy.followed_by
 		) {
-			console.log(`did not block user with NFT avatar ${user.legacy.name} (@${user.legacy.screen_name}) because they follow you.`);
+			console.log(logstr, `did not block user with NFT avatar ${user.legacy.name} (@${user.legacy.screen_name}) because they follow you.`);
 		}
 		else {
 			QueueBlockUser(user, String(user.rest_id), headers, ReasonNftAvatar);
@@ -353,7 +355,7 @@ function HandleTweetObject(obj, headers) {
 		}
 	}
 	if (ptr.__typename !== "User") {
-		console.error("could not parse tweet", obj);
+		console.error(logstr, "could not parse tweet", obj);
 		return;
 	}
 	BlockBlueVerified(ptr, headers);
@@ -383,7 +385,7 @@ export function HandleInstructionsResponse(e, body) {
 		}
 	}
 	catch (e) {
-		console.error("failed to parse response body for instructions object", e, body);
+		console.error(logstr, "failed to parse response body for instructions object", e, body);
 		return;
 	}
 
@@ -398,7 +400,7 @@ export function HandleInstructionsResponse(e, body) {
 		}
 	}
 	if (tweets === undefined) {
-		console.error("response object does not contain an instruction to add entries", body);
+		console.error(logstr, "response object does not contain an instruction to add entries", body);
 		return;
 	}
 
@@ -417,7 +419,7 @@ export function HandleInstructionsResponse(e, body) {
 		// parse each tweet for the user object
 		switch (tweet?.content?.entryType) {
 			case null:
-				console.error("tweet structure does not match expectation", tweet);
+				console.error(logstr, "tweet structure does not match expectation", tweet);
 				break;
 
 			case "TimelineTimelineItem":
@@ -433,7 +435,7 @@ export function HandleInstructionsResponse(e, body) {
 
 			default:
 				if (!IgnoreTweetTypes.has(tweet.content.entryType)) {
-					console.error(`unexpected tweet type found: ${tweet.content.entryType}`, tweet);
+					console.error(logstr, `unexpected tweet type found: ${tweet.content.entryType}`, tweet);
 				}
 		}
 	}
