@@ -1,12 +1,19 @@
-export const api = chrome || browser;
+let _api = null;
+try {
+	_api = browser;
+	// manifest v2 has the action api stored in browserAction, so manually assign it to action
+	_api.action = browser.browserAction;
+}
+catch (ReferenceError) {
+	_api = chrome;
+}
+export const api = _api;
+export const logstr = "[Blue Blocker]";
 
 var s = document.createElement("script");
 s.src = api.runtime.getURL("inject.js");
 s.id = "injected-blue-block-xhr";
 s.type = "text/javascript";
-// s.onload = function() {
-// 	this.remove();
-// };
 (document.head || document.documentElement).appendChild(s);
 
 export const DefaultOptions = {
@@ -19,6 +26,7 @@ export const DefaultOptions = {
 	skip1Mplus: true,
 	blockNftAvatars: false,
 	mute: false,
+	blockInterval: 10,
 };
 
 // when parsing a timeline response body, these are the paths to navigate in the json to retrieve the "instructions" object
@@ -64,7 +72,6 @@ export const IgnoreTweetTypes = new Set([
 ]);
 export const Headers = [
 	"authorization",
-	"x-csrf-token",
 	"x-twitter-active-user",
 	"x-twitter-auth-type",
 	"x-twitter-client-language",
@@ -81,10 +88,13 @@ export function commafy(x)
 	return parts.join('.');
 }
 
-var options = { };
+var options = { ...DefaultOptions };
 export function SetOptions(items) {
 	options = items;
 }
+
+// retrieve settings immediately on startup
+api.storage.sync.get(DefaultOptions).then(SetOptions);
 
 const ReasonBlueVerified = 0;
 const ReasonNftAvatar = 1;
@@ -184,7 +194,7 @@ export class BlockCounter {
 const queue = new BlockQueue(api.storage.local);
 const blockCounter = new BlockCounter(api.storage.local);
 const BlockCache = new Set();
-let BlockInterval = null;
+let BlockTimeout = null;
 
 export function ClearCache() {
 	BlockCache.clear();
@@ -196,25 +206,30 @@ function QueueBlockUser(user, user_id, headers, reason) {
 	}
 	BlockCache.add(user_id);
 	queue.push({user, user_id, headers, reason});
-	console.log(`queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
+	console.log(logstr, `queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
 
-	if (BlockInterval === null) {
-		BlockInterval = setInterval(CheckBlockQueue, 5000);
+	if (BlockTimeout === null) {
+		BlockTimeout = setTimeout(CheckBlockQueue, options.blockInterval * 1000);
 	}
 }
 
 function CheckBlockQueue() {
 	queue.shift().then(item => {
 		if (item === undefined) {
-			clearInterval(BlockInterval);
-			BlockInterval = null;
+			clearTimeout(BlockTimeout);
+			BlockTimeout = null;
 			return;
 		}
-		const {user, user_id, headers, reason} = item;
-		BlockUser(user, user_id, headers, reason);
+		api.storage.sync.get(DefaultOptions).then(items => {
+			SetOptions(items);
+			BlockTimeout = setTimeout(CheckBlockQueue, options.blockInterval * 1000);
+			const {user, user_id, headers, reason} = item;
+			BlockUser(user, user_id, headers, reason);
+		});
 	});
 }
 
+const CsrfTokenRegex = /ct0=\s*(\w+);/;
 function BlockUser(user, user_id, headers, reason, attempt=1) {
 	const formdata = new FormData();
 	formdata.append("user_id", user_id);
@@ -222,18 +237,33 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 	const ajax = new XMLHttpRequest();
 
 	ajax.addEventListener('load', event => {
-		blockCounter.increment();
-		console.log(`blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`);
-	}, false);
+		if (event.target.status === 403) {
+			// user has been logged out, we need to stop queue and re-add
+			clearTimeout(BlockTimeout);
+			BlockTimeout = null;
+			queue.push({user, user_id, headers, reason});
+			console.log(logstr, "user is logged out, queue consumer has been ceased.");
+			return;
+		}
+		else if (event.target.status >= 300) {
+			queue.push({user, user_id, headers, reason});
+			console.error(logstr, `failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user);
+		}
+		else {
+			blockCounter.increment();
+			console.log(logstr, `blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`);
+		}
+	});
 	ajax.addEventListener('error', error => {
-		console.error('error:', error);
+		console.error(logstr, 'error:', error);
 
 		if (attempt < 3) {
 			BlockUser(user, user_id, headers, reason, attempt + 1);
 		} else {
-			console.error(`failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user);
+			queue.push({user, user_id, headers, reason});
+			console.error(logstr, `failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user);
 		}
-	}, false);
+	});
 
 	if (options.mute) {
 		ajax.open('POST', "https://twitter.com/i/api/1.1/mutes/users/create.json");
@@ -244,6 +274,16 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 
 	for (const header of Headers) {
 		ajax.setRequestHeader(header, headers[header]);
+	}
+
+	// attempt to manually set the csrf token to the current active cookie
+	const csrf = CsrfTokenRegex.exec(document.cookie);
+	if (csrf) {
+		ajax.setRequestHeader("x-csrf-token", csrf[1]);
+	}
+	else {
+		// default to the request's csrf token
+		ajax.setRequestHeader("x-csrf-token", headers["x-csrf-token"]);
 	}
 	ajax.send(formdata);
 }
@@ -258,31 +298,31 @@ export function BlockBlueVerified(user, headers) {
 			// group for block-following option
 			!options.blockFollowing && (user.legacy.following || user.super_following)
 		) {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
 		}
 		else if (
 			// group for block-followers option
 			!options.blockFollowers && user.legacy.followed_by
 		) {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they follow you.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they follow you.`);
 		}
 		else if (
 			// group for skip-verified option
 			options.skipVerified && (user.legacy.verified || user.legacy.verified_type)
 		) {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through other means.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through other means.`);
 		}
 		else if (
 			// verified via an affiliated organisation instead of blue
 			options.skipAffiliated && user.affiliates_highlighted_label.label
 		) {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through an affiliated organisation.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through an affiliated organisation.`);
 		}
 		else if (
 			// verified by follower count
 			options.skip1Mplus && user.legacy.followers_count > 1000000
 		) {
-			console.log(`did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they have over a million followers and Elon is an idiot.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they have over a million followers and Elon is an idiot.`);
 		}
 		else {
 			QueueBlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
@@ -293,13 +333,13 @@ export function BlockBlueVerified(user, headers) {
 			// group for block-following option
 			!options.blockFollowing && (user.legacy.following || user.super_following)
 		) {
-			console.log(`did not block user with NFT avatar ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
+			console.log(logstr, `did not block user with NFT avatar ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
 		}
 		else if (
 			// group for block-followers option
 			!options.blockFollowers && user.legacy.followed_by
 		) {
-			console.log(`did not block user with NFT avatar ${user.legacy.name} (@${user.legacy.screen_name}) because they follow you.`);
+			console.log(logstr, `did not block user with NFT avatar ${user.legacy.name} (@${user.legacy.screen_name}) because they follow you.`);
 		}
 		else {
 			QueueBlockUser(user, String(user.rest_id), headers, ReasonNftAvatar);
@@ -315,7 +355,7 @@ function HandleTweetObject(obj, headers) {
 		}
 	}
 	if (ptr.__typename !== "User") {
-		console.error("could not parse tweet", obj);
+		console.error(logstr, "could not parse tweet", obj);
 		return;
 	}
 	BlockBlueVerified(ptr, headers);
@@ -345,7 +385,7 @@ export function HandleInstructionsResponse(e, body) {
 		}
 	}
 	catch (e) {
-		console.error("failed to parse response body for instructions object", e, body);
+		console.error(logstr, "failed to parse response body for instructions object", e, body);
 		return;
 	}
 
@@ -360,7 +400,7 @@ export function HandleInstructionsResponse(e, body) {
 		}
 	}
 	if (tweets === undefined) {
-		console.error("response object does not contain an instruction to add entries", body);
+		console.error(logstr, "response object does not contain an instruction to add entries", body);
 		return;
 	}
 
@@ -379,7 +419,7 @@ export function HandleInstructionsResponse(e, body) {
 		// parse each tweet for the user object
 		switch (tweet?.content?.entryType) {
 			case null:
-				console.error("tweet structure does not match expectation", tweet);
+				console.error(logstr, "tweet structure does not match expectation", tweet);
 				break;
 
 			case "TimelineTimelineItem":
@@ -395,7 +435,7 @@ export function HandleInstructionsResponse(e, body) {
 
 			default:
 				if (!IgnoreTweetTypes.has(tweet.content.entryType)) {
-					console.error(`unexpected tweet type found: ${tweet.content.entryType}`, tweet);
+					console.error(logstr, `unexpected tweet type found: ${tweet.content.entryType}`, tweet);
 				}
 		}
 	}

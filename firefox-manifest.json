@@ -1,27 +1,23 @@
 {
-	"manifest_version": 3,
+	"manifest_version": 2,
 	"name": "Blue Blocker",
-	"version": "0.2.2",
+	"version": "0.2.3",
 	"description": "Blocks all Twitter Blue verified users on twitter.com",
 	"icons": {
 		"128": "assets/icon-128.png"
 	},
 	"web_accessible_resources": [
-		{
-			"resources": [
-				"script.js",
-				"shared.js",
-				"inject.js"
-			],
-			"matches": [
-				"*://*.twitter.com/*",
-				"*://twitter.com/*"
-			]
-		}
+		"script.js",
+		"shared.js",
+		"inject.js"
 	],
-	"action": {
-		"default_popup": "popup.html",
-		"default_icon": "assets/icon.png"
+	"browser_action": {
+		"browser_style": true,
+		"default_icon": {
+			"128": "assets/icon-128.png"
+		},
+		"default_title": "Blue Blocker",
+		"default_popup": "popup.html"
 	},
 	"permissions": [
 		"storage"
