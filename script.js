@@ -1,4 +1,4 @@
-import { ClearCache, HandleInstructionsResponse, HandleHomeTimeline } from './shared.js';
+import { logstr, ClearCache, HandleInstructionsResponse, HandleHomeTimeline } from './shared.js';
 
 document.addEventListener("blue-blocker-event", function (e) {
 	ClearCache();
@@ -12,6 +12,6 @@ document.addEventListener("blue-blocker-event", function (e) {
 		case "timeline/home.json":
 			return HandleHomeTimeline(e, body);
 		default:
-			console.error("found an unexpected url that we don't know how to handle:", e.detail.url);
+			console.error(logstr, "found an unexpected url that we don't know how to handle:", e.detail.url);
 	}
 });
