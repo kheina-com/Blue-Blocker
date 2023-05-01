@@ -215,6 +215,7 @@ function QueueBlockUser(user, user_id, headers, reason) {
 function CheckBlockQueue() {
 	queue.shift().then(item => {
 		if (item === undefined) {
+			clearTimeout(BlockTimeout);
 			BlockTimeout = null;
 			return;
 		}
@@ -235,18 +236,32 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 	const ajax = new XMLHttpRequest();
 
 	ajax.addEventListener('load', event => {
-		blockCounter.increment();
-		console.log(`blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`);
-	}, false);
+		if (event.target.status === 403) {
+			// user has been logged out, we need to stop queue and re-add
+			clearTimeout(BlockTimeout);
+			BlockTimeout = null;
+			queue.push({user, user_id, headers, reason});
+			return;
+		}
+		else if (event.target.status >= 300) {
+			queue.push({user, user_id, headers, reason});
+			console.error(`failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user);
+		}
+		else {
+			blockCounter.increment();
+			console.log(`blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`);
+		}
+	});
 	ajax.addEventListener('error', error => {
 		console.error('error:', error);
 
 		if (attempt < 3) {
 			BlockUser(user, user_id, headers, reason, attempt + 1);
 		} else {
+			queue.push({user, user_id, headers, reason});
 			console.error(`failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user);
 		}
-	}, false);
+	});
 
 	if (options.mute) {
 		ajax.open('POST', "https://twitter.com/i/api/1.1/mutes/users/create.json");
