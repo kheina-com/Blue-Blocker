@@ -30,6 +30,8 @@ api.storage.local.onChanged.addListener(items => {
 	// if we want to add other values, add them here
 });
 
+document.getElementById("version").innerText = "v" + api.runtime.getManifest().version;
+
 document.getElementById("mute-instead-of-block").addEventListener("input", e => {
 	api.storage.sync.set({
 		mute: e.target.checked,
