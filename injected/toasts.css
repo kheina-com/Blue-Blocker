@@ -1,0 +1,87 @@
+#injected-blue-block-toasts, #injected-blue-block-visual-queue {
+	font-family: Bitstream Vera Sans, DejaVu Sans, Arial, Helvetica, sans-serif;
+	pointer-events: none;
+	position: fixed;
+	z-index: 1000;
+
+	--transition: ease;
+	--fadetime: 0.15s;
+	--interact: #1da1f2;
+	--bg1color: #1e1f25;
+	--bg2color: #151416;
+	--textcolor: #DDD;
+	--bordercolor: #2D333A;
+	--borderhover: var(--interact);
+	--shadowcolor: #00000080;
+	--activeshadowcolor: #000000B3;
+	--border-size: 1px;
+	--border-radius: 3px;
+}
+
+#injected-blue-block-toasts {
+	bottom: 0;
+	width: 100%;
+	display: flex;
+	align-items: flex-start;
+	flex-direction: column;
+}
+
+#injected-blue-block-toasts .toast {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background: url('../assets/icon.png') var(--bg1color);
+	background-repeat: no-repeat;
+	background-size: 2.5em;
+	background-position-x: 1em;
+	background-position-y: center;
+	pointer-events: all;
+	padding: 1em 1.5em 1em 4.25em;
+	margin: 0 0 25px 25px;
+	border: var(--border-size) solid var(--bordercolor);
+	border-radius: var(--border-radius);
+	color: var(--textcolor);
+	box-shadow: 0 2px 3px 1px var(--shadowcolor);
+	min-height: calc(2em + 4px);
+}
+
+#injected-blue-block-toasts .toast a,
+#injected-blue-block-toasts .toast a:active,
+#injected-blue-block-toasts .toast a:focus {
+	color: var(--textcolor);
+	text-shadow: 0 2px 3px 1px var(--shadowcolor);
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
+	cursor: pointer;
+}
+
+#injected-blue-block-toasts .toast a:hover {
+	text-shadow: 0 0 10px 3px var(--activeshadowcolor);
+	color: var(--interact);
+}
+
+#injected-blue-block-toasts .toast button,
+#injected-blue-block-toasts .toast button:active,
+#injected-blue-block-toasts .toast button:focus {
+	margin-left: 1em;
+	font-size: 1em;
+	padding: 0.5em 1em;
+	color: var(--textcolor);
+	background: var(--bg2color);
+	box-shadow: 0 2px 3px 1px var(--shadowcolor);
+	border: var(--border-size) solid var(--bordercolor);
+	border-radius: var(--border-radius);
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
+	cursor: pointer;
+}
+
+#injected-blue-block-toasts .toast button:hover {
+	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
+	border-color: var(--interact);
+	color: var(--interact);
+}

@@ -33,6 +33,15 @@ body {
 	font-size: 1.1rem;
 }
 
+#version {
+	color: var(--subtle);
+	position: absolute;
+	font-size: 0.8em;
+	right: 0;
+	top: 0;
+	margin: 10px;
+}
+
 /* popup title */
 h2 {
 	margin: 0;

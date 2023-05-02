@@ -1,6 +1,27 @@
-import { logstr, ClearCache, HandleInstructionsResponse, HandleHomeTimeline } from './shared.js';
+import { api, logstr } from './constants.js';
+import { ClearCache } from './shared.js';
+import { HandleInstructionsResponse } from './parsers/instructions.js';
+import { HandleForYou } from './parsers/timeline.js';
+import { HandleTypeahead } from './parsers/search.js';
+
+let s = document.createElement("script");
+s.src = api.runtime.getURL("./injected/inject.js");
+s.id = "injected-blue-block-xhr";
+s.type = "text/javascript";
+(document.head || document.documentElement).appendChild(s);
+
+let l = document.createElement("link");
+l.href = api.runtime.getURL("./injected/toasts.css");
+l.rel = "stylesheet";
+(document.head || document.documentElement).appendChild(l);
+
+let t = document.createElement("div");
+t.id = "injected-blue-block-toasts";
+document.body.appendChild(t);
 
 document.addEventListener("blue-blocker-event", function (e) {
+	// TODO: we may want to seriously consider clearing the cache on a much less frequent
+	// cadence since we're no longer able to block users immediately and need the queue
 	ClearCache();
 	const body = JSON.parse(e.detail.body);
 	switch (e.detail.parsedUrl[1]) {
@@ -10,7 +31,10 @@ document.addEventListener("blue-blocker-event", function (e) {
 		case "TweetDetail":
 			return HandleInstructionsResponse(e, body);
 		case "timeline/home.json":
-			return HandleHomeTimeline(e, body);
+		case "search/adaptive.json":
+			return HandleForYou(e, body);
+		case "search/typeahead.json":
+			return HandleTypeahead(e, body);
 		default:
 			console.error(logstr, "found an unexpected url that we don't know how to handle:", e.detail.url);
 	}

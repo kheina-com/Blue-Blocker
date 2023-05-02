@@ -1,11 +1,13 @@
-![Blue Blocker Marquee](assets/marquee.png)
-# Blue Blocker
-Blocks all Verified Twitter Blue users on twitter.com
+<p align="center">
+	<img src="https://github.com/kheina-com/blue-blocker/raw/main/assets/marquee.png" alt="Blue Blocker Logo">
+	<br>
+	Blocks all Verified Twitter Blue users on twitter.com
+</p>
 
 ## Usage
 Nothing! Just install and say goodbye to all the paid blue checkmarks!
 
-By default, Blue Blocker does not block users you follow who have purchased Twitter Blue. You can enable this from the extension settings.
+By default, Blue Blocker does not block users you follow or follow you who have purchased Twitter Blue. You can change this and other settings from the extension context menu found by clicking the extension icon in your browser's toolbar.
 
 ## Install
 [![Available from Chrome Webstore](assets/chrome.png)](https://chrome.google.com/webstore/detail/blue-blocker/jgpjphkbfjhlbajmmcoknjjppoamhpmm)
@@ -27,10 +29,5 @@ By default, Blue Blocker does not block users you follow who have purchased Twit
 	(or enter `about:debugging#/runtime/this-firefox` in the Firefox url bar)
 4. Click `Load Temporary Add-on` in the top right and select `manifest.json` in the cloned directory
 
-## TODO
-1. Missing support for these requests
-	- search (all types)
-	- "you might like" column
-	- "who to follow" sections
-2. Remove the blocked users from the dom
-3. Look into an issue where users can be missed
+## License
+This work is licensed under the [Mozilla Public License 2.0](https://choosealicense.com/licenses/mpl-2.0/), allowing for public, private, and commercial use so long as access to this library's source code is provided. If this library's source code is modified, then the modified source code must be licensed under the same license or an [applicable GNU license](https://www.mozilla.org/en-US/MPL/2.0/#1.12) and made publicly available.

@@ -10,18 +10,16 @@ firefox:
 	mv manifest.json chrome-manifest.json
 	mv firefox-manifest.json manifest.json
 	zip "blue-blocker-firefox-${VERSION}.zip" \
+		assets/icon-128.png \
+		assets/icon.png \
+		injected/* \
+		models/* \
+		parsers/* \
+		popup/* \
 		manifest.json \
 		LICENSE \
 		readme.md \
-		popup.html \
-		style.css \
-		inject.js \
-		main.js \
-		options.js \
-		script.js \
-		service_worker.js \
-		shared.js \
-		assets/*
+		*.js
 	mv manifest.json firefox-manifest.json
 	mv chrome-manifest.json manifest.json
 
@@ -31,15 +29,13 @@ chrome:
 	# 	rm "blue-blocker-chrome-${VERSION}.zip"
 	# endif
 	zip "blue-blocker-chrome-${VERSION}.zip" \
+		assets/icon-128.png \
+		assets/icon.png \
+		injected/* \
+		models/* \
+		parsers/* \
+		popup/* \
 		manifest.json \
 		LICENSE \
 		readme.md \
-		popup.html \
-		style.css \
-		inject.js \
-		main.js \
-		options.js \
-		script.js \
-		service_worker.js \
-		shared.js \
-		assets/*
+		*.js

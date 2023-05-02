@@ -1,233 +1,153 @@
-let _api = null;
-try {
-	_api = browser;
-	// manifest v2 has the action api stored in browserAction, so manually assign it to action
-	_api.action = browser.browserAction;
-}
-catch (ReferenceError) {
-	_api = chrome;
-}
-export const api = _api;
-export const logstr = "[Blue Blocker]";
+import { BlockCounter } from "./models/block_counter.js";
+import { BlockQueue } from "./models/block_queue.js";
+import { QueueConsumer } from "./models/queue_consumer.js";
+import { api, DefaultOptions, logstr, Headers, ReasonBlueVerified, ReasonNftAvatar, ReasonMap } from "./constants.js";
 
-var s = document.createElement("script");
-s.src = api.runtime.getURL("inject.js");
-s.id = "injected-blue-block-xhr";
-s.type = "text/javascript";
-(document.head || document.documentElement).appendChild(s);
+// Define constants that shouldn't be exported to the rest of the addon
+const queue = new BlockQueue(api.storage.local);
+const blockCounter = new BlockCounter(api.storage.local);
+const blockCache = new Set();
 
-export const DefaultOptions = {
-	// by default, spare as many people as possible
-	// let the user decide if they want to be stricter
-	blockFollowing: false,
-	blockFollowers: false,
-	skipVerified: true,
-	skipAffiliated: true,
-	skip1Mplus: true,
-	blockNftAvatars: false,
-	mute: false,
-	blockInterval: 10,
-};
-
-// when parsing a timeline response body, these are the paths to navigate in the json to retrieve the "instructions" object
-// the key to this object is the capture group from the request regex in inject.js
-export const InstructionsPaths = {
-	HomeLatestTimeline: [
-		"data",
-		"home",
-		"home_timeline_urt",
-		"instructions",
-	],
-	HomeTimeline: [
-		"data",
-		"home",
-		"home_timeline_urt",
-		"instructions",
-	],
-	UserTweets: [
-		"data",
-		"user",
-		"result",
-		"timeline_v2",
-		"timeline",
-		"instructions",
-	],
-	TweetDetail: [
-		"data",
-		"threaded_conversation_with_injections_v2",
-		"instructions",
-	],
-};
-// this is the path to retrieve the user object from the individual tweet
-export const UserObjectPath = [
-	"tweet_results",
-	"result",
-	"tweet",
-	"core",
-	"user_results",
-	"result",
-];
-export const IgnoreTweetTypes = new Set([
-	"TimelineTimelineCursor",
-]);
-export const Headers = [
-	"authorization",
-	"x-twitter-active-user",
-	"x-twitter-auth-type",
-	"x-twitter-client-language",
-];
-
-// 64bit refid
-const MaxId = 0xffffffffffffffff;
-const RefId = () => Math.round(Math.random() * MaxId);
-
-export function commafy(x)
-{ // from https://stackoverflow.com/a/2901298
-	let parts = x.toString().split('.');
-	parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-	return parts.join('.');
-}
-
-var options = { ...DefaultOptions };
+export var options = { ...DefaultOptions };
 export function SetOptions(items) {
 	options = items;
 }
 
+function unblockUser(user, user_id, headers, reason) {
+	api.storage.sync.get({ unblocked: { } }).then(items => {
+		items.unblocked[String(user_id)] = null;
+		api.storage.sync.set(items);
+	});
+	const formdata = new FormData();
+	formdata.append("user_id", user_id);
+
+	const ajax = new XMLHttpRequest();
+
+	ajax.addEventListener('load', event => {	
+		if (event.target.status === 403) {
+			// user has been logged out, we need to stop queue and re-add
+			console.log(logstr, "user is logged out, failed to unblock user.");
+			return;
+		}
+		else if (event.target.status >= 300) {
+			queue.push({user, user_id, headers, reason});
+			console.error(logstr, `failed to unblock ${user.legacy.name} (@${user.legacy.screen_name}):`, user, event);
+		}
+		else {
+			const t = document.createElement("div");
+			t.className = "toast";
+			t.innerText = `unblocked @${user.legacy.screen_name}, they won't be blocked again.`;
+			const ele = document.getElementById("injected-blue-block-toasts");
+			ele.appendChild(t);
+			setTimeout(() => ele.removeChild(t), 30e3);
+			console.log(logstr, `unblocked ${user.legacy.name} (@${user.legacy.screen_name})`);
+		}
+	});
+	ajax.addEventListener('error', error => {
+		console.error(logstr, 'error:', error);
+
+		if (attempt < 3) {
+			unblockUser(user, user_id, headers, reason, attempt + 1);
+		} else {
+			console.error(logstr, `failed to unblock ${user.legacy.name} (@${user.legacy.screen_name}):`, user, error);
+		}
+	});
+
+	if (options.mute) {
+		ajax.open('POST', "https://twitter.com/i/api/1.1/mutes/users/destroy.json");
+	}
+	else {
+		ajax.open('POST', "https://twitter.com/i/api/1.1/blocks/destroy.json");
+	}
+
+	for (const header of Headers) {
+		ajax.setRequestHeader(header, headers[header]);
+	}
+
+	// attempt to manually set the csrf token to the current active cookie
+	const csrf = CsrfTokenRegex.exec(document.cookie);
+	if (csrf) {
+		ajax.setRequestHeader("x-csrf-token", csrf[1]);
+	}
+	else {
+		// default to the request's csrf token
+		ajax.setRequestHeader("x-csrf-token", headers["x-csrf-token"]);
+	}
+	ajax.send(formdata);
+}
+
+const eventKey = "MultiTabEvent";
+const UserBlockedEvent = "UserBlockedEvent";
+api.storage.local.onChanged.addListener(items => {
+	// we're using local storage as a really dirty event driver
+	if (!items.hasOwnProperty(eventKey)) {
+		return;
+	}
+	const e = items[eventKey].newValue;
+
+	switch (e.type) {
+		case UserBlockedEvent:
+			if (options.showBlockPopups) {
+				const { user, user_id, headers, reason } = e;
+				const t = document.createElement("div");
+				t.className = "toast";
+				const name = user.legacy.name.length > 25 ? user.legacy.name.substring(0, 23).trim() + "..." : user.legacy.name;
+				t.innerHTML = `blocked ${name} (<a href="/${user.legacy.screen_name}">@${user.legacy.screen_name}</a>)`;
+				const b = document.createElement("button");
+				b.onclick = () => {
+					unblockUser(user, user_id, headers, reason);
+					t.removeChild(b);
+				};
+				b.innerText = "undo";
+				t.appendChild(b);
+				const ele = document.getElementById("injected-blue-block-toasts");
+				ele.appendChild(t);
+				setTimeout(() => ele.removeChild(t), 30e3);
+			}
+			break;
+
+		default:
+			console.error(logstr, "unknown multitab event occurred:", e);
+	}
+});
+
 // retrieve settings immediately on startup
 api.storage.sync.get(DefaultOptions).then(SetOptions);
 
-const ReasonBlueVerified = 0;
-const ReasonNftAvatar = 1;
-
-const ReasonMap = {
-	[ReasonBlueVerified]: "Twitter Blue verified",
-	[ReasonNftAvatar]: "NFT avatar",
-};
-
-export class BlockQueue {
-	// queue must be defined with push and shift functions
-	constructor(storage) {
-		this.storage = storage;
-		this.queue = [];
-		this.timeout = null;
-	}
-	async sync() {
-		// sync simply adds the in-memory queue to the stored queue
-		const items = await this.storage.get({ BlockQueue: [] });
-		items.BlockQueue.push(...this.queue);
-		await this.storage.set(items);
-		this.queue.length = 0;
-		this.timeout = null;
-	}
-	async push(item) {
-		this.queue.push(item);
-		if (this.timeout) {
-			clearTimeout(this.timeout);
-		}
-		this.timeout = setTimeout(() => this.sync(), 100);
-	}
-	async shift() {
-		// shift halts any modifications to the local storage queue, removes an item, and saves it, and restarts sync
-		if (this.timeout) {
-			clearTimeout(this.timeout);
-		}
-		const items = await this.storage.get({ BlockQueue: [] });
-		const item = items.BlockQueue.shift();
-		if (item !== undefined) {
-			await this.storage.set(items);
-		}
-		this.timeout = setTimeout(() => this.sync(), 100);
-		return item;
-	}
-}
-
-export class BlockCounter {
-	// this class provides functionality to update and maintain a counter on badge text in an accurate way via async functions
-	constructor(storage) {
-		this.storage = storage;
-		this.value = 0;
-		this.timeout = null;
-
-		// we need to make sure the critical point is empty on launch. this has a very low chance of causing conflict between tabs, but
-		// prevents the possibility of a bunch of bugs caused by issues in retrieving the critical point. ideally we wouldn't have this
-		this.releaseCriticalPoint();
-	}
-	async getCriticalPoint() {
-		const key = "blockCounterCriticalPoint";
-		const refId = RefId();
-		let value = null;
-		do {
-			value = (await this.storage.get({ [key]: null }))[key];
-			if (!value) {
-				// try to access the critical point
-				await this.storage.set({ [key]: refId });
-				value = (await this.storage.get({ [key]: null }))[key];
-			}
-			else {
-				// sleep for a little bit to let the other tab(s) release the critical point
-				await new Promise(r => setTimeout(r, 50));
-			}
-		} while (value !== refId)
-	}
-	async releaseCriticalPoint() {
-		// this should only be called AFTER getCriticalPoint
-		const key = "blockCounterCriticalPoint";
-		await this.storage.set({ [key]: null });
-	}
-	async sync() {
-		await this.getCriticalPoint();
-		const items = await this.storage.get({ BlockCounter: 0 });
-		items.BlockCounter += this.value;
-		this.value = 0;
-		await this.storage.set(items);
-		this.releaseCriticalPoint();
-	}
-	async increment(value = 1) {
-		this.value += value;
-		if (this.timeout) {
-			clearTimeout(this.timeout);
-		}
-		this.timeout = setTimeout(() => this.sync(), 100);
-	}
-}
-
-const queue = new BlockQueue(api.storage.local);
-const blockCounter = new BlockCounter(api.storage.local);
-const BlockCache = new Set();
-let BlockTimeout = null;
-
 export function ClearCache() {
-	BlockCache.clear();
+	blockCache.clear();
 }
 
 function QueueBlockUser(user, user_id, headers, reason) {
-	if (BlockCache.has(user_id)) {
+	if (blockCache.has(user_id)) {
 		return;
 	}
-	BlockCache.add(user_id);
+	blockCache.add(user_id);
 	queue.push({user, user_id, headers, reason});
 	console.log(logstr, `queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
-
-	if (BlockTimeout === null) {
-		BlockTimeout = setTimeout(CheckBlockQueue, options.blockInterval * 1000);
-	}
+	consumer.start();
 }
 
 function CheckBlockQueue() {
-	queue.shift().then(item => {
+	api.storage.sync.get(DefaultOptions).then(items => {
+		SetOptions(items);
+	})
+	.then(() => queue.shift())
+	.then(item => {
 		if (item === undefined) {
-			clearTimeout(BlockTimeout);
-			BlockTimeout = null;
+			consumer.stop();
 			return;
 		}
-		api.storage.sync.get(DefaultOptions).then(items => {
-			SetOptions(items);
-			BlockTimeout = setTimeout(CheckBlockQueue, options.blockInterval * 1000);
-			const {user, user_id, headers, reason} = item;
-			BlockUser(user, user_id, headers, reason);
-		});
+		const {user, user_id, headers, reason} = item;
+		BlockUser(user, user_id, headers, reason);
 	});
 }
+
+const consumer = new QueueConsumer(api.storage.local, CheckBlockQueue, async s => {
+	const items = await api.storage.sync.get({ blockInterval: options.blockInterval });
+	return items.blockInterval * 1000
+});
+consumer.start();
 
 const CsrfTokenRegex = /ct0=\s*(\w+);/;
 function BlockUser(user, user_id, headers, reason, attempt=1) {
@@ -239,19 +159,19 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 	ajax.addEventListener('load', event => {
 		if (event.target.status === 403) {
 			// user has been logged out, we need to stop queue and re-add
-			clearTimeout(BlockTimeout);
-			BlockTimeout = null;
+			consumer.stop();
 			queue.push({user, user_id, headers, reason});
-			console.log(logstr, "user is logged out, queue consumer has been ceased.");
+			console.log(logstr, "user is logged out, queue consumer has been halted.");
 			return;
 		}
 		else if (event.target.status >= 300) {
 			queue.push({user, user_id, headers, reason});
-			console.error(logstr, `failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user);
+			console.error(logstr, `failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user, event);
 		}
 		else {
 			blockCounter.increment();
 			console.log(logstr, `blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`);
+			api.storage.local.set({ [eventKey]: { type: UserBlockedEvent, user, user_id, headers, reason } })
 		}
 	});
 	ajax.addEventListener('error', error => {
@@ -261,7 +181,7 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 			BlockUser(user, user_id, headers, reason, attempt + 1);
 		} else {
 			queue.push({user, user_id, headers, reason});
-			console.error(logstr, `failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user);
+			console.error(logstr, `failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user, error);
 		}
 	});
 
@@ -288,13 +208,25 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 	ajax.send(formdata);
 }
 
+const blockableAffiliateLabels = new Set(["AutomatedLabel"]);
+const blockableVerifiedTypes = new Set(["Business"]);
 export function BlockBlueVerified(user, headers) {
 	// since we can be fairly certain all user objects will be the same, break this into a separate function
+	if (user.legacy.verified_type && !blockableVerifiedTypes.has(user.legacy.verified_type)) {
+		return;
+	}
 	if (user.legacy.blocking) {
 		return;
 	}
 	if (user.is_blue_verified) {	
 		if (
+			// group for if the user has unblocked them previously
+			// you cannot store sets in sync memory, so this will be a janky object
+			options.unblocked.hasOwnProperty(String(user.rest_id))
+		) {
+			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because you unblocked them previously.`);
+		}
+		else if (
 			// group for block-following option
 			!options.blockFollowing && (user.legacy.following || user.super_following)
 		) {
@@ -308,13 +240,14 @@ export function BlockBlueVerified(user, headers) {
 		}
 		else if (
 			// group for skip-verified option
-			options.skipVerified && (user.legacy.verified || user.legacy.verified_type)
+			// TODO: look to see if there's some other way to check legacy verified
+			options.skipVerified && (user.legacy.verified)
 		) {
 			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through other means.`);
 		}
 		else if (
 			// verified via an affiliated organisation instead of blue
-			options.skipAffiliated && user.affiliates_highlighted_label.label
+			options.skipAffiliated && (blockableAffiliateLabels.has(user?.affiliates_highlighted_label?.label?.userLabelType) || user.legacy.verified_type === "Business")
 		) {
 			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through an affiliated organisation.`);
 		}
@@ -328,7 +261,7 @@ export function BlockBlueVerified(user, headers) {
 			QueueBlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
 		}
 	}
-	if (options.blockNftAvatars && user.has_nft_avatar) {
+	else if (options.blockNftAvatars && user.has_nft_avatar) {
 		if (
 			// group for block-following option
 			!options.blockFollowing && (user.legacy.following || user.super_following)
@@ -344,133 +277,5 @@ export function BlockBlueVerified(user, headers) {
 		else {
 			QueueBlockUser(user, String(user.rest_id), headers, ReasonNftAvatar);
 		}
-	}
-}
-
-function HandleTweetObject(obj, headers) {
-	let ptr = obj;
-	for (const key of UserObjectPath) {
-		if (ptr.hasOwnProperty(key)) {
-			ptr = ptr[key];
-		}
-	}
-	if (ptr.__typename !== "User") {
-		console.error(logstr, "could not parse tweet", obj);
-		return;
-	}
-	BlockBlueVerified(ptr, headers);
-}
-
-export function ParseTimelineTweet(tweet, headers) {
-	if(tweet.itemType=="TimelineTimelineCursor") {
-		return;
-	}
-	
-	// Handle retweets and quoted tweets (check the retweeted user, too)
-	if(tweet?.tweet_results?.result?.quoted_status_result) {
-		HandleTweetObject(tweet.tweet_results.result.quoted_status_result.result, headers);
-	} else if(tweet?.tweet_results?.result?.legacy?.retweeted_status_result) {
-		HandleTweetObject(tweet.tweet_results.result.legacy.retweeted_status_result.result, headers);
-	}
-	HandleTweetObject(tweet, headers);
-}
-
-export function HandleInstructionsResponse(e, body) {
-	// pull the "instructions" object from the tweet
-	let instructions = body;
-	
-	try {
-		for (const key of InstructionsPaths[e.detail.parsedUrl[1]]) {
-			instructions = instructions[key];
-		}
-	}
-	catch (e) {
-		console.error(logstr, "failed to parse response body for instructions object", e, body);
-		return;
-	}
-
-	// "instructions" should be an array, we need to iterate over it to find the "TimelineAddEntries" type
-	let tweets = undefined;
-	let isAddToModule = false;
-	for (const value of instructions) {
-		if (value.type === "TimelineAddEntries" || value.type === "TimelineAddToModule") {
-			tweets = value;
-			isAddToModule = value.type === "TimelineAddToModule";
-			break;
-		}
-	}
-	if (tweets === undefined) {
-		console.error(logstr, "response object does not contain an instruction to add entries", body);
-		return;
-	}
-
-	if (isAddToModule) {
-		// wrap AddToModule info so the handler can treat it the same (and unwrap it below)
-		tweets.entries = [{
-			content: {
-				entryType: "TimelineTimelineModule",
-				items: tweets.moduleItems
-			}
-		}];
-	}
-
-	// tweets object should now contain an array of all returned tweets
-	for (const tweet of tweets.entries) {
-		// parse each tweet for the user object
-		switch (tweet?.content?.entryType) {
-			case null:
-				console.error(logstr, "tweet structure does not match expectation", tweet);
-				break;
-
-			case "TimelineTimelineItem":
-				if (tweet.content.itemContent.itemType=="TimelineTweet") {
-					ParseTimelineTweet(tweet.content.itemContent, e.detail.request.headers);
-				}
-				break;
-			case "TimelineTimelineModule":
-				for (const innerTweet of tweet.content.items) {
-					ParseTimelineTweet(innerTweet.item.itemContent, e.detail.request.headers)
-				}
-				break;
-
-			default:
-				if (!IgnoreTweetTypes.has(tweet.content.entryType)) {
-					console.error(logstr, `unexpected tweet type found: ${tweet.content.entryType}`, tweet);
-				}
-		}
-	}
-
-	if (isAddToModule) {
-		tweets.moduleItems = tweets.entries[0]?.content?.items || [];
-		delete tweets.entries;
-	}
-}
-
-export function HandleHomeTimeline(e, body) {
-	// This API endpoint currently does not deliver information required for
-	// block filters (in particular, it's missing affiliates_highlighted_label).
-	// So if the user has set the "skip users verified by other means" options,
-	// this function must be skipped, however, it is still mostly covered by the
-	// instructions responses
-	if (options.skipAffiliated) return;
-
-	// so this url straight up gives us an array of users, so just use that lmao
-	for (const [user_id, user] of Object.entries(body.globalObjects.users)) {
-		// the user object is a bit different, so reshape it a little
-		BlockBlueVerified({
-			is_blue_verified: user.ext_is_blue_verified,
-			has_nft_avatar: user.ext_has_nft_avatar,
-			legacy: {
-				blocking: user.blocking,
-				followed_by: user.followed_by,
-				following: user.following,
-				name: user.name,
-				screen_name: user.screen_name,
-				verified: user.verified,
-				verified_type: user.ext_verified_type,
-			},
-			super_following: user.ext?.superFollowMetadata?.r?.ok?.superFollowing,
-			rest_id: user_id,
-		}, e.detail.request.headers)
 	}
 }
