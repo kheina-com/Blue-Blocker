@@ -9,9 +9,13 @@
 	"web_accessible_resources": [
 		{
 			"resources": [
+				"constants.js",
+				"utilities.js",
 				"script.js",
 				"shared.js",
-				"inject.js"
+				"inject.js",
+				"parsers/*",
+				"models/*"
 			],
 			"matches": [
 				"*://*.twitter.com/*",

@@ -1,5 +1,4 @@
 import { RefId } from "../utilities.js";
-import { logstr } from "../constants.js";
 
 const criticalPointKey = "QueueConsumerCriticalPoint";
 // this class provides to make sure there is only one consumer running per browser instance.
@@ -56,40 +55,25 @@ export class QueueConsumer {
 			this._func_timeout = setTimeout(this.func, this._interval);
 		}
 		else if (this._func_timeout) {
-			console.debug(logstr, "stopped consumer", this._refId, "because a different consumer is started running");
 			clearTimeout(this._func_timeout);
 			this._func_timeout = null;
-		}
-		else {
-			console.debug(logstr, "did not consume with", this._refId, "because a different consumer is already running");
 		}
 	}
 	start() {
 		if (this._timeout) {
-			console.debug(logstr, "did not start consumer", this._refId, "because it is already running");
 			// we're already running
 			return;
-		}
-		else {
-			console.debug(logstr, "started consumer", this._refId);
 		}
 		this.sync();
 	}
 	stop() {
-		let debug = false;
 		if (this._timeout) {
 			clearTimeout(this._timeout);
 			this._timeout = null;
-			debug = true;
 		}
 		if (this._func_timeout) {
 			clearTimeout(this._func_timeout);
 			this._func_timeout = null;
-			debug = true;
-		}
-
-		if (debug) {
-			console.debug(logstr, "halted consumer", this._refId);
 		}
 		this.releaseCriticalPoint();
 	}

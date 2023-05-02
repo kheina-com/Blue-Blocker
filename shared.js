@@ -3,12 +3,6 @@ import { BlockQueue } from "./models/block_queue.js";
 import { QueueConsumer } from "./models/queue_consumer.js";
 import { api, DefaultOptions, logstr, Headers, ReasonBlueVerified, ReasonNftAvatar, ReasonMap } from "./constants.js";
 
-var s = document.createElement("script");
-s.src = api.runtime.getURL("inject.js");
-s.id = "injected-blue-block-xhr";
-s.type = "text/javascript";
-(document.head || document.documentElement).appendChild(s);
-
 // Define constants that shouldn't be exported to the rest of the addon
 const queue = new BlockQueue(api.storage.local);
 const blockCounter = new BlockCounter(api.storage.local);
@@ -21,8 +15,6 @@ export function SetOptions(items) {
 
 // retrieve settings immediately on startup
 api.storage.sync.get(DefaultOptions).then(SetOptions);
-
-let BlockTimeout = null;
 
 export function ClearCache() {
 	blockCache.clear();
@@ -54,7 +46,8 @@ function CheckBlockQueue() {
 }
 
 const consumer = new QueueConsumer(api.storage.local, CheckBlockQueue, async s => {
-	return (await s.get({ blockInterval: DefaultOptions.blockInterval })).blockInterval * 1000
+	const items = await api.storage.sync.get({ blockInterval: options.blockInterval });
+	return items.blockInterval * 1000
 });
 consumer.start();
 

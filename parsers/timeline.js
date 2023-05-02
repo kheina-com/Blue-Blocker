@@ -1,14 +1,14 @@
-import { options, BlockBlueVerified } from "../shared.js";
+import { BlockBlueVerified } from "../shared.js";
 // This file handles any requests made to populate twitter's main timeline
-// including the "For You" page as well as the "Following" page
+// including the "For You" page as well as the "Following" page. it also
+// seems to work for the "adaptive.json" response from search results
 
 export function HandleForYou(e, body) {
 	// This API endpoint currently does not deliver information required for
 	// block filters (in particular, it's missing affiliates_highlighted_label).
-	// So if the user has set the "skip users verified by other means" options,
-	// this function must be skipped, however, it is still mostly covered by the
-	// instructions responses
-	// if (options.skipAffiliated) return;
+	// The above doesn't seem completely true. it's missing affiliates specifically
+	// but, it's not missing verified_type, which says "Business" when using a
+	// gold (affiliate) checkmark.
 
 	// so this url straight up gives us an array of users, so just use that lmao
 	for (const [user_id, user] of Object.entries(body.globalObjects.users)) {
