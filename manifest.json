@@ -13,8 +13,9 @@
 				"utilities.js",
 				"script.js",
 				"shared.js",
-				"inject.js",
+				"injected/*",
 				"parsers/*",
+				"assets/*",
 				"models/*"
 			],
 			"matches": [
@@ -24,7 +25,7 @@
 		}
 	],
 	"action": {
-		"default_popup": "popup.html",
+		"default_popup": "popup/index.html",
 		"default_icon": "assets/icon.png"
 	},
 	"permissions": [

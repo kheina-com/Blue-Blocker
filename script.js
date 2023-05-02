@@ -4,11 +4,20 @@ import { HandleInstructionsResponse } from './parsers/instructions.js';
 import { HandleForYou } from './parsers/timeline.js';
 import { HandleTypeahead } from './parsers/search.js';
 
-var s = document.createElement("script");
-s.src = api.runtime.getURL("inject.js");
+let s = document.createElement("script");
+s.src = api.runtime.getURL("./injected/inject.js");
 s.id = "injected-blue-block-xhr";
 s.type = "text/javascript";
 (document.head || document.documentElement).appendChild(s);
+
+let l = document.createElement("link");
+l.href = api.runtime.getURL("./injected/toasts.css");
+l.rel = "stylesheet";
+(document.head || document.documentElement).appendChild(l);
+
+let t = document.createElement("div");
+t.id = "injected-blue-block-toasts";
+document.body.appendChild(t);
 
 document.addEventListener("blue-blocker-event", function (e) {
 	// TODO: we may want to seriously consider clearing the cache on a much less frequent

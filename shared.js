@@ -13,6 +13,104 @@ export function SetOptions(items) {
 	options = items;
 }
 
+function unblockUser(user, user_id, headers, reason) {
+	api.storage.sync.get({ unblocked: { } }).then(items => {
+		items.unblocked[String(user_id)] = null;
+		api.storage.sync.set(items);
+	});
+	const formdata = new FormData();
+	formdata.append("user_id", user_id);
+
+	const ajax = new XMLHttpRequest();
+
+	ajax.addEventListener('load', event => {	
+		if (event.target.status === 403) {
+			// user has been logged out, we need to stop queue and re-add
+			console.log(logstr, "user is logged out, failed to unblock user.");
+			return;
+		}
+		else if (event.target.status >= 300) {
+			queue.push({user, user_id, headers, reason});
+			console.error(logstr, `failed to unblock ${user.legacy.name} (@${user.legacy.screen_name}):`, user, event);
+		}
+		else {
+			const t = document.createElement("div");
+			t.className = "toast";
+			t.innerText = `unblocked @${user.legacy.screen_name}, they won't be blocked again.`;
+			const ele = document.getElementById("injected-blue-block-toasts");
+			ele.appendChild(t);
+			setTimeout(() => ele.removeChild(t), 30e3);
+			console.log(logstr, `unblocked ${user.legacy.name} (@${user.legacy.screen_name})`);
+		}
+	});
+	ajax.addEventListener('error', error => {
+		console.error(logstr, 'error:', error);
+
+		if (attempt < 3) {
+			unblockUser(user, user_id, headers, reason, attempt + 1);
+		} else {
+			console.error(logstr, `failed to unblock ${user.legacy.name} (@${user.legacy.screen_name}):`, user, error);
+		}
+	});
+
+	if (options.mute) {
+		ajax.open('POST', "https://twitter.com/i/api/1.1/mutes/users/destroy.json");
+	}
+	else {
+		ajax.open('POST', "https://twitter.com/i/api/1.1/blocks/destroy.json");
+	}
+
+	for (const header of Headers) {
+		ajax.setRequestHeader(header, headers[header]);
+	}
+
+	// attempt to manually set the csrf token to the current active cookie
+	const csrf = CsrfTokenRegex.exec(document.cookie);
+	if (csrf) {
+		ajax.setRequestHeader("x-csrf-token", csrf[1]);
+	}
+	else {
+		// default to the request's csrf token
+		ajax.setRequestHeader("x-csrf-token", headers["x-csrf-token"]);
+	}
+	ajax.send(formdata);
+}
+
+const eventKey = "MultiTabEvent";
+const UserBlockedEvent = "UserBlockedEvent";
+api.storage.local.onChanged.addListener(items => {
+	// we're using local storage as a really dirty event driver
+	if (!items.hasOwnProperty(eventKey)) {
+		return;
+	}
+	const e = items[eventKey].newValue;
+
+	switch (e.type) {
+		case UserBlockedEvent:
+			if (options.showBlockPopups) {
+				const { user, user_id, headers, reason } = e;
+				const t = document.createElement("div");
+				t.className = "toast";
+				const name = user.legacy.name.length > 25 ? user.legacy.name.substring(0, 23).trim() + "..." : user.legacy.name;
+				t.innerHTML = `blocked ${name} (<a href="/${user.legacy.screen_name}">@${user.legacy.screen_name}</a>)`;
+				const b = document.createElement("button");
+				b.onclick = () => {
+					unblockUser(user, user_id, headers, reason);
+					t.removeChild(b);
+				};
+				b.innerText = "undo";
+				t.appendChild(b);
+				const ele = document.getElementById("injected-blue-block-toasts");
+				ele.appendChild(t);
+				setTimeout(() => ele.removeChild(t), 30e3);
+			}
+			break;
+
+		default:
+			console.error(logstr, "unknown multitab event occurred:", e);
+	}
+});
+
 // retrieve settings immediately on startup
 api.storage.sync.get(DefaultOptions).then(SetOptions);
 
@@ -27,21 +125,21 @@ function QueueBlockUser(user, user_id, headers, reason) {
 	blockCache.add(user_id);
 	queue.push({user, user_id, headers, reason});
 	console.log(logstr, `queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
-
 	consumer.start();
 }
 
 function CheckBlockQueue() {
-	queue.shift().then(item => {
+	api.storage.sync.get(DefaultOptions).then(items => {
+		SetOptions(items);
+	})
+	.then(() => queue.shift())
+	.then(item => {
 		if (item === undefined) {
 			consumer.stop();
 			return;
 		}
-		api.storage.sync.get(DefaultOptions).then(items => {
-			SetOptions(items);
-			const {user, user_id, headers, reason} = item;
-			BlockUser(user, user_id, headers, reason);
-		});
+		const {user, user_id, headers, reason} = item;
+		BlockUser(user, user_id, headers, reason);
 	});
 }
 
@@ -73,6 +171,7 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 		else {
 			blockCounter.increment();
 			console.log(logstr, `blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`);
+			api.storage.local.set({ [eventKey]: { type: UserBlockedEvent, user, user_id, headers, reason } })
 		}
 	});
 	ajax.addEventListener('error', error => {
@@ -121,6 +220,13 @@ export function BlockBlueVerified(user, headers) {
 	}
 	if (user.is_blue_verified) {	
 		if (
+			// group for if the user has unblocked them previously
+			// you cannot store sets in sync memory, so this will be a janky object
+			options.unblocked.hasOwnProperty(String(user.rest_id))
+		) {
+			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because you unblocked them previously.`);
+		}
+		else if (
 			// group for block-following option
 			!options.blockFollowing && (user.legacy.following || user.super_following)
 		) {

@@ -12,6 +12,7 @@ export const logstr = "[Blue Blocker]";
 export const DefaultOptions = {
 	// by default, spare as many people as possible
 	// let the user decide if they want to be stricter
+	showBlockPopups: true,
 	mute: false,
 	blockFollowing: false,
 	blockFollowers: false,
@@ -19,7 +20,11 @@ export const DefaultOptions = {
 	skipAffiliated: true,
 	skip1Mplus: true,
 	blockNftAvatars: false,
-	blockInterval: 10,
+	blockInterval: 15,
+
+	// this isn't set, but is used
+	// TODO: when migrating to firefox manifest v3, check to see if sets can be stored yet
+	unblocked: { },
 };
 export const Headers = [
 	"authorization",
