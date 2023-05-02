@@ -42,6 +42,7 @@ export class BlockQueue {
 		await this.getCriticalPoint();
 		// sync simply adds the in-memory queue to the stored queue
 		const oldQueue = (await this.storage.get({ BlockQueue: [] })).BlockQueue;
+		// TODO: do this via user_id only, user objects won't always be equal
 		const newQueue = Array.from(new Set([...oldQueue, ...this.queue]))
 		await this.storage.set({ BlockQueue: newQueue });
 		this.releaseCriticalPoint();

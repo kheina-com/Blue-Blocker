@@ -1,3 +1,4 @@
+import { logstr } from "../constants.js";
 import { BlockBlueVerified } from "../shared.js";
 // This file contains a bit of a special case for responses. many responses
 // on twitter contain a shared type stored in an "instructions" key within

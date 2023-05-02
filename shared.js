@@ -68,7 +68,7 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 		}
 		else if (event.target.status >= 300) {
 			queue.push({user, user_id, headers, reason});
-			console.error(logstr, `failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user);
+			console.error(logstr, `failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user, event);
 		}
 		else {
 			blockCounter.increment();
@@ -82,7 +82,7 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 			BlockUser(user, user_id, headers, reason, attempt + 1);
 		} else {
 			queue.push({user, user_id, headers, reason});
-			console.error(logstr, `failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user);
+			console.error(logstr, `failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user, error);
 		}
 	});
 
