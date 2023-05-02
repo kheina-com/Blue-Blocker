@@ -109,8 +109,13 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 	ajax.send(formdata);
 }
 
+const blockableAffiliateLabels = new Set(["AutomatedLabel"]);
+const blockableVerifiedTypes = new Set(["Business"]);
 export function BlockBlueVerified(user, headers) {
 	// since we can be fairly certain all user objects will be the same, break this into a separate function
+	if (user.legacy.verified_type && !blockableVerifiedTypes.has(user.legacy.verified_type)) {
+		return;
+	}
 	if (user.legacy.blocking) {
 		return;
 	}
@@ -136,7 +141,7 @@ export function BlockBlueVerified(user, headers) {
 		}
 		else if (
 			// verified via an affiliated organisation instead of blue
-			options.skipAffiliated && (user?.affiliates_highlighted_label?.label || user.legacy.verified_type === "Business")
+			options.skipAffiliated && (blockableAffiliateLabels.has(user?.affiliates_highlighted_label?.label?.userLabelType) || user.legacy.verified_type === "Business")
 		) {
 			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through an affiliated organisation.`);
 		}

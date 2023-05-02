@@ -24,6 +24,7 @@ export function HandleForYou(e, body) {
 				screen_name: user.screen_name,
 				verified: user.verified,
 				verified_type: user.ext_verified_type,
+				followers_count: user.followers_count,
 			},
 			super_following: user.ext?.superFollowMetadata?.r?.ok?.superFollowing,
 			rest_id: user_id,

@@ -20,7 +20,8 @@ export function HandleTypeahead(e, body) {
 				name: user.name,
 				screen_name: user.screen_name,
 				verified: user.verified,
-				verified_type: user?.ext_verified_type || false, // only populated when not null
+				verified_type: user?.ext_verified_type,
+				followers_count: 1e10, // since we don't have this info, just put in a really large number for the option
 			},
 			super_following: false, // meh
 			rest_id: user.id_str,
