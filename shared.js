@@ -13,13 +13,83 @@ export function SetOptions(items) {
 	options = items;
 }
 
+function unblockUser(user, user_id, headers, reason) {
+	api.storage.sync.get({ unblocked: new Set() }).then(items => {
+		items.unblocked.add(String(user_id));
+		api.storage.sync.set(items);
+	});
+	const formdata = new FormData();
+	formdata.append("user_id", user_id);
+
+	const ajax = new XMLHttpRequest();
+
+	ajax.addEventListener('load', event => {	
+		if (event.target.status === 403) {
+			// user has been logged out, we need to stop queue and re-add
+			console.log(logstr, "user is logged out, failed to unblock user.");
+			return;
+		}
+		else if (event.target.status >= 300) {
+			queue.push({user, user_id, headers, reason});
+			console.error(logstr, `failed to unblock ${user.legacy.name} (@${user.legacy.screen_name}):`, user, event);
+		}
+		else {
+			const t = document.createElement("div");
+			t.className = "toast";
+			t.innerText = `unblocked @${user.legacy.screen_name}, they won't be blocked again.`;
+			const ele = document.getElementById("injected-blue-block-toasts");
+			ele.appendChild(t);
+			setTimeout(() => ele.removeChild(t), 20000);
+			console.log(logstr, `unblocked ${user.legacy.name} (@${user.legacy.screen_name})`);
+		}
+	});
+	ajax.addEventListener('error', error => {
+		console.error(logstr, 'error:', error);
+
+		if (attempt < 3) {
+			unblockUser(user, user_id, headers, reason, attempt + 1);
+		} else {
+			console.error(logstr, `failed to unblock ${user.legacy.name} (@${user.legacy.screen_name}):`, user, error);
+		}
+	});
+
+	if (options.mute) {
+		ajax.open('POST', "https://twitter.com/i/api/1.1/mutes/users/destroy.json");
+	}
+	else {
+		ajax.open('POST', "https://twitter.com/i/api/1.1/blocks/destroy.json");
+	}
+
+	for (const header of Headers) {
+		ajax.setRequestHeader(header, headers[header]);
+	}
+
+	// attempt to manually set the csrf token to the current active cookie
+	const csrf = CsrfTokenRegex.exec(document.cookie);
+	if (csrf) {
+		ajax.setRequestHeader("x-csrf-token", csrf[1]);
+	}
+	else {
+		// default to the request's csrf token
+		ajax.setRequestHeader("x-csrf-token", headers["x-csrf-token"]);
+	}
+	ajax.send(formdata);
+}
+
 const blockedUserKey = "LatestBlockedUser";
 api.storage.local.onChanged.addListener(items => {
 	if (items.hasOwnProperty(blockedUserKey) && options.showBlockPopups) {
-		const { user, user_id, reason } = items[blockedUserKey].newValue;
+		const { user, user_id, headers, reason } = items[blockedUserKey].newValue;
 		const t = document.createElement("div");
 		t.className = "toast";
-		t.innerText = `blocked ${user.legacy.name} (@${user.legacy.screen_name}) undo`;
+		t.innerText = `blocked ${user.legacy.name} (@${user.legacy.screen_name})`;
+		const b = document.createElement("button");
+		b.onclick = () => {
+			unblockUser(user, user_id, headers, reason);
+			t.removeChild(b);
+		};
+		b.innerText = "undo";
+		t.appendChild(b);
 		const ele = document.getElementById("injected-blue-block-toasts");
 		ele.appendChild(t);
 		setTimeout(() => ele.removeChild(t), 20000);
@@ -40,7 +110,6 @@ function QueueBlockUser(user, user_id, headers, reason) {
 	blockCache.add(user_id);
 	queue.push({user, user_id, headers, reason});
 	console.log(logstr, `queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
-
 	consumer.start();
 }
 
@@ -50,7 +119,7 @@ function CheckBlockQueue() {
 			consumer.stop();
 			return;
 		}
-		api.storage.sync.get(DefaultOptions).then(items => {
+		api.storage.sync.get({ unblocked: new Set(), ...DefaultOptions }).then(items => {
 			SetOptions(items);
 			const {user, user_id, headers, reason} = item;
 			BlockUser(user, user_id, headers, reason);
@@ -86,7 +155,7 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 		else {
 			blockCounter.increment();
 			console.log(logstr, `blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`);
-			api.storage.local.set({ [blockedUserKey]: { user, user_id, reason } })
+			api.storage.local.set({ [blockedUserKey]: { user, user_id, headers, reason } })
 		}
 	});
 	ajax.addEventListener('error', error => {
@@ -135,6 +204,12 @@ export function BlockBlueVerified(user, headers) {
 	}
 	if (user.is_blue_verified) {	
 		if (
+			// group for if the user has unblocked them previously
+			options.unblocked.has(String(user.rest_id))
+		) {
+			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because you unblocked them previously.`);
+		}
+		else if (
 			// group for block-following option
 			!options.blockFollowing && (user.legacy.following || user.super_following)
 		) {

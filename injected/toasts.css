@@ -5,7 +5,7 @@
 	pointer-events: none;
 	width: 100%;
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	flex-direction: column;
 	z-index: 1000;
 
@@ -30,16 +30,44 @@
 }
 
 #injected-blue-block-toasts .toast {
+	display: flex;
+	justify-content: center;
+	align-items: center;
 	background: url('../assets/icon.png') var(--bg1color);
 	background-repeat: no-repeat;
 	background-size: 2.5em;
 	background-position-x: 1em;
 	background-position-y: center;
 	pointer-events: all;
-	padding: 25px 25px 25px 4.25em;
+	padding: 1em 1.5em 1em 4.25em;
 	margin: 0 0 25px 25px;
 	border: var(--border-size) solid var(--bordercolor);
 	border-radius: var(--border-radius);
 	color: var(--textcolor);
 	box-shadow: 0 2px 3px 1px var(--shadowcolor);
+	min-height: calc(2em + 4px);
+}
+
+#injected-blue-block-toasts .toast button,
+#injected-blue-block-toasts .toast button:active,
+#injected-blue-block-toasts .toast button:focus {
+	margin-left: 1em;
+	font-size: 1em;
+	padding: 0.5em 1em;
+	color: var(--textcolor);
+	background: var(--bg2color);
+	box-shadow: 0 2px 3px 1px var(--shadowcolor);
+	border: var(--border-size) solid var(--bordercolor);
+	border-radius: var(--border-radius);
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
+	cursor: pointer;
+}
+
+#injected-blue-block-toasts .toast button:hover {
+	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
+	border-color: var(--interact);
+	color: var(--interact);
 }

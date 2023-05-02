@@ -12,13 +12,13 @@ firefox:
 	zip "blue-blocker-firefox-${VERSION}.zip" \
 		assets/icon-128.png \
 		assets/icon.png \
+		injected/* \
 		models/* \
 		parsers/* \
+		popup/* \
 		manifest.json \
 		LICENSE \
 		readme.md \
-		popup.html \
-		style.css \
 		*.js
 	mv manifest.json firefox-manifest.json
 	mv chrome-manifest.json manifest.json
@@ -31,11 +31,11 @@ chrome:
 	zip "blue-blocker-chrome-${VERSION}.zip" \
 		assets/icon-128.png \
 		assets/icon.png \
+		injected/* \
 		models/* \
 		parsers/* \
+		popup/* \
 		manifest.json \
 		LICENSE \
 		readme.md \
-		popup.html \
-		style.css \
 		*.js
