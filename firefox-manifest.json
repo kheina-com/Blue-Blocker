@@ -15,7 +15,7 @@
 		"parsers/*",
 		"assets/*",
 		"models/*"
-],
+	],
 	"browser_action": {
 		"browser_style": true,
 		"default_icon": {
@@ -39,7 +39,9 @@
 		}
 	],
 	"background": {
-		"scripts": ["service_worker.js"],
+		"scripts": [
+			"service_worker.js"
+		],
 		"type": "module"
 	},
 	"browser_specific_settings": {
