@@ -7,7 +7,7 @@
 ## Usage
 Nothing! Just install and say goodbye to all the paid blue checkmarks!
 
-By default, Blue Blocker does not block users you follow or follow you who have purchased Twitter Blue. You can change this and other settings from the extension context menu found by clicking the extension icon in the browser's toolbar.
+By default, Blue Blocker does not block users you follow or follow you who have purchased Twitter Blue. You can change this and other settings from the extension context menu found by clicking the extension icon in your browser's toolbar.
 
 ## Install
 [![Available from Chrome Webstore](assets/chrome.png)](https://chrome.google.com/webstore/detail/blue-blocker/jgpjphkbfjhlbajmmcoknjjppoamhpmm)
