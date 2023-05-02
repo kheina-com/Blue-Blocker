@@ -39,7 +39,7 @@ function unblockUser(user, user_id, headers, reason) {
 			t.innerText = `unblocked @${user.legacy.screen_name}, they won't be blocked again.`;
 			const ele = document.getElementById("injected-blue-block-toasts");
 			ele.appendChild(t);
-			setTimeout(() => ele.removeChild(t), 20000);
+			setTimeout(() => ele.removeChild(t), 30e3);
 			console.log(logstr, `unblocked ${user.legacy.name} (@${user.legacy.screen_name})`);
 		}
 	});
@@ -76,23 +76,38 @@ function unblockUser(user, user_id, headers, reason) {
 	ajax.send(formdata);
 }
 
-const blockedUserKey = "LatestBlockedUser";
+const eventKey = "MultiTabEvent";
+const UserBlockedEvent = "UserBlockedEvent";
 api.storage.local.onChanged.addListener(items => {
-	if (items.hasOwnProperty(blockedUserKey) && options.showBlockPopups) {
-		const { user, user_id, headers, reason } = items[blockedUserKey].newValue;
-		const t = document.createElement("div");
-		t.className = "toast";
-		t.innerText = `blocked ${user.legacy.name} (@${user.legacy.screen_name})`;
-		const b = document.createElement("button");
-		b.onclick = () => {
-			unblockUser(user, user_id, headers, reason);
-			t.removeChild(b);
-		};
-		b.innerText = "undo";
-		t.appendChild(b);
-		const ele = document.getElementById("injected-blue-block-toasts");
-		ele.appendChild(t);
-		setTimeout(() => ele.removeChild(t), 20000);
+	// we're using local storage as a really dirty event driver
+	if (!items.hasOwnProperty(eventKey)) {
+		return;
+	}
+	const e = items[eventKey].newValue;
+
+	switch (e.type) {
+		case UserBlockedEvent:
+			if (options.showBlockPopups) {
+				const { user, user_id, headers, reason } = e;
+				const t = document.createElement("div");
+				t.className = "toast";
+				const name = user.legacy.name.length > 25 ? user.legacy.name.substring(0, 23).trim() + "..." : user.legacy.name;
+				t.innerHTML = `blocked ${name} (<a href="/${user.legacy.screen_name}">@${user.legacy.screen_name}</a>)`;
+				const b = document.createElement("button");
+				b.onclick = () => {
+					unblockUser(user, user_id, headers, reason);
+					t.removeChild(b);
+				};
+				b.innerText = "undo";
+				t.appendChild(b);
+				const ele = document.getElementById("injected-blue-block-toasts");
+				ele.appendChild(t);
+				setTimeout(() => ele.removeChild(t), 30e3);
+			}
+			break;
+
+		default:
+			console.error(logstr, "unknown multitab event occurred:", e);
 	}
 });
 
@@ -114,16 +129,17 @@ function QueueBlockUser(user, user_id, headers, reason) {
 }
 
 function CheckBlockQueue() {
-	queue.shift().then(item => {
+	api.storage.sync.get(DefaultOptions).then(items => {
+		SetOptions(items);
+	})
+	.then(() => queue.shift())
+	.then(item => {
 		if (item === undefined) {
 			consumer.stop();
 			return;
 		}
-		api.storage.sync.get(DefaultOptions).then(items => {
-			SetOptions(items);
-			const {user, user_id, headers, reason} = item;
-			BlockUser(user, user_id, headers, reason);
-		});
+		const {user, user_id, headers, reason} = item;
+		BlockUser(user, user_id, headers, reason);
 	});
 }
 
@@ -155,7 +171,7 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 		else {
 			blockCounter.increment();
 			console.log(logstr, `blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`);
-			api.storage.local.set({ [blockedUserKey]: { user, user_id, headers, reason } })
+			api.storage.local.set({ [eventKey]: { type: UserBlockedEvent, user, user_id, headers, reason } })
 		}
 	});
 	ajax.addEventListener('error', error => {

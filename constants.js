@@ -20,9 +20,10 @@ export const DefaultOptions = {
 	skipAffiliated: true,
 	skip1Mplus: true,
 	blockNftAvatars: false,
-	blockInterval: 10,
+	blockInterval: 15,
 
 	// this isn't set, but is used
+	// TODO: when migrating to firefox manifest v3, check to see if sets can be stored yet
 	unblocked: { },
 };
 export const Headers = [
