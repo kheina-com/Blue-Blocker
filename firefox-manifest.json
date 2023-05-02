@@ -11,8 +11,9 @@
 		"utilities.js",
 		"script.js",
 		"shared.js",
-		"inject.js",
+		"injected/*",
 		"parsers/*",
+		"assets/*",
 		"models/*"
 ],
 	"browser_action": {
@@ -21,7 +22,7 @@
 			"128": "assets/icon-128.png"
 		},
 		"default_title": "Blue Blocker",
-		"default_popup": "popup.html"
+		"default_popup": "popup/index.html"
 	},
 	"permissions": [
 		"storage"

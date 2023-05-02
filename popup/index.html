@@ -7,8 +7,18 @@
 	</head>
 	<body>
 		<span id="version"></span>
-		<h2><img src="./assets/icon.png" alt="🅱️">lue Blocker</h2>
+		<h2><img src="../assets/icon.png" alt="🅱️">lue Blocker</h2>
 		<p class="blocked-users-count">blocked <span id="blocked-users-count"></span> users so far! (<span id="blocked-user-queue-length"></span> queued)</p>
+		<div class="option">
+			<input type="checkbox" id="show-block-popups">
+			<label ref="label" for="show-block-popups" >
+				<div class="checkmark">
+					<div></div>
+				</div>
+				<p>show popup for blocked users</p>
+			</label>
+			<span id="show-block-popups-status"></span>
+		</div>
 		<div class="option">
 			<input type="checkbox" id="mute-instead-of-block">
 			<label ref="label" for="mute-instead-of-block" >
@@ -90,5 +100,5 @@
 			</div>
 		</div>
 	</body>
-	<script src="options.js" type="module"></script>
+	<script src="./options.js" type="module"></script>
 </html>

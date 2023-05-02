@@ -13,6 +13,19 @@ export function SetOptions(items) {
 	options = items;
 }
 
+const blockedUserKey = "LatestBlockedUser";
+api.storage.local.onChanged.addListener(items => {
+	if (items.hasOwnProperty(blockedUserKey) && options.showBlockPopups) {
+		const { user, user_id, reason } = items[blockedUserKey].newValue;
+		const t = document.createElement("div");
+		t.className = "toast";
+		t.innerText = `blocked ${user.legacy.name} (@${user.legacy.screen_name}) undo`;
+		const ele = document.getElementById("injected-blue-block-toasts");
+		ele.appendChild(t);
+		setTimeout(() => ele.removeChild(t), 20000);
+	}
+});
+
 // retrieve settings immediately on startup
 api.storage.sync.get(DefaultOptions).then(SetOptions);
 
@@ -73,6 +86,7 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 		else {
 			blockCounter.increment();
 			console.log(logstr, `blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`);
+			api.storage.local.set({ [blockedUserKey]: { user, user_id, reason } })
 		}
 	});
 	ajax.addEventListener('error', error => {

@@ -1,0 +1,45 @@
+#injected-blue-block-toasts {
+	font-family: Bitstream Vera Sans, DejaVu Sans, Arial, Helvetica, sans-serif;
+	position: fixed;
+	bottom: 0;
+	pointer-events: none;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+	z-index: 1000;
+
+	--transition: ease;
+	--fadetime: 0.15s;
+	--interact: #1da1f2;
+	--bg0color: #000000;
+	--bg1color: #1e1f25;
+	--bg2color: #151416;
+	--bg3color: var(--bordercolor);
+	--blockquote: var(--bordercolor);
+	--textcolor: #DDD;
+	--bordercolor: #2D333A;
+	--linecolor: var(--bordercolor);
+	--borderhover: var(--interact);
+	--subtle: #EEEEEE80;
+	--shadowcolor: #00000080;
+	--activeshadowcolor: #000000B3;
+	--screen-cover: #00000080;
+	--border-size: 1px;
+	--border-radius: 3px;
+}
+
+#injected-blue-block-toasts .toast {
+	background: url('../assets/icon.png') var(--bg1color);
+	background-repeat: no-repeat;
+	background-size: 2.5em;
+	background-position-x: 1em;
+	background-position-y: center;
+	pointer-events: all;
+	padding: 25px 25px 25px 4.25em;
+	margin: 0 0 25px 25px;
+	border: var(--border-size) solid var(--bordercolor);
+	border-radius: var(--border-radius);
+	color: var(--textcolor);
+	box-shadow: 0 2px 3px 1px var(--shadowcolor);
+}
