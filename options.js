@@ -1,4 +1,5 @@
-import { api, DefaultOptions, commafy } from './shared.js';
+import { api, DefaultOptions } from './constants.js';
+import { commafy } from './utilities.js';
 
 // restore state from storage
 document.addEventListener("DOMContentLoaded", () => {

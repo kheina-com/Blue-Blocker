@@ -7,10 +7,14 @@
 		"128": "assets/icon-128.png"
 	},
 	"web_accessible_resources": [
+		"constants.js",
+		"utilities.js",
 		"script.js",
 		"shared.js",
-		"inject.js"
-	],
+		"inject.js",
+		"parsers/*",
+		"models/*"
+],
 	"browser_action": {
 		"browser_style": true,
 		"default_icon": {

@@ -1,0 +1,35 @@
+let _api = null;
+try {
+	_api = browser;
+	// manifest v2 has the action api stored in browserAction, so manually assign it to action
+	_api.action = browser.browserAction;
+}
+catch (ReferenceError) {
+	_api = chrome;
+}
+export const api = _api;
+export const logstr = "[Blue Blocker]";
+export const DefaultOptions = {
+	// by default, spare as many people as possible
+	// let the user decide if they want to be stricter
+	mute: false,
+	blockFollowing: false,
+	blockFollowers: false,
+	skipVerified: true,
+	skipAffiliated: true,
+	skip1Mplus: true,
+	blockNftAvatars: false,
+	blockInterval: 10,
+};
+export const Headers = [
+	"authorization",
+	"x-twitter-active-user",
+	"x-twitter-auth-type",
+	"x-twitter-client-language",
+];
+export const ReasonBlueVerified = 0;
+export const ReasonNftAvatar = 1;
+export const ReasonMap = {
+	[ReasonBlueVerified]: "Twitter Blue verified",
+	[ReasonNftAvatar]: "NFT avatar",
+};
