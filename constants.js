@@ -21,6 +21,9 @@ export const DefaultOptions = {
 	skip1Mplus: true,
 	blockNftAvatars: false,
 	blockInterval: 10,
+
+	// this isn't set, but is used
+	unblocked: { },
 };
 export const Headers = [
 	"authorization",

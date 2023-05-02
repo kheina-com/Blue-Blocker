@@ -14,8 +14,8 @@ export function SetOptions(items) {
 }
 
 function unblockUser(user, user_id, headers, reason) {
-	api.storage.sync.get({ unblocked: new Set() }).then(items => {
-		items.unblocked.add(String(user_id));
+	api.storage.sync.get({ unblocked: { } }).then(items => {
+		items.unblocked[String(user_id)] = null;
 		api.storage.sync.set(items);
 	});
 	const formdata = new FormData();
@@ -119,7 +119,7 @@ function CheckBlockQueue() {
 			consumer.stop();
 			return;
 		}
-		api.storage.sync.get({ unblocked: new Set(), ...DefaultOptions }).then(items => {
+		api.storage.sync.get(DefaultOptions).then(items => {
 			SetOptions(items);
 			const {user, user_id, headers, reason} = item;
 			BlockUser(user, user_id, headers, reason);
@@ -205,7 +205,8 @@ export function BlockBlueVerified(user, headers) {
 	if (user.is_blue_verified) {	
 		if (
 			// group for if the user has unblocked them previously
-			options.unblocked.has(String(user.rest_id))
+			// you cannot store sets in sync memory, so this will be a janky object
+			options.unblocked.hasOwnProperty(String(user.rest_id))
 		) {
 			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because you unblocked them previously.`);
 		}
