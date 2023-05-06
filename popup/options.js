@@ -3,7 +3,8 @@ import { commafy } from '../utilities.js';
 
 // restore state from storage
 document.addEventListener("DOMContentLoaded", () => {
-	api.storage.sync.get(DefaultOptions, items => {
+	api.storage.sync.get(DefaultOptions).then(items => {
+		document.getElementById("suspend-block-collection").checked = items.suspendedBlockCollection;
 		document.getElementById("show-block-popups").checked = items.showBlockPopups;
 		document.getElementById("mute-instead-of-block").checked = items.mute;
 		document.getElementById("block-following").checked = items.blockFollowing;
@@ -34,10 +35,21 @@ api.storage.local.onChanged.addListener(items => {
 
 document.getElementById("version").innerText = "v" + api.runtime.getManifest().version;
 
+document.getElementById("suspend-block-collection").addEventListener("input", e => {
+	api.storage.sync.set({
+		suspendedBlockCollection: e.target.checked,
+	}).then(() => {
+		// Update status to let user know options were saved.
+		const status = document.getElementById("suspend-block-collection-status");
+		status.textContent = "saved";
+		setTimeout(() => status.textContent = null, 1000);
+	});
+});
+
 document.getElementById("show-block-popups").addEventListener("input", e => {
 	api.storage.sync.set({
 		showBlockPopups: e.target.checked,
-	}, () => {
+	}).then(() => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("show-block-popups-status");
 		status.textContent = "saved";
@@ -48,7 +60,7 @@ document.getElementById("show-block-popups").addEventListener("input", e => {
 document.getElementById("mute-instead-of-block").addEventListener("input", e => {
 	api.storage.sync.set({
 		mute: e.target.checked,
-	}, () => {
+	}).then(() => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("mute-instead-of-block-status");
 		status.textContent = "saved";
@@ -59,7 +71,7 @@ document.getElementById("mute-instead-of-block").addEventListener("input", e => 
 document.getElementById("block-following").addEventListener("input", e => {
 	api.storage.sync.set({
 		blockFollowing: e.target.checked,
-	}, () => {
+	}).then(() => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("block-following-status");
 		status.textContent = "saved";
@@ -70,7 +82,7 @@ document.getElementById("block-following").addEventListener("input", e => {
 document.getElementById("block-followers").addEventListener("input", e => {
 	api.storage.sync.set({
 		blockFollowers: e.target.checked,
-	}, () => {
+	}).then(() => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("block-followers-status");
 		status.textContent = "saved";
@@ -81,7 +93,7 @@ document.getElementById("block-followers").addEventListener("input", e => {
 document.getElementById("skip-verified").addEventListener("input", e => {
 	api.storage.sync.set({
 		skipVerified: e.target.checked,
-	}, () => {
+	}).then(() => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("skip-verified-status");
 		status.textContent = "saved";
@@ -92,7 +104,7 @@ document.getElementById("skip-verified").addEventListener("input", e => {
 document.getElementById("skip-affiliated").addEventListener("input", e => {
 	api.storage.sync.set({
 		skipAffiliated: e.target.checked,
-	}, () => {
+	}).then(() => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("skip-affiliated-status");
 		status.textContent = "saved";
@@ -103,7 +115,7 @@ document.getElementById("skip-affiliated").addEventListener("input", e => {
 document.getElementById("skip-1mplus").addEventListener("input", e => {
 	api.storage.sync.set({
 		skip1Mplus: e.target.checked,
-	}, () => {
+	}).then(() => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("skip-1mplus-status");
 		status.textContent = "saved";
@@ -114,7 +126,7 @@ document.getElementById("skip-1mplus").addEventListener("input", e => {
 document.getElementById("block-nft-avatars").addEventListener("input", e => {
 	api.storage.sync.set({
 		blockNftAvatars: e.target.checked,
-	}, () => {
+	}).then(() => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("block-nft-avatars-status");
 		status.textContent = "saved";
@@ -130,7 +142,7 @@ document.getElementById("block-interval").addEventListener("input", e => {
 document.getElementById("block-interval").addEventListener("change", e => {
 	api.storage.sync.set({
 		blockInterval: parseInt(e.target.value),
-	}, () => {
+	}).then(() => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("block-interval-status");
 		status.textContent = "saved";

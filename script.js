@@ -1,5 +1,5 @@
-import { api } from './constants.js';
 import { ClearCache, ErrorEvent, EventKey } from './shared.js';
+import { api, DefaultOptions } from './constants.js';
 import { HandleInstructionsResponse } from './parsers/instructions.js';
 import { HandleForYou } from './parsers/timeline.js';
 import { HandleTypeahead } from './parsers/search.js';
@@ -23,25 +23,26 @@ document.addEventListener("blue-blocker-event", function (e) {
 	// TODO: we may want to seriously consider clearing the cache on a much less frequent
 	// cadence since we're no longer able to block users immediately and need the queue
 	ClearCache();
-	let body = null;
-	try {
-		body = JSON.parse(e.detail.body);
-		switch (e.detail.parsedUrl[1]) {
-			case "HomeLatestTimeline":
-			case "HomeTimeline":
-			case "UserTweets":
-			case "TweetDetail":
-				return HandleInstructionsResponse(e, body);
-			case "timeline/home.json":
-			case "search/adaptive.json":
-				return HandleForYou(e, body);
-			case "search/typeahead.json":
-				return HandleTypeahead(e, body);
-			default:
-				api.storage.local.set({ [EventKey]: { type: ErrorEvent, message: "found an unexpected url that we don't know how to handle", detail: e } });
+	api.storage.sync.get(DefaultOptions).then(config => {
+		const body_str = e.detail.body;
+		try {
+			const parsed_body = JSON.parse(body_str);
+			switch (e.detail.parsedUrl[1]) {
+				case "HomeLatestTimeline":
+				case "HomeTimeline":
+				case "UserTweets":
+				case "TweetDetail":
+					return HandleInstructionsResponse(e, parsed_body, config);
+				case "timeline/home.json":
+				case "search/adaptive.json":
+					return HandleForYou(e, parsed_body, config);
+				case "search/typeahead.json":
+					return HandleTypeahead(e, parsed_body, config);
+				default:
+					api.storage.local.set({ [EventKey]: { type: ErrorEvent, message: "found an unexpected url that we don't know how to handle", detail: e } });
+			} 
+		} catch (error) {
+			api.storage.local.set({ [EventKey]: { type: ErrorEvent, message: "exepected error occurred while parsing request body", detail: { error, body_str, event: e } } });
 		}
-	}
-	catch (error) {
-		api.storage.local.set({ [EventKey]: { type: ErrorEvent, message: "exepected error occurred while parsing request body", detail: { error, body, event: e } } });
-	}
+	});
 });

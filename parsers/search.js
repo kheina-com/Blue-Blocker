@@ -1,7 +1,7 @@
 import { BlockBlueVerified } from "../shared.js";
 // This file handles requests made pertaining to search results.
 
-export function HandleTypeahead(e, body) {
+export function HandleTypeahead(e, body, config) {
 	// This endpoints appears to be extra/miscilaneous response data returned
 	// when doing a search. it has a user list in it, so run it through the gamut!
 	if (!body.users) {
@@ -25,6 +25,6 @@ export function HandleTypeahead(e, body) {
 			},
 			super_following: false, // meh
 			rest_id: user.id_str,
-		}, e.detail.request.headers)
+		}, e.detail.request.headers, config);
 	}
 }
