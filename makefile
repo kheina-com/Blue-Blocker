@@ -12,6 +12,7 @@ firefox:
 	zip "blue-blocker-firefox-${VERSION}.zip" \
 		assets/icon-128.png \
 		assets/icon.png \
+		assets/error.png \
 		injected/* \
 		models/* \
 		parsers/* \
@@ -31,6 +32,7 @@ chrome:
 	zip "blue-blocker-chrome-${VERSION}.zip" \
 		assets/icon-128.png \
 		assets/icon.png \
+		assets/error.png \
 		injected/* \
 		models/* \
 		parsers/* \

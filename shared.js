@@ -76,14 +76,15 @@ function unblockUser(user, user_id, headers, reason) {
 	ajax.send(formdata);
 }
 
-const eventKey = "MultiTabEvent";
+export const EventKey = "MultiTabEvent";
+export const ErrorEvent = "ErrorEvent";
 const UserBlockedEvent = "UserBlockedEvent";
 api.storage.local.onChanged.addListener(items => {
 	// we're using local storage as a really dirty event driver
-	if (!items.hasOwnProperty(eventKey)) {
+	if (!items.hasOwnProperty(EventKey)) {
 		return;
 	}
-	const e = items[eventKey].newValue;
+	const e = items[EventKey].newValue;
 
 	switch (e.type) {
 		case UserBlockedEvent:
@@ -104,6 +105,20 @@ api.storage.local.onChanged.addListener(items => {
 				ele.appendChild(t);
 				setTimeout(() => ele.removeChild(t), 30e3);
 			}
+			break;
+
+		case ErrorEvent:
+			// skip checking options, since errors should always be shown
+			const { message, detail } = e;
+			console.error(logstr, `${message}:`, detail);
+
+			const t = document.createElement("div");
+			t.className = "toast error";
+			t.innerHTML = `<p>an error occurred! check the console and create an issue on <a href="https://github.com/kheina-com/Blue-Blocker/issues" target="_blank">GitHub</a></p>`;
+
+			const ele = document.getElementById("injected-blue-block-toasts");
+			ele.appendChild(t);
+			setTimeout(() => ele.removeChild(t), 60e3);
 			break;
 
 		default:
@@ -129,18 +144,25 @@ function QueueBlockUser(user, user_id, headers, reason) {
 }
 
 function CheckBlockQueue() {
-	api.storage.sync.get(DefaultOptions).then(items => {
-		SetOptions(items);
-	})
-	.then(() => queue.shift())
-	.then(item => {
-		if (item === undefined) {
-			consumer.stop();
-			return;
-		}
-		const {user, user_id, headers, reason} = item;
-		BlockUser(user, user_id, headers, reason);
-	});
+	let event = null;
+	try {
+		api.storage.sync.get(DefaultOptions).then(items => {
+			SetOptions(items);
+		})
+		.then(() => queue.shift())
+		.then(item => {
+			event = item;
+			if (item === undefined) {
+				consumer.stop();
+				return;
+			}
+			const {user, user_id, headers, reason} = item;
+			BlockUser(user, user_id, headers, reason);
+		});
+	}
+	catch (error) {
+		api.storage.local.set({ [EventKey]: { type: ErrorEvent, message: "unexpected error occurred while processing block queue", detail: { error, event } } });
+	}
 }
 
 const consumer = new QueueConsumer(api.storage.local, CheckBlockQueue, async s => {
@@ -171,7 +193,7 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 		else {
 			blockCounter.increment();
 			console.log(logstr, `blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`);
-			api.storage.local.set({ [eventKey]: { type: UserBlockedEvent, user, user_id, headers, reason } })
+			api.storage.local.set({ [EventKey]: { type: UserBlockedEvent, user, user_id, headers, reason } })
 		}
 	});
 	ajax.addEventListener('error', error => {
