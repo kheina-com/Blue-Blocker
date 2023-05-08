@@ -44,6 +44,13 @@
 	box-shadow: 0 2px 3px 1px var(--shadowcolor);
 	min-height: calc(2em + 4px);
 }
+#injected-blue-block-toasts .toast.error {
+	background: url('../assets/error.png') var(--bg1color);
+	background-repeat: no-repeat;
+	background-size: 2.5em;
+	background-position-x: 1em;
+	background-position-y: center;
+}
 
 #injected-blue-block-toasts .toast a,
 #injected-blue-block-toasts .toast a:active,

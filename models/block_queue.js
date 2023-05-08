@@ -69,4 +69,13 @@ export class BlockQueue {
 		this.releaseCriticalPoint();
 		return item;
 	}
+	async clear() {
+		await this.getCriticalPoint();
+		const items = await this.storage.get({ BlockQueue: [] });
+		if (!items.BlockQueue || items.BlockQueue.length === 0) {
+			return;
+		}
+		await this.storage.set({ BlockQueue: [] });
+		this.releaseCriticalPoint();
+	}
 }

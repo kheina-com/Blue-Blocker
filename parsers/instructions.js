@@ -82,16 +82,12 @@ export function ParseTimelineTweet(tweet, headers) {
 export function HandleInstructionsResponse(e, body) {
 	// pull the "instructions" object from the tweet
 	let instructions = body;
-	
-	try {
-		for (const key of InstructionsPaths[e.detail.parsedUrl[1]]) {
-			instructions = instructions[key];
-		}
+
+	for (const key of InstructionsPaths[e.detail.parsedUrl[1]]) {
+		instructions = instructions[key];
 	}
-	catch (e) {
-		console.error(logstr, "failed to parse response body for instructions object", e, body);
-		return;
-	}
+
+	console.debug(logstr, "parsed instructions path:", instructions);
 
 	// "instructions" should be an array, we need to iterate over it to find the "TimelineAddEntries" type
 	let tweets = undefined;
@@ -140,7 +136,11 @@ export function HandleInstructionsResponse(e, body) {
 
 			default:
 				if (!IgnoreTweetTypes.has(tweet.content.entryType)) {
-					console.error(logstr, `unexpected tweet type found: ${tweet.content.entryType}`, tweet);
+					throw {
+						message: `unexpected tweet type found: ${tweet?.content?.entryType}`,
+						name: "TweetType",
+						tweet,
+					};
 				}
 		}
 	}
