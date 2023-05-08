@@ -32,7 +32,6 @@ export const InstructionsPaths = {
 		"data",
 		"threaded_conversation_with_injections_v2",
 		"instructions",
-		"tacobell",
 	],
 	"search/adaptive.json": [
 		"timeline",
