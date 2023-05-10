@@ -239,6 +239,8 @@ export function BlockBlueVerified(user, headers) {
 	}
 	const legacyName = user.legacy?.name;
 	const screenName = user.legacy?.screenName;
+	const formattedUserName = `${legacyName} (@${screenName})`;
+
 	// since we can be fairly certain all user objects will be the same, break this into a separate function
 	if (!blockableVerifiedTypes.has(user.legacy?.verified_type)) {
 		return;
@@ -252,38 +254,38 @@ export function BlockBlueVerified(user, headers) {
 			// you cannot store sets in sync memory, so this will be a janky object
 			options.unblocked.hasOwnProperty(String(user.rest_id))
 		) {
-			console.log(logstr, `did not block Twitter Blue verified user ${legacyName} (@${screenName}) because you unblocked them previously.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because you unblocked them previously.`);
 		}
 		else if (
 			// group for block-following option
 			!options.blockFollowing && (user.legacy?.following || user.super_following)
 		) {
-			console.log(logstr, `did not block Twitter Blue verified user ${legacyName} (@${screenName}) because you follow them.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because you follow them.`);
 		}
 		else if (
 			// group for block-followers option
 			!options.blockFollowers && user.legacy?.followed_by
 		) {
-			console.log(logstr, `did not block Twitter Blue verified user ${legacyName} (@${screenName}) because they follow you.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they follow you.`);
 		}
 		else if (
 			// group for skip-verified option
 			// TODO: look to see if there's some other way to check legacy verified
 			options.skipVerified && (user.legacy?.verified)
 		) {
-			console.log(logstr, `did not block Twitter Blue verified user ${legacyName} (@${screenName}) because they are verified through other means.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they are verified through other means.`);
 		}
 		else if (
 			// verified via an affiliated organization instead of blue
 			options.skipAffiliated && (blockableAffiliateLabels.has(user.affiliates_highlighted_label?.label?.userLabelType) || user.legacy?.verified_type === "Business")
 		) {
-			console.log(logstr, `did not block Twitter Blue verified user ${legacyName} (@${screenName}) because they are verified through an affiliated organization.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they are verified through an affiliated organization.`);
 		}
 		else if (
 			// verified by follower count
 			options.skip1Mplus && user.legacy?.followers_count > 1000000
 		) {
-			console.log(logstr, `did not block Twitter Blue verified user ${legacyName} (@${screenName}) because they have over a million followers and Elon is an idiot.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they have over a million followers and Elon is an idiot.`);
 		}
 		else {
 			QueueBlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
@@ -294,13 +296,13 @@ export function BlockBlueVerified(user, headers) {
 			// group for block-following option
 			!options.blockFollowing && (user.legacy?.following || user.super_following)
 		) {
-			console.log(logstr, `did not block user with NFT avatar ${legacyName} (@${screenName}) because you follow them.`);
+			console.log(logstr, `did not block user with NFT avatar ${formattedUserName} because you follow them.`);
 		}
 		else if (
 			// group for block-followers option
 			!options.blockFollowers && user.legacy?.followed_by
 		) {
-			console.log(logstr, `did not block user with NFT avatar ${legacyName} (@${screenName}) because they follow you.`);
+			console.log(logstr, `did not block user with NFT avatar ${formattedUserName} because they follow you.`);
 		}
 		else {
 			QueueBlockUser(user, String(user.rest_id), headers, ReasonNftAvatar);
