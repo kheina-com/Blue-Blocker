@@ -240,7 +240,7 @@ export function BlockBlueVerified(user, headers) {
 	const formattedUserName = formatLegacyName(user);
 
 	// since we can be fairly certain all user objects will be the same, break this into a separate function
-	if (!blockableVerifiedTypes.has(user.legacy?.verified_type)) {
+	if (user.legacy?.verified_type && !blockableVerifiedTypes.has(user.legacy.verified_type)) {
 		return;
 	}
 	if (user.legacy?.blocking) {
