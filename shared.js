@@ -31,7 +31,7 @@ function UnblockUser(user, user_id, headers, reason, attempt = 1) {
 		}
 		else if (event.target.status >= 300) {
 			queue.push({user, user_id, headers, reason});
-			console.error(logstr, `failed to unblock ${user.legacy.name} (@${user.legacy.screen_name}):`, user, event);
+			console.error(logstr, `failed to unblock ${formatLegacyName(user)}):`, user, event);
 		}
 		else {
 			const t = document.createElement("div");
@@ -40,7 +40,7 @@ function UnblockUser(user, user_id, headers, reason, attempt = 1) {
 			const ele = document.getElementById("injected-blue-block-toasts");
 			ele.appendChild(t);
 			setTimeout(() => ele.removeChild(t), 30e3);
-			console.log(logstr, `unblocked ${user.legacy.name} (@${user.legacy.screen_name})`);
+			console.log(logstr, `unblocked ${formatLegacyName(user)})`);
 		}
 	});
 	ajax.addEventListener('error', error => {
@@ -49,7 +49,7 @@ function UnblockUser(user, user_id, headers, reason, attempt = 1) {
 		if (attempt < 3) {
 			UnblockUser(user, user_id, headers, reason, attempt + 1);
 		} else {
-			console.error(logstr, `failed to unblock ${user.legacy.name} (@${user.legacy.screen_name}):`, user, error);
+			console.error(logstr, `failed to unblock ${formatLegacyName(user)}):`, user, error);
 		}
 	});
 
@@ -139,7 +139,7 @@ function QueueBlockUser(user, user_id, headers, reason) {
 	}
 	blockCache.add(user_id);
 	queue.push({user, user_id, headers, reason});
-	console.log(logstr, `queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
+	console.log(logstr, `queued ${formatLegacyName(user)}) for a block due to ${ReasonMap[reason]}.`);
 	consumer.start();
 }
 
@@ -188,11 +188,11 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 		}
 		else if (event.target.status >= 300) {
 			queue.push({user, user_id, headers, reason});
-			console.error(logstr, `failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user, event);
+			console.error(logstr, `failed to block ${formatLegacyName(user)}):`, user, event);
 		}
 		else {
 			blockCounter.increment();
-			console.log(logstr, `blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`);
+			console.log(logstr, `blocked ${formatLegacyName(user)}) due to ${ReasonMap[reason]}.`);
 			api.storage.local.set({ [EventKey]: { type: UserBlockedEvent, user, user_id, headers, reason } })
 		}
 	});
@@ -203,7 +203,7 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 			BlockUser(user, user_id, headers, reason, attempt + 1);
 		} else {
 			queue.push({user, user_id, headers, reason});
-			console.error(logstr, `failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user, error);
+			console.error(logstr, `failed to block ${formatLegacyName(user)}):`, user, error);
 		}
 	});
 
@@ -237,9 +237,7 @@ export function BlockBlueVerified(user, headers) {
 		console.error(logstr, 'invalid user object passed to BlockBlueVerified');
 		return;
 	}
-	const legacyName = user.legacy?.name;
-	const screenName = user.legacy?.screenName;
-	const formattedUserName = `${legacyName} (@${screenName})`;
+	const formattedUserName = formatLegacyName(user);
 
 	// since we can be fairly certain all user objects will be the same, break this into a separate function
 	if (!blockableVerifiedTypes.has(user.legacy?.verified_type)) {
@@ -307,5 +305,11 @@ export function BlockBlueVerified(user, headers) {
 		else {
 			QueueBlockUser(user, String(user.rest_id), headers, ReasonNftAvatar);
 		}
+	}
+
+	function formatLegacyName(user) {
+		const legacyName = user.legacy?.name;
+		const screenName = user.legacy?.screenName;
+		return `${legacyName} (@${screenName})`;
 	}
 }
