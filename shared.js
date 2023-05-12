@@ -145,24 +145,17 @@ function queueBlockUser(user, user_id, headers, reason) {
 
 function checkBlockQueue() {
 	let event = null;
-	try {
-		api.storage.sync.get(DefaultOptions).then(items => {
-			SetOptions(items);
-		})
-		.then(() => queue.shift())
-		.then(item => {
-			event = item;
-			if (item === undefined) {
-				consumer.stop();
-				return;
-			}
-			const {user, user_id, headers, reason} = item;
-			blockUser(user, user_id, headers, reason);
-		});
-	}
-	catch (error) {
-		api.storage.local.set({ [EventKey]: { type: ErrorEvent, message: "unexpected error occurred while processing block queue", detail: { error, event } } });
-	}
+	api.storage.sync.get(DefaultOptions)
+	.then(items => SetOptions(items))
+	.then(() => queue.shift())
+	.then(item => {
+		if (item === undefined) {
+			consumer.stop();
+			return;
+		}
+		const {user, user_id, headers, reason} = item;
+		blockUser(user, user_id, headers, reason);
+	}).catch(error => api.storage.local.set({ [EventKey]: { type: ErrorEvent, message: "unexpected error occurred while processing block queue", detail: { error, event } } }));
 }
 
 const consumer = new QueueConsumer(api.storage.local, checkBlockQueue, async s => {
@@ -232,11 +225,17 @@ function blockUser(user, user_id, headers, reason, attempt=1) {
 
 const blockableAffiliateLabels = new Set(["AutomatedLabel"]);
 const blockableVerifiedTypes = new Set(["Business"]);
-export function BlockBlueVerified(user, headers) {
+export function BlockBlueVerified(user, headers, config) {
+	// We're not currently adding anything to the queue so give up.
+	if (config.suspendedBlockCollection) {
+		return;
+	}
+
 	if (!user?.rest_id) {
 		console.error(logstr, 'invalid user object passed to BlockBlueVerified');
 		return;
 	}
+
 	const formattedUserName = formatLegacyName(user);
 
 	// since we can be fairly certain all user objects will be the same, break this into a separate function
@@ -250,38 +249,38 @@ export function BlockBlueVerified(user, headers) {
 		if (
 			// group for if the user has unblocked them previously
 			// you cannot store sets in sync memory, so this will be a janky object
-			options.unblocked.hasOwnProperty(String(user.rest_id))
+			config.unblocked.hasOwnProperty(String(user.rest_id))
 		) {
 			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because you unblocked them previously.`);
 		}
 		else if (
 			// group for block-following option
-			!options.blockFollowing && (user.legacy?.following || user.super_following)
+			!config.blockFollowing && (user.legacy?.following || user.super_following)
 		) {
 			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because you follow them.`);
 		}
 		else if (
 			// group for block-followers option
-			!options.blockFollowers && user.legacy?.followed_by
+			!config.blockFollowers && user.legacy?.followed_by
 		) {
 			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they follow you.`);
 		}
 		else if (
 			// group for skip-verified option
 			// TODO: look to see if there's some other way to check legacy verified
-			options.skipVerified && (user.legacy?.verified)
+			config.skipVerified && (user.legacy?.verified)
 		) {
 			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they are verified through other means.`);
 		}
 		else if (
 			// verified via an affiliated organization instead of blue
-			options.skipAffiliated && (blockableAffiliateLabels.has(user.affiliates_highlighted_label?.label?.userLabelType) || user.legacy?.verified_type === "Business")
+			config.skipAffiliated && (blockableAffiliateLabels.has(user.affiliates_highlighted_label?.label?.userLabelType) || user.legacy?.verified_type === "Business")
 		) {
 			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they are verified through an affiliated organization.`);
 		}
 		else if (
 			// verified by follower count
-			options.skip1Mplus && user.legacy?.followers_count > 1000000
+			config.skip1Mplus && user.legacy?.followers_count > 1000000
 		) {
 			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they have over a million followers and Elon is an idiot.`);
 		}
@@ -289,16 +288,16 @@ export function BlockBlueVerified(user, headers) {
 			queueBlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
 		}
 	}
-	else if (options.blockNftAvatars && user.has_nft_avatar) {
+	else if (config.blockNftAvatars && user.has_nft_avatar) {
 		if (
 			// group for block-following option
-			!options.blockFollowing && (user.legacy?.following || user.super_following)
+			!config.blockFollowing && (user.legacy?.following || user.super_following)
 		) {
 			console.log(logstr, `did not block user with NFT avatar ${formattedUserName} because you follow them.`);
 		}
 		else if (
 			// group for block-followers option
-			!options.blockFollowers && user.legacy?.followed_by
+			!config.blockFollowers && user.legacy?.followed_by
 		) {
 			console.log(logstr, `did not block user with NFT avatar ${formattedUserName} because they follow you.`);
 		}

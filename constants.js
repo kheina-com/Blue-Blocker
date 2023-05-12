@@ -12,6 +12,7 @@ export const logstr = "[Blue Blocker]";
 export const DefaultOptions = {
 	// by default, spare as many people as possible
 	// let the user decide if they want to be stricter
+	suspendedBlockCollection: false,
 	showBlockPopups: true,
 	mute: false,
 	blockFollowing: false,
