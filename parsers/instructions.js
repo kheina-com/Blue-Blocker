@@ -51,7 +51,7 @@ export const IgnoreTweetTypes = new Set([
 	"TimelineTimelineCursor",
 ]);
 
-function handleTweetObject(obj, headers) {
+function handleTweetObject(obj, headers, config) {
 	let ptr = obj;
 	for (const key of UserObjectPath) {
 		if (ptr.hasOwnProperty(key)) {
@@ -62,24 +62,24 @@ function handleTweetObject(obj, headers) {
 		console.error(logstr, "could not parse tweet", obj);
 		return;
 	}
-	BlockBlueVerified(ptr, headers);
+	BlockBlueVerified(ptr, headers, config);
 }
 
-export function ParseTimelineTweet(tweet, headers) {
+export function ParseTimelineTweet(tweet, headers, config) {
 	if(tweet.itemType=="TimelineTimelineCursor") {
 		return;
 	}
 	
 	// Handle retweets and quoted tweets (check the retweeted user, too)
 	if(tweet?.tweet_results?.result?.quoted_status_result) {
-		handleTweetObject(tweet.tweet_results.result.quoted_status_result.result, headers);
+		handleTweetObject(tweet.tweet_results.result.quoted_status_result.result, headers, config);
 	} else if(tweet?.tweet_results?.result?.legacy?.retweeted_status_result) {
-		handleTweetObject(tweet.tweet_results.result.legacy.retweeted_status_result.result, headers);
+		handleTweetObject(tweet.tweet_results.result.legacy.retweeted_status_result.result, headers, config);
 	}
-	handleTweetObject(tweet, headers);
+	handleTweetObject(tweet, headers, config);
 }
 
-export function HandleInstructionsResponse(e, body) {
+export function HandleInstructionsResponse(e, body, config) {
 	// pull the "instructions" object from the tweet
 	let instructions = body;
 
@@ -124,13 +124,13 @@ export function HandleInstructionsResponse(e, body) {
 
 			case "TimelineTimelineItem":
 				if (tweet.content.itemContent.itemType=="TimelineTweet") {
-					ParseTimelineTweet(tweet.content.itemContent, e.detail.request.headers);
+					ParseTimelineTweet(tweet.content.itemContent, e.detail.request.headers, config);
 				}
 				break;
 
 			case "TimelineTimelineModule":
 				for (const innerTweet of tweet.content.items) {
-					ParseTimelineTweet(innerTweet.item.itemContent, e.detail.request.headers)
+					ParseTimelineTweet(innerTweet.item.itemContent, e.detail.request.headers, config)
 				}
 				break;
 

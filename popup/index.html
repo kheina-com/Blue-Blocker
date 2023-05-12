@@ -10,6 +10,16 @@
 		<h2><img src="../assets/icon.png" alt="🅱️">lue Blocker</h2>
 		<p class="blocked-users-count">blocked <span id="blocked-users-count"></span> users so far! (<span id="blocked-user-queue-length"></span> queued)</p>
 		<div class="option">
+			<input type="checkbox" id="suspend-block-collection">
+			<label ref="label" for="suspend-block-collection" >
+				<div class="checkmark">
+					<div></div>
+				</div>
+				<p>suspend collection of users to block</p>
+			</label>
+			<span id="suspend-block-collection-status"></span>
+		</div>
+		<div class="option">
 			<input type="checkbox" id="show-block-popups">
 			<label ref="label" for="show-block-popups" >
 				<div class="checkmark">
