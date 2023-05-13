@@ -13,7 +13,7 @@ export function SetOptions(items) {
 	options = items;
 }
 
-function unblockUser(user, user_id, headers, reason) {
+function unblockUser(user, user_id, headers, reason, attempt = 1) {
 	api.storage.sync.get({ unblocked: { } }).then(items => {
 		items.unblocked[String(user_id)] = null;
 		api.storage.sync.set(items);
@@ -31,7 +31,7 @@ function unblockUser(user, user_id, headers, reason) {
 		}
 		else if (event.target.status >= 300) {
 			queue.push({user, user_id, headers, reason});
-			console.error(logstr, `failed to unblock ${user.legacy.name} (@${user.legacy.screen_name}):`, user, event);
+			console.error(logstr, `failed to unblock ${formatLegacyName(user)}:`, user, event);
 		}
 		else {
 			const t = document.createElement("div");
@@ -40,7 +40,7 @@ function unblockUser(user, user_id, headers, reason) {
 			const ele = document.getElementById("injected-blue-block-toasts");
 			ele.appendChild(t);
 			setTimeout(() => ele.removeChild(t), 30e3);
-			console.log(logstr, `unblocked ${user.legacy.name} (@${user.legacy.screen_name})`);
+			console.log(logstr, `unblocked ${formatLegacyName(user)}`);
 		}
 	});
 	ajax.addEventListener('error', error => {
@@ -49,7 +49,7 @@ function unblockUser(user, user_id, headers, reason) {
 		if (attempt < 3) {
 			unblockUser(user, user_id, headers, reason, attempt + 1);
 		} else {
-			console.error(logstr, `failed to unblock ${user.legacy.name} (@${user.legacy.screen_name}):`, user, error);
+			console.error(logstr, `failed to unblock ${formatLegacyName(user)}:`, user, error);
 		}
 	});
 
@@ -133,17 +133,17 @@ export function ClearCache() {
 	blockCache.clear();
 }
 
-function QueueBlockUser(user, user_id, headers, reason) {
+function queueBlockUser(user, user_id, headers, reason) {
 	if (blockCache.has(user_id)) {
 		return;
 	}
 	blockCache.add(user_id);
 	queue.push({user, user_id, headers, reason});
-	console.log(logstr, `queued ${user.legacy.name} (@${user.legacy.screen_name}) for a block due to ${ReasonMap[reason]}.`);
+	console.log(logstr, `queued ${formatLegacyName(user)} for a block due to ${ReasonMap[reason]}.`);
 	consumer.start();
 }
 
-function CheckBlockQueue() {
+function checkBlockQueue() {
 	let event = null;
 	api.storage.sync.get(DefaultOptions)
 	.then(items => SetOptions(items))
@@ -154,18 +154,18 @@ function CheckBlockQueue() {
 			return;
 		}
 		const {user, user_id, headers, reason} = item;
-		BlockUser(user, user_id, headers, reason);
+		blockUser(user, user_id, headers, reason);
 	}).catch(error => api.storage.local.set({ [EventKey]: { type: ErrorEvent, message: "unexpected error occurred while processing block queue", detail: { error, event } } }));
 }
 
-const consumer = new QueueConsumer(api.storage.local, CheckBlockQueue, async s => {
+const consumer = new QueueConsumer(api.storage.local, checkBlockQueue, async s => {
 	const items = await api.storage.sync.get({ blockInterval: options.blockInterval });
 	return items.blockInterval * 1000
 });
 consumer.start();
 
 const CsrfTokenRegex = /ct0=\s*(\w+);/;
-function BlockUser(user, user_id, headers, reason, attempt=1) {
+function blockUser(user, user_id, headers, reason, attempt=1) {
 	const formdata = new FormData();
 	formdata.append("user_id", user_id);
 
@@ -181,11 +181,11 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 		}
 		else if (event.target.status >= 300) {
 			queue.push({user, user_id, headers, reason});
-			console.error(logstr, `failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user, event);
+			console.error(logstr, `failed to block ${formatLegacyName(user)}:`, user, event);
 		}
 		else {
 			blockCounter.increment();
-			console.log(logstr, `blocked ${user.legacy.name} (@${user.legacy.screen_name}) due to ${ReasonMap[reason]}.`);
+			console.log(logstr, `blocked ${formatLegacyName(user)} due to ${ReasonMap[reason]}.`);
 			api.storage.local.set({ [EventKey]: { type: UserBlockedEvent, user, user_id, headers, reason } })
 		}
 	});
@@ -193,10 +193,10 @@ function BlockUser(user, user_id, headers, reason, attempt=1) {
 		console.error(logstr, 'error:', error);
 
 		if (attempt < 3) {
-			BlockUser(user, user_id, headers, reason, attempt + 1);
+			blockUser(user, user_id, headers, reason, attempt + 1);
 		} else {
 			queue.push({user, user_id, headers, reason});
-			console.error(logstr, `failed to block ${user.legacy.name} (@${user.legacy.screen_name}):`, user, error);
+			console.error(logstr, `failed to block ${formatLegacyName(user)}:`, user, error);
 		}
 	});
 
@@ -231,11 +231,18 @@ export function BlockBlueVerified(user, headers, config) {
 		return;
 	}
 
-	// since we can be fairly certain all user objects will be the same, break this into a separate function
-	if (user.legacy.verified_type && !blockableVerifiedTypes.has(user.legacy.verified_type)) {
+	if (!user?.rest_id) {
+		console.error(logstr, 'invalid user object passed to BlockBlueVerified');
 		return;
 	}
-	if (user.legacy.blocking) {
+
+	const formattedUserName = formatLegacyName(user);
+
+	// since we can be fairly certain all user objects will be the same, break this into a separate function
+	if (user.legacy?.verified_type && !blockableVerifiedTypes.has(user.legacy.verified_type)) {
+		return;
+	}
+	if (user.legacy?.blocking) {
 		return;
 	}
 	if (user.is_blue_verified) {	
@@ -244,58 +251,64 @@ export function BlockBlueVerified(user, headers, config) {
 			// you cannot store sets in sync memory, so this will be a janky object
 			config.unblocked.hasOwnProperty(String(user.rest_id))
 		) {
-			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because you unblocked them previously.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because you unblocked them previously.`);
 		}
 		else if (
 			// group for block-following option
-			!config.blockFollowing && (user.legacy.following || user.super_following)
+			!config.blockFollowing && (user.legacy?.following || user.super_following)
 		) {
-			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because you follow them.`);
 		}
 		else if (
 			// group for block-followers option
-			!config.blockFollowers && user.legacy.followed_by
+			!config.blockFollowers && user.legacy?.followed_by
 		) {
-			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they follow you.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they follow you.`);
 		}
 		else if (
 			// group for skip-verified option
 			// TODO: look to see if there's some other way to check legacy verified
-			config.skipVerified && (user.legacy.verified)
+			config.skipVerified && (user.legacy?.verified)
 		) {
-			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through other means.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they are verified through other means.`);
 		}
 		else if (
-			// verified via an affiliated organisation instead of blue
-			config.skipAffiliated && (blockableAffiliateLabels.has(user?.affiliates_highlighted_label?.label?.userLabelType) || user.legacy.verified_type === "Business")
+			// verified via an affiliated organization instead of blue
+			config.skipAffiliated && (blockableAffiliateLabels.has(user.affiliates_highlighted_label?.label?.userLabelType) || user.legacy?.verified_type === "Business")
 		) {
-			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they are verified through an affiliated organisation.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they are verified through an affiliated organization.`);
 		}
 		else if (
 			// verified by follower count
-			config.skip1Mplus && user.legacy.followers_count > 1000000
+			config.skip1Mplus && user.legacy?.followers_count > 1000000
 		) {
-			console.log(logstr, `did not block Twitter Blue verified user ${user.legacy.name} (@${user.legacy.screen_name}) because they have over a million followers and Elon is an idiot.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they have over a million followers and Elon is an idiot.`);
 		}
 		else {
-			QueueBlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
+			queueBlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
 		}
 	}
 	else if (config.blockNftAvatars && user.has_nft_avatar) {
 		if (
 			// group for block-following option
-			!config.blockFollowing && (user.legacy.following || user.super_following)
+			!config.blockFollowing && (user.legacy?.following || user.super_following)
 		) {
-			console.log(logstr, `did not block user with NFT avatar ${user.legacy.name} (@${user.legacy.screen_name}) because you follow them.`);
+			console.log(logstr, `did not block user with NFT avatar ${formattedUserName} because you follow them.`);
 		}
 		else if (
 			// group for block-followers option
-			!config.blockFollowers && user.legacy.followed_by
+			!config.blockFollowers && user.legacy?.followed_by
 		) {
-			console.log(logstr, `did not block user with NFT avatar ${user.legacy.name} (@${user.legacy.screen_name}) because they follow you.`);
+			console.log(logstr, `did not block user with NFT avatar ${formattedUserName} because they follow you.`);
 		}
 		else {
-			QueueBlockUser(user, String(user.rest_id), headers, ReasonNftAvatar);
+			queueBlockUser(user, String(user.rest_id), headers, ReasonNftAvatar);
 		}
 	}
+}
+
+function formatLegacyName(user) {
+	const legacyName = user.legacy?.name;
+	const screenName = user.legacy?.screen_name;
+	return `${legacyName} (@${screenName})`;
 }
