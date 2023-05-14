@@ -10,7 +10,6 @@ export function HandleForYou(e: CustomEvent<BlueBlockerEvent>, body: Body, confi
   // but, it's not missing verified_type, which says "Business" when using a
   // gold (affiliate) checkmark.
 
-  console.log('HandleForYou', { body });
   // so this url straight up gives us an array of users, so just use that lmao
   for (const [user_id, user] of Object.entries(body.globalObjects.users)) {
     // the user object is a bit different, so reshape it a little

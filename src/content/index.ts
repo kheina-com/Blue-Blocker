@@ -5,18 +5,14 @@ import { HandleForYou } from '../parsers/timeline';
 import { HandleTypeahead } from '../parsers/search';
 
 // https://github.com/crxjs/chrome-extension-tools/issues/576#issuecomment-1312838225
-// import inject from '../injected/inject';
-
-// const script = document.createElement('script');
-// script.src = chrome.runtime.getURL(inject);
-// script.type = 'module';
-// document.head.prepend(script);
-
-let s = document.createElement('script');
-s.src = api.runtime.getURL('src/injected/inject.js'); // MUST BE ABSOLUTE PATH & .js
-s.id = 'injected-blue-block-xhr';
-s.type = 'text/javascript';
-(document.head || document.documentElement).appendChild(s);
+// TODO: see if we can remove this ignore
+// @ts-ignore
+import inject from '/src/injected/inject?script&module';
+const script = document.createElement('script');
+script.src = chrome.runtime.getURL(inject);
+script.id = 'injected-blue-block-xhr';
+script.type = 'text/javascript';
+document.head.prepend(script);
 
 let l = document.createElement('link');
 l.href = api.runtime.getURL('src/injected/toasts.css'); // MUST BE ABSOLUTE PATH
