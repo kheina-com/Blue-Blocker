@@ -18,10 +18,9 @@ By default, Blue Blocker does not block users you follow or follow you who have 
 ## Development
 
 1. Check if your `Node.js` version is >= **18**.
-2. Change or configure the name of your extension on `src/manifest`.
-3. Run `npm install` to install the dependencies.
+2. Run `npm install` to install the dependencies.
 
-run the commands
+run the command
 
 ```shell
 npm run dev
