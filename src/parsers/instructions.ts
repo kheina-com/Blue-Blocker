@@ -90,7 +90,7 @@ export function HandleInstructionsResponse(
     return;
   }
 
-  tweets.entries = [];
+  tweets.entries = tweets.entries || [];
   if (isAddToModule) {
     // wrap AddToModule info so the handler can treat it the same (and unwrap it below)
     tweets.entries = [
@@ -140,7 +140,7 @@ export function HandleInstructionsResponse(
   }
 }
 interface Body {
-  [key: string]: {
+  data: {
     [key: string]: {
       home_timeline_urt?: Instruction[];
       result?: {
@@ -158,15 +158,17 @@ interface Instruction {
   type: string;
   direction?: string;
   moduleItems?: any;
-  entries?: {
-    entryId?: string;
-    sortIndex?: string;
-    content: {
-      itemContent?: {
-        itemType: string;
-      };
-      entryType: string;
-      items?: any[];
+  entries?: Entry[];
+}
+
+interface Entry {
+  entryId?: string;
+  sortIndex?: string;
+  content: {
+    itemContent?: {
+      itemType: string;
     };
-  }[];
+    entryType: string;
+    items?: any[];
+  };
 }

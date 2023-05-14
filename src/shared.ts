@@ -194,8 +194,6 @@ function blockUser(user: any, user_id: string, headers: any, reason: number, att
 
   const xhr = new XMLHttpRequest();
 
-  console.log({ user, user_id });
-
   xhr.addEventListener('load', (event) => {
     if (xhr.status === 403) {
       // user has been logged out, we need to stop queue and re-add

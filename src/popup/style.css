@@ -49,7 +49,7 @@ h2 {
 }
 /* Blue Blocker logo in the popup title */
 h2 img {
-	height: 1.2em;
+	height: 1.2em !important; /* overwrite inline style that was added for development */
 	margin-bottom: -0.15em;
 }
 
