@@ -1,16 +1,13 @@
 # built package files
+/build
 *.zip
-
-# See https://help.github.com/ignore-files/ for more about ignoring files.
+firefox-manifest.json
 
 # dependencies
 /node_modules
 
 # testing
 /coverage
-
-# production
-/build
 
 # misc
 .DS_Store
