@@ -6,11 +6,11 @@ export default defineManifest({
   version: '1.0.0',
   manifest_version: 3,
   icons: {
-    '128': 'img/icon-128.png',
+    '128': 'icon/icon-128.png',
   },
   action: {
     default_popup: 'popup.html',
-    default_icon: 'img/icon.png',
+    default_icon: 'icon/icon.png',
   },
   background: {
     service_worker: 'src/background/index.ts',

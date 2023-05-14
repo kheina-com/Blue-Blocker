@@ -40,7 +40,7 @@ interface BlueBlockerUser {
 interface BlueBlockerEvent {
   url: URL | string;
   parsedUrl: RegExpExecArray;
-  body?: XMLHttpRequest.response;
+  body: XMLHttpRequestResponseType;
   request: { headers: any };
 }
 
