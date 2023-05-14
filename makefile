@@ -18,8 +18,8 @@ firefox:
 	# move action to browser_action
 	jq '.["browser_action"] = .action | del(.action)' firefox-manifest.json >tmp.json && mv tmp.json firefox-manifest.json
 	# replace chrome manifest with firefox manifest
+	jq '.browser_specific_settings = {"gecko": {"id": "{119be3f3-597c-4f6a-9caf-627ee431d374}"}}'  firefox-manifest.json >tmp.json && mv tmp.json firefox-manifest.json
 	mv firefox-manifest.json build/manifest.json
-
 
 	zip "blue-blocker-firefox-${VERSION}.zip" \
 		build/* \
