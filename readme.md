@@ -29,26 +29,18 @@ npm run dev
 
 ### Chrome
 
-1. Visit the [chrome extentions page](chrome://extensions/)
+1. run `npm run dev` or `npm run build`
+2. Visit the [chrome extentions page](chrome://extensions/)
    1. (or enter `chrome://extensions/` in the Chrome url bar)
-2. Enable `Developer mode` in the top right
-3. Click `Load unpacked` in the top left and select `blue-blocker/build` folder
+3. Enable `Developer mode` in the top right
+4. Click `Load unpacked` in the top left and select `blue-blocker/build` folder
 
 ### Firefox
 
-1. Visit the [firefox addon debugging page](about:debugging#/runtime/this-firefox)
+1. Run `make firefox` in the top right
+2. Visit the [firefox addon debugging page](about:debugging#/runtime/this-firefox)
    1. (or enter `about:debugging#/runtime/this-firefox` in the Firefox url bar)
-2. Click `Load Temporary Add-on` in the top right and select `manifest.json` in the `blue-blocker/build` folder
-
-## Packing
-
-After the development of your extension run the command
-
-```shell
-npm build
-```
-
-Now, the content of `build` folder will be the extension ready to be submitted to the Chrome Web Store. Just take a look at the [official guide](https://developer.chrome.com/webstore/publish) to more infos about publishing.
+3. Click `Load Temporary Add-on` in the top right and select `manifest.json` in the `blue-blocker/build` folder
 
 ## License
 

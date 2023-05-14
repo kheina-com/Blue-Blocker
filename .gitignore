@@ -17,6 +17,7 @@ firefox-manifest.json
 .env.production.local
 .history
 *.log
+vite.config.ts.*
 
 # secrets
 secrets.*.js
