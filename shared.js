@@ -28,7 +28,18 @@ function unblockUser(user, user_id, headers, reason, attempt = 1) {
 		if (event.target.status === 403) {
 			// user has been logged out, we need to stop queue and re-add
 			console.log(logstr, "user is logged out, failed to unblock user.");
-			return;
+		}
+		else if (event.target.status === 404) {
+			// notice the wording here is different than the blocked 404. the difference is that if the user
+			// is unbanned, they will still be blocked and we want the user to know about that
+
+			const t = document.createElement("div");
+			t.className = "toast";
+			t.innerText = `could not unblock @${user.legacy.screen_name}, user has been suspended or no longer exists.`;
+			const ele = document.getElementById("injected-blue-block-toasts");
+			ele.appendChild(t);
+			setTimeout(() => ele.removeChild(t), options.popupTimer * 1000);
+			console.log(logstr, `failed to unblock ${FormatLegacyName(user)}, user no longer exists`);
 		}
 		else if (event.target.status >= 300) {
 			console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, event);
@@ -44,8 +55,6 @@ function unblockUser(user, user_id, headers, reason, attempt = 1) {
 		}
 	});
 	ajax.addEventListener('error', error => {
-		console.error(logstr, 'error:', error);
-
 		if (attempt < 3) {
 			unblockUser(user, user_id, headers, reason, attempt + 1);
 		} else {
@@ -177,7 +186,9 @@ function blockUser(user, user_id, headers, reason, attempt=1) {
 			consumer.stop();
 			queue.push({user, user_id, headers, reason});
 			console.log(logstr, "user is logged out, queue consumer has been halted.");
-			return;
+		}
+		else if (event.target.status === 404) {
+			console.log(logstr, `did not block ${FormatLegacyName(user)}, user no longer exists`);
 		}
 		else if (event.target.status >= 300) {
 			queue.push({user, user_id, headers, reason});

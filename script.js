@@ -22,6 +22,11 @@ document.body.appendChild(t);
 document.addEventListener("blue-blocker-event", function (e) {
 	// TODO: we may want to seriously consider clearing the cache on a much less frequent
 	// cadence since we're no longer able to block users immediately and need the queue
+
+	// TODO: we really really really want to keep a single global "headers" object and set
+	// it here so that when we have a large queue, we dont have 1000+ copies of the same
+	// headers. instead, we have a single copy of the most up-to-date headers
+
 	ClearCache();
 	api.storage.sync.get(DefaultOptions).then(config => {
 		const body_str = e.detail.body;
