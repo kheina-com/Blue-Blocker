@@ -1,6 +1,7 @@
 import { BlockCounter } from "./models/block_counter.js";
 import { BlockQueue } from "./models/block_queue.js";
 import { QueueConsumer } from "./models/queue_consumer.js";
+import { commafy, FormatLegacyName } from "./utilities.js";
 import { api, DefaultOptions, logstr, Headers, ReasonBlueVerified, ReasonNftAvatar, ReasonMap } from "./constants.js";
 
 // Define constants that shouldn't be exported to the rest of the addon
@@ -30,8 +31,7 @@ function unblockUser(user, user_id, headers, reason, attempt = 1) {
 			return;
 		}
 		else if (event.target.status >= 300) {
-			queue.push({user, user_id, headers, reason});
-			console.error(logstr, `failed to unblock ${formatLegacyName(user)}:`, user, event);
+			console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, event);
 		}
 		else {
 			const t = document.createElement("div");
@@ -39,8 +39,8 @@ function unblockUser(user, user_id, headers, reason, attempt = 1) {
 			t.innerText = `unblocked @${user.legacy.screen_name}, they won't be blocked again.`;
 			const ele = document.getElementById("injected-blue-block-toasts");
 			ele.appendChild(t);
-			setTimeout(() => ele.removeChild(t), 30e3);
-			console.log(logstr, `unblocked ${formatLegacyName(user)}`);
+			setTimeout(() => ele.removeChild(t), options.popupTimer * 1000);
+			console.log(logstr, `unblocked ${FormatLegacyName(user)}`);
 		}
 	});
 	ajax.addEventListener('error', error => {
@@ -49,7 +49,7 @@ function unblockUser(user, user_id, headers, reason, attempt = 1) {
 		if (attempt < 3) {
 			unblockUser(user, user_id, headers, reason, attempt + 1);
 		} else {
-			console.error(logstr, `failed to unblock ${formatLegacyName(user)}:`, user, error);
+			console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, error);
 		}
 	});
 
@@ -103,7 +103,7 @@ api.storage.local.onChanged.addListener(items => {
 				t.appendChild(b);
 				const ele = document.getElementById("injected-blue-block-toasts");
 				ele.appendChild(t);
-				setTimeout(() => ele.removeChild(t), 30e3);
+				setTimeout(() => ele.removeChild(t), options.popupTimer * 1000);
 			}
 			break;
 
@@ -118,7 +118,7 @@ api.storage.local.onChanged.addListener(items => {
 
 			const ele = document.getElementById("injected-blue-block-toasts");
 			ele.appendChild(t);
-			setTimeout(() => ele.removeChild(t), 60e3);
+			setTimeout(() => ele.removeChild(t), options.popupTimer * 2000);
 			break;
 
 		default:
@@ -139,7 +139,7 @@ function queueBlockUser(user, user_id, headers, reason) {
 	}
 	blockCache.add(user_id);
 	queue.push({user, user_id, headers, reason});
-	console.log(logstr, `queued ${formatLegacyName(user)} for a block due to ${ReasonMap[reason]}.`);
+	console.log(logstr, `queued ${FormatLegacyName(user)} for a block due to ${ReasonMap[reason]}.`);
 	consumer.start();
 }
 
@@ -181,11 +181,11 @@ function blockUser(user, user_id, headers, reason, attempt=1) {
 		}
 		else if (event.target.status >= 300) {
 			queue.push({user, user_id, headers, reason});
-			console.error(logstr, `failed to block ${formatLegacyName(user)}:`, user, event);
+			console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, event);
 		}
 		else {
 			blockCounter.increment();
-			console.log(logstr, `blocked ${formatLegacyName(user)} due to ${ReasonMap[reason]}.`);
+			console.log(logstr, `blocked ${FormatLegacyName(user)} due to ${ReasonMap[reason]}.`);
 			api.storage.local.set({ [EventKey]: { type: UserBlockedEvent, user, user_id, headers, reason } })
 		}
 	});
@@ -196,7 +196,7 @@ function blockUser(user, user_id, headers, reason, attempt=1) {
 			blockUser(user, user_id, headers, reason, attempt + 1);
 		} else {
 			queue.push({user, user_id, headers, reason});
-			console.error(logstr, `failed to block ${formatLegacyName(user)}:`, user, error);
+			console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, error);
 		}
 	});
 
@@ -236,7 +236,7 @@ export function BlockBlueVerified(user, headers, config) {
 		return;
 	}
 
-	const formattedUserName = formatLegacyName(user);
+	const formattedUserName = FormatLegacyName(user);
 
 	// since we can be fairly certain all user objects will be the same, break this into a separate function
 	if (user.legacy?.verified_type && !blockableVerifiedTypes.has(user.legacy.verified_type)) {
@@ -280,9 +280,9 @@ export function BlockBlueVerified(user, headers, config) {
 		}
 		else if (
 			// verified by follower count
-			config.skip1Mplus && user.legacy?.followers_count > 1000000
+			config.skip1Mplus && user.legacy?.followers_count > (config.skipFollowerCount)
 		) {
-			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they have over a million followers and Elon is an idiot.`);
+			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they have over ${commafy(config.skipFollowerCount)} followers and Elon is an idiot.`);
 		}
 		else {
 			queueBlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
@@ -305,10 +305,4 @@ export function BlockBlueVerified(user, headers, config) {
 			queueBlockUser(user, String(user.rest_id), headers, ReasonNftAvatar);
 		}
 	}
-}
-
-function formatLegacyName(user) {
-	const legacyName = user.legacy?.name;
-	const screenName = user.legacy?.screen_name;
-	return `${legacyName} (@${screenName})`;
 }

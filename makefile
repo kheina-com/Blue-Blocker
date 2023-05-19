@@ -17,6 +17,7 @@ firefox:
 		models/* \
 		parsers/* \
 		popup/* \
+		pages/* \
 		manifest.json \
 		LICENSE \
 		readme.md \
@@ -37,6 +38,7 @@ chrome:
 		models/* \
 		parsers/* \
 		popup/* \
+		pages/* \
 		manifest.json \
 		LICENSE \
 		readme.md \

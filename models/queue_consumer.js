@@ -33,7 +33,7 @@ export class QueueConsumer {
 				// try to access the critical point
 				await this.storage.set({ [criticalPointKey]: { refId: this._refId, time: (new Date()).valueOf() + this._interval * 1.5 } });
 				await new Promise(r => setTimeout(r, 10)); // wait a second to make sure any other sets have resolved
-				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey].refId;
+				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey]?.refId;
 			}
 			else {
 				return false;

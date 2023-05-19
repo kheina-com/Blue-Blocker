@@ -17,6 +17,8 @@ html {
 	--screen-cover: #00000080;
 	--border-size: 1px;
 	--border-radius: 3px;
+
+	border: var(--border-size) solid var(--bordercolor);
 }
 html * {
 	font-family: Bitstream Vera Sans, DejaVu Sans, Arial, Helvetica, sans-serif;
@@ -32,6 +34,13 @@ body {
 	padding: 0;
 	font-size: 1.1rem;
 }
+body > div {
+	margin-bottom: 1em;
+}
+body > div:last-child, .last {
+	margin-bottom: 0;
+}
+
 
 #version {
 	color: var(--subtle);
@@ -62,6 +71,12 @@ a, input, label, textarea {
 	-o-transition: var(--transition) var(--fadetime);
 	transition: var(--transition) var(--fadetime);
 }
+a:link, a:visited
+{ color: var(--textcolor); }
+a:hover {
+	color: var(--interact) !important;
+	opacity: 1 !important;
+}
 
 .option p {
 	text-align: center;
@@ -70,15 +85,10 @@ a, input, label, textarea {
 
 .option {
 	display: flex;
-	margin-bottom: 1em;
 	justify-content: space-between;
 }
 
-.last {
-	margin-bottom: 0;
-}
-
-.option input {
+input[type="checkbox"] {
 	position: absolute;
 	display: none;
 	top: -100vh;
@@ -144,6 +154,41 @@ input:checked + label div.checkmark div, label.checked div.checkmark div {
 	-webkit-transform: rotate(45deg);
 	-ms-transform: rotate(45deg);
 	transform: rotate(45deg);
+}
+
+.skip-follower-count.option {
+	margin-left: 2em;
+}
+input#skip-follower-count {
+	text-align: right;
+	width: 6em;
+	height: 1em;
+	position: relative;
+	top: -0.1em;
+	padding: 0.5em 1em;
+	background: var(--bg0color);
+	color: var(--textcolor);
+	border: var(--border-size) solid var(--bordercolor);
+	box-shadow: 0 2px 3px 1px var(--shadowcolor);
+	border-radius: var(--border-radius);
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
+}
+input#skip-follower-count:hover {
+	color: var(--interact);
+	border-color: var(--borderhover);
+	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
+}
+input#skip-follower-count:focus {
+	color: var(--textcolor);
+}
+
+.gold-check {
+	margin: -0.15em 0;
+	width: 1.2em;
+	height: 1.2em;
 }
 
 .blocked-users-count {
