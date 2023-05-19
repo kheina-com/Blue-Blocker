@@ -20,6 +20,9 @@ html {
 
 	border: var(--border-size) solid var(--bordercolor);
 }
+script {
+	display: none;
+}
 html * {
 	font-family: Bitstream Vera Sans, DejaVu Sans, Arial, Helvetica, sans-serif;
 }
@@ -187,7 +190,7 @@ input#skip-follower-count:focus {
 }
 
 .gold-check {
-	margin: -0.15em 0;
+	margin: -0.2em 0;
 	width: 1.2em;
 	height: 1.2em;
 }

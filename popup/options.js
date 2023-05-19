@@ -125,13 +125,13 @@ document.getElementById("skip-affiliated").addEventListener("input", e => {
 });
 
 document.getElementById("skip-1mplus").addEventListener("input", e => {
-	document.getElementById("skip-follower-count-option").style.display = e.target.checked ? null : "none";
 	api.storage.sync.set({
 		skip1Mplus: e.target.checked,
 	}).then(() => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("skip-1mplus-status");
 		status.textContent = "saved";
+		document.getElementById("skip-follower-count-option").style.display = e.target.checked ? null : "none";
 		setTimeout(() => status.textContent = null, 1000);
 	});
 });
