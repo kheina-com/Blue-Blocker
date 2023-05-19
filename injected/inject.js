@@ -21,7 +21,17 @@
 			// determine if request is a timeline/tweet-returning request
 			const parsedUrl = RequestRegex.exec(this._url);
 			if(this._url && parsedUrl) {
-				document.dispatchEvent(new CustomEvent("blue-blocker-event", { detail: { url : this._url, parsedUrl, body: this.response, request: { headers: this._requestHeaders } } }));
+				document.dispatchEvent(new CustomEvent("blue-blocker-event", {
+					detail: {
+						parsedUrl,
+						url : this._url,
+						body: this.response,
+						request: {
+							headers: this._requestHeaders,
+						},
+						status: this.status,
+					},
+				}));
 			}
 		});
 		return send.apply(this, arguments);

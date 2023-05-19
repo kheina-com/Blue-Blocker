@@ -3,7 +3,7 @@ import { BlockBlueVerified } from "../shared.js";
 // including the "For You" page as well as the "Following" page. it also
 // seems to work for the "adaptive.json" response from search results
 
-export function HandleForYou(e, body, config) {
+export function HandleForYou(_, body, config) {
 	// This API endpoint currently does not deliver information required for
 	// block filters (in particular, it's missing affiliates_highlighted_label).
 	// The above doesn't seem completely true. it's missing affiliates specifically
@@ -28,6 +28,6 @@ export function HandleForYou(e, body, config) {
 			},
 			super_following: user.ext?.superFollowMetadata?.r?.ok?.superFollowing,
 			rest_id: user_id,
-		}, e.detail.request.headers, config)
+		}, config)
 	}
 }

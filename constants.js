@@ -20,8 +20,10 @@ export const DefaultOptions = {
 	skipVerified: true,
 	skipAffiliated: true,
 	skip1Mplus: true,
+	skipFollowerCount: 1e6,
 	blockNftAvatars: false,
 	blockInterval: 15,
+	popupTimer: 30,
 
 	// this isn't set, but is used
 	// TODO: when migrating to firefox manifest v3, check to see if sets can be stored yet

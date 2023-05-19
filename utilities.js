@@ -25,3 +25,9 @@ export function commafy(x)
 // due to floating point bullshit, but it's good enough
 const MaxId = 0xffffffffffffffff;
 export const RefId = () => Math.round(Math.random() * MaxId);
+
+export function FormatLegacyName(user) {
+	const legacyName = user.legacy?.name;
+	const screenName = user.legacy?.screen_name;
+	return `${legacyName} (@${screenName})`;
+}

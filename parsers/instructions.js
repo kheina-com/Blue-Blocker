@@ -51,7 +51,7 @@ export const IgnoreTweetTypes = new Set([
 	"TimelineTimelineCursor",
 ]);
 
-function handleTweetObject(obj, headers, config) {
+function handleTweetObject(obj, config) {
 	let ptr = obj;
 	for (const key of UserObjectPath) {
 		if (ptr.hasOwnProperty(key)) {
@@ -62,21 +62,21 @@ function handleTweetObject(obj, headers, config) {
 		console.error(logstr, "could not parse tweet", obj);
 		return;
 	}
-	BlockBlueVerified(ptr, headers, config);
+	BlockBlueVerified(ptr, config);
 }
 
-export function ParseTimelineTweet(tweet, headers, config) {
+export function ParseTimelineTweet(tweet, config) {
 	if(tweet.itemType=="TimelineTimelineCursor") {
 		return;
 	}
 	
 	// Handle retweets and quoted tweets (check the retweeted user, too)
 	if(tweet?.tweet_results?.result?.quoted_status_result) {
-		handleTweetObject(tweet.tweet_results.result.quoted_status_result.result, headers, config);
+		handleTweetObject(tweet.tweet_results.result.quoted_status_result.result, config);
 	} else if(tweet?.tweet_results?.result?.legacy?.retweeted_status_result) {
-		handleTweetObject(tweet.tweet_results.result.legacy.retweeted_status_result.result, headers, config);
+		handleTweetObject(tweet.tweet_results.result.legacy.retweeted_status_result.result, config);
 	}
-	handleTweetObject(tweet, headers, config);
+	handleTweetObject(tweet, config);
 }
 
 export function HandleInstructionsResponse(e, body, config) {
@@ -124,13 +124,13 @@ export function HandleInstructionsResponse(e, body, config) {
 
 			case "TimelineTimelineItem":
 				if (tweet.content.itemContent.itemType=="TimelineTweet") {
-					ParseTimelineTweet(tweet.content.itemContent, e.detail.request.headers, config);
+					ParseTimelineTweet(tweet.content.itemContent, config);
 				}
 				break;
 
 			case "TimelineTimelineModule":
 				for (const innerTweet of tweet.content.items) {
-					ParseTimelineTweet(innerTweet.item.itemContent, e.detail.request.headers, config)
+					ParseTimelineTweet(innerTweet.item.itemContent, config)
 				}
 				break;
 
@@ -143,10 +143,5 @@ export function HandleInstructionsResponse(e, body, config) {
 					};
 				}
 		}
-	}
-
-	if (isAddToModule) {
-		tweets.moduleItems = tweets.entries[0]?.content?.items || [];
-		delete tweets.entries;
 	}
 }
