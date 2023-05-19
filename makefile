@@ -10,6 +10,7 @@ firefox:
 	mv manifest.json chrome-manifest.json
 	mv firefox-manifest.json manifest.json
 	zip "blue-blocker-firefox-${VERSION}.zip" \
+		assets/icon-128-greyscale.png \
 		assets/icon-128.png \
 		assets/icon.png \
 		assets/error.png \
@@ -31,6 +32,7 @@ chrome:
 	# 	rm "blue-blocker-chrome-${VERSION}.zip"
 	# endif
 	zip "blue-blocker-chrome-${VERSION}.zip" \
+		assets/icon-128-greyscale.png \
 		assets/icon-128.png \
 		assets/icon.png \
 		assets/error.png \
