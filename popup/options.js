@@ -4,7 +4,9 @@ import { abbreviate, commafy } from '../utilities.js';
 // restore state from storage
 document.addEventListener("DOMContentLoaded", () => {
 	api.storage.sync.get(DefaultOptions).then(items => {
+		api.action.setIcon({ path: items.suspendedBlockCollection ? "../assets/icon-128-greyscale.png" : "../assets/icon-128.png"});
 		document.getElementById("suspend-block-collection").checked = items.suspendedBlockCollection;
+
 		document.getElementById("show-block-popups").checked = items.showBlockPopups;
 		document.getElementById("mute-instead-of-block").checked = items.mute;
 		document.getElementById("block-following").checked = items.blockFollowing;
@@ -20,7 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
 		document.getElementById("block-interval").value = items.blockInterval;
 		document.getElementById("block-interval-value").textContent = items.blockInterval.toString() + "s";
 
-		
 		document.getElementById("popup-timer-slider").style.display = items.showBlockPopups ? null : "none";
 		document.getElementById("popup-timer").value = items.popupTimer;
 		document.getElementById("popup-timer-value").textContent = items.popupTimer.toString() + "s";
@@ -50,7 +51,8 @@ document.getElementById("suspend-block-collection").addEventListener("input", e 
 	}).then(() => {
 		// Update status to let user know options were saved.
 		const status = document.getElementById("suspend-block-collection-status");
-		status.textContent = "saved";
+		status.textContent = e.target.checked ? "paused" : "resumed";
+		api.action.setIcon({ path: e.target.checked ? "../assets/icon-128-greyscale.png" : "../assets/icon-128.png"});
 		setTimeout(() => status.textContent = null, 1000);
 	});
 });
