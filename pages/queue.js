@@ -11,13 +11,15 @@ setInterval(async () => {
 	await queue.getCriticalPoint()
 }, 500);
 
-async function unqueueUser(user_id) {
+async function unqueueUser(user_id, safelist) {
 	// because this page holds onto the critical point, we can modify the queue
 	// without worrying about if it'll affect another tab
-	api.storage.sync.get({ unblocked: { } }).then(items => {
-		items.unblocked[String(user_id)] = null;
-		api.storage.sync.set(items);
-	});
+	if (safelist) {
+		api.storage.sync.get({ unblocked: { } }).then(items => {
+			items.unblocked[String(user_id)] = null;
+			api.storage.sync.set(items);
+		});
+	}
 
 	const items = await api.storage.local.get({ BlockQueue: [] });
 
@@ -52,16 +54,27 @@ queue.getCriticalPoint()
 		p.innerHTML = `${user.legacy.name} (<a href="https://twitter.com/${user.legacy.screen_name}" target="_blank">@${user.legacy.screen_name}</a>)`;
 		div.appendChild(p);
 
-		const b = document.createElement("button");
-		b.onclick = () => {
-			div.removeChild(b);
-			unqueueUser(user_id).then(() => {
+		const remove = document.createElement("button");
+		remove.onclick = () => {
+			div.removeChild(remove);
+			unqueueUser(user_id, false).then(() => {
 				queueDiv.removeChild(div);
 			});
 			console.log(logstr, `removed ${FormatLegacyName(user)} from queue`);
 		};
-		b.textContent = "remove";
-		div.appendChild(b);
+		remove.textContent = "remove";
+		div.appendChild(remove);
+
+		const never = document.createElement("button");
+		never.onclick = () => {
+			div.removeChild(never);
+			unqueueUser(user_id, true).then(() => {
+				queueDiv.removeChild(div);
+			});
+			console.log(logstr, `removed and safelisted ${FormatLegacyName(user)} from queue`);
+		};
+		never.textContent = "never block";
+		div.appendChild(never);
 
 		queueDiv.appendChild(div);
 	});

@@ -1,4 +1,4 @@
-import { ClearCache, ErrorEvent, EventKey } from './shared.js';
+import { ClearCache, ErrorEvent, EventKey, SetHeaders } from './shared.js';
 import { api, DefaultOptions } from './constants.js';
 import { HandleInstructionsResponse } from './parsers/instructions.js';
 import { HandleForYou } from './parsers/timeline.js';
@@ -23,9 +23,12 @@ document.addEventListener("blue-blocker-event", function (e) {
 	// TODO: we may want to seriously consider clearing the cache on a much less frequent
 	// cadence since we're no longer able to block users immediately and need the queue
 
-	// TODO: we really really really want to keep a single global "headers" object and set
-	// it here so that when we have a large queue, we dont have 1000+ copies of the same
-	// headers. instead, we have a single copy of the most up-to-date headers
+	// TODO: probably also check status code here so that we're not parsing error responses
+	// for no reason
+
+	if (e.detail.status < 300) {
+		SetHeaders(e.detail.request.headers);
+	}
 
 	ClearCache();
 	api.storage.sync.get(DefaultOptions).then(config => {
