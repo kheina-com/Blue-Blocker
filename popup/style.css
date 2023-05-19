@@ -156,15 +156,16 @@ input:checked + label div.checkmark div, label.checked div.checkmark div {
 	transform: rotate(45deg);
 }
 
-.skip-follower-count.option {
+#skip-follower-count-option {
 	margin-left: 2em;
 }
 input#skip-follower-count {
 	text-align: right;
-	width: 6em;
+	width: 7em;
 	height: 1em;
 	position: relative;
 	top: -0.1em;
+	display: inline-block;
 	padding: 0.5em 1em;
 	background: var(--bg0color);
 	color: var(--textcolor);
