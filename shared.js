@@ -84,9 +84,8 @@ function unblockUser(user, user_id, reason, attempt = 1) {
 			}
 		}).catch(error => {
 			if (attempt < 3) {
-				blockUser(user, user_id, reason, attempt + 1);
+				unblockUser(user, user_id, reason, attempt + 1);
 			} else {
-				queue.push({user, user_id, reason});
 				console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, error);
 			}
 		})
