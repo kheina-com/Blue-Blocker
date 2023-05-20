@@ -109,7 +109,7 @@ function unblockUser(user, user_id, reason, attempt = 1) {
 			} else {
 				console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, error);
 			}
-		})
+		});
 	});
 }
 
@@ -277,7 +277,7 @@ function blockUser(user, user_id, reason, attempt=1) {
 				queue.push({user, user_id, reason});
 				console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, error);
 			}
-		})
+		});
 	});
 }
 
