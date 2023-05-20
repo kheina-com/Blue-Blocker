@@ -20,8 +20,10 @@ export const DefaultOptions = {
 	skipVerified: true,
 	skipAffiliated: true,
 	skip1Mplus: true,
+	skipFollowerCount: 1e6,
 	blockNftAvatars: false,
 	blockInterval: 15,
+	popupTimer: 30,
 
 	// this isn't set, but is used
 	// TODO: when migrating to firefox manifest v3, check to see if sets can be stored yet
@@ -32,6 +34,12 @@ export const Headers = [
 	"x-twitter-active-user",
 	"x-twitter-auth-type",
 	"x-twitter-client-language",
+	"sec-ch-ua",
+	"sec-ch-ua-mobile",
+	"sec-ch-ua-platform",
+	"sec-fetch-dest",
+	"sec-fetch-mode",
+	"sec-fetch-site",
 ];
 export const ReasonBlueVerified = 0;
 export const ReasonNftAvatar = 1;
