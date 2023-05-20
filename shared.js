@@ -15,7 +15,14 @@ export function SetOptions(items) {
 }
 
 export function SetHeaders(headers) {
-	api.storage.local.set({ headers });
+	api.storage.local.get({ headers: { }}).then(items => {
+		// so basically we want to only update items that have values
+		for (const [header, value] of Object.entries(headers)) {
+			items.headers[header.toLowerCase()] = value;
+		}
+		api.storage.local.set(items);
+		console.debug(logstr, "updated headers:", items.headers);
+	});
 }
 
 function unblockUser(user, user_id, reason, attempt = 1) {
@@ -23,8 +30,23 @@ function unblockUser(user, user_id, reason, attempt = 1) {
 		items.unblocked[String(user_id)] = null;
 		api.storage.sync.set(items);
 	});
-	api.storage.local.get({ headers: null }).then((items) => {
-		const root = window.location.href.match(/^https?:\/\/(?:\w+\.)?twitter.com(?=$|\/)/)[0];
+
+	const root = window.location.href.match(/^https?:\/\/(?:\w+\.)?twitter.com(?=$|\/)/)[0];
+	let url = null;
+
+	if (root.includes("tweetdeck")) {
+		url = "https://api.twitter.com/1.1/";
+	} else {
+		url = `${root}/i/api/1.1/`;
+	}
+
+	if (options.mute) {
+		url += "mutes/users/destroy.json";
+	} else {
+		url += "blocks/destroy.json";
+	}
+
+	api.storage.local.get({ headers: null }).then(items => {
 		const body = `user_id=${user_id}`;
 		const headers = {
 			"content-length": body.length.toString(),
@@ -42,13 +64,12 @@ function unblockUser(user, user_id, reason, attempt = 1) {
 		const csrf = CsrfTokenRegex.exec(document.cookie);
 		if (csrf) {
 			headers["x-csrf-token"] = csrf[1];
-		}
-		else {
+		} else {
 			// default to the request's csrf token
 			headers["x-csrf-token"] = items.headers["x-csrf-token"];
 		}
 
-		fetch(options.mute ? `${root}/i/api/1.1/mutes/users/destroy.json` : `${root}/i/api/1.1/blocks/destroy.json`, {
+		fetch(url, {
 			body,
 			headers,
 			method: "POST",
@@ -182,10 +203,24 @@ consumer.start();
 
 const CsrfTokenRegex = /ct0=\s*(\w+);/;
 function blockUser(user, user_id, reason, attempt=1) {
-	api.storage.local.get({ headers: null }).then((items) => {
-		const root = window.location.href.match(/^https?:\/\/(?:\w+\.)?twitter.com(?=$|\/)/)[0];
+	const root = window.location.href.match(/^https?:\/\/(?:\w+\.)?twitter.com(?=$|\/)/)[0];
+	let url = null;
+
+	if (root.includes("tweetdeck")) {
+		url = "https://api.twitter.com/1.1/";
+	} else {
+		url = `${root}/i/api/1.1/`;
+	}
+
+	if (options.mute) {
+		url += "mutes/users/create.json";
+	} else {
+		url += "blocks/create.json";
+	}
+
+	api.storage.local.get({ headers: null }).then(items => {
 		const body = `user_id=${user_id}`;
-		const headers = {
+		let headers = {
 			"content-length": body.length.toString(),
 			"content-type": "application/x-www-form-urlencoded",
 			"accept-encoding": "gzip, deflate, br",
@@ -201,18 +236,22 @@ function blockUser(user, user_id, reason, attempt=1) {
 		const csrf = CsrfTokenRegex.exec(document.cookie);
 		if (csrf) {
 			headers["x-csrf-token"] = csrf[1];
-		}
-		else {
+		} else {
 			// default to the request's csrf token
 			headers["x-csrf-token"] = items.headers["x-csrf-token"];
 		}
 
-		fetch(options.mute ? `${root}/i/api/1.1/mutes/users/create.json` : `${root}/i/api/1.1/blocks/create.json`, {
+		const options = {
 			body,
 			headers,
 			method: "POST",
 			credentials: "include",
-		}).then(response => {
+		};
+		console.debug(logstr, "block request:", { url, ...options });
+
+		fetch(url, options).then(response => {
+			console.debug(logstr, "block response:", response);
+
 			if (response.status === 403) {
 				// user has been logged out, we need to stop queue and re-add
 				consumer.stop();

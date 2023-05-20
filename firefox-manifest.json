@@ -25,6 +25,8 @@
 		"default_popup": "popup/index.html"
 	},
 	"permissions": [
+		"*://*.twitter.com/*",
+		"*://twitter.com/*",
 		"storage"
 	],
 	"content_scripts": [
