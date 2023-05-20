@@ -86,7 +86,7 @@ function unblockUser(user, user_id, reason, attempt = 1) {
 			if (attempt < 3) {
 				unblockUser(user, user_id, reason, attempt + 1);
 			} else {
-				console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, error);
+				console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, error);
 			}
 		})
 	});
