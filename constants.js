@@ -34,6 +34,12 @@ export const Headers = [
 	"x-twitter-active-user",
 	"x-twitter-auth-type",
 	"x-twitter-client-language",
+	"sec-ch-ua",
+	"sec-ch-ua-mobile",
+	"sec-ch-ua-platform",
+	"sec-fetch-dest",
+	"sec-fetch-mode",
+	"sec-fetch-site",
 ];
 export const ReasonBlueVerified = 0;
 export const ReasonNftAvatar = 1;

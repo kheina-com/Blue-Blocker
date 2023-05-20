@@ -15,7 +15,14 @@ export function SetOptions(items) {
 }
 
 export function SetHeaders(headers) {
-	api.storage.local.set({ headers });
+	api.storage.local.get({ headers: { }}).then(items => {
+		// so basically we want to only update items that have values
+		for (const [header, value] of Object.entries(headers)) {
+			items.headers[header.toLowerCase()] = value;
+		}
+		api.storage.local.set(items);
+		console.debug(logstr, "updated headers:", items.headers);
+	});
 }
 
 function unblockUser(user, user_id, reason, attempt = 1) {
@@ -23,19 +30,56 @@ function unblockUser(user, user_id, reason, attempt = 1) {
 		items.unblocked[String(user_id)] = null;
 		api.storage.sync.set(items);
 	});
-	api.storage.local.get({ headers: null }).then((items) => {
-		const headers = items.headers;
-		const formdata = new FormData();
-		formdata.append("user_id", user_id);
 
-		const ajax = new XMLHttpRequest();
+	const root = window.location.href.match(/^https?:\/\/(?:\w+\.)?twitter.com(?=$|\/)/)[0];
+	let url = null;
 
-		ajax.addEventListener('load', event => {	
-			if (event.target.status === 403) {
+	if (root.includes("tweetdeck")) {
+		url = "https://api.twitter.com/1.1/";
+	} else {
+		url = `${root}/i/api/1.1/`;
+	}
+
+	if (options.mute) {
+		url += "mutes/users/destroy.json";
+	} else {
+		url += "blocks/destroy.json";
+	}
+
+	api.storage.local.get({ headers: null }).then(items => {
+		const body = `user_id=${user_id}`;
+		const headers = {
+			"content-length": body.length.toString(),
+			"content-type": "application/x-www-form-urlencoded",
+			"accept-encoding": "gzip, deflate, br",
+			"accept-language": "en-US,en;q=0.9",
+			accept: "*/*",
+		};
+
+		for (const header of Headers) {
+			headers[header] = items.headers[header];
+		}
+
+		// attempt to manually set the csrf token to the current active cookie
+		const csrf = CsrfTokenRegex.exec(document.cookie);
+		if (csrf) {
+			headers["x-csrf-token"] = csrf[1];
+		} else {
+			// default to the request's csrf token
+			headers["x-csrf-token"] = items.headers["x-csrf-token"];
+		}
+
+		fetch(url, {
+			body,
+			headers,
+			method: "POST",
+			credentials: "include",
+		}).then(response => {
+			if (response.status === 403) {
 				// user has been logged out, we need to stop queue and re-add
 				console.log(logstr, "user is logged out, failed to unblock user.");
 			}
-			else if (event.target.status === 404) {
+			else if (response.status === 404) {
 				// notice the wording here is different than the blocked 404. the difference is that if the user
 				// is unbanned, they will still be blocked and we want the user to know about that
 
@@ -47,8 +91,8 @@ function unblockUser(user, user_id, reason, attempt = 1) {
 				setTimeout(() => ele.removeChild(t), options.popupTimer * 1000);
 				console.log(logstr, `failed to unblock ${FormatLegacyName(user)}, user no longer exists`);
 			}
-			else if (event.target.status >= 300) {
-				console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, event);
+			else if (response.status >= 300) {
+				console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, response);
 			}
 			else {
 				const t = document.createElement("div");
@@ -59,36 +103,13 @@ function unblockUser(user, user_id, reason, attempt = 1) {
 				setTimeout(() => ele.removeChild(t), options.popupTimer * 1000);
 				console.log(logstr, `unblocked ${FormatLegacyName(user)}`);
 			}
-		});
-		ajax.addEventListener('error', error => {
+		}).catch(error => {
 			if (attempt < 3) {
 				unblockUser(user, user_id, reason, attempt + 1);
 			} else {
 				console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, error);
 			}
-		});
-
-		if (options.mute) {
-			ajax.open('POST', "https://twitter.com/i/api/1.1/mutes/users/destroy.json");
-		}
-		else {
-			ajax.open('POST', "https://twitter.com/i/api/1.1/blocks/destroy.json");
-		}
-
-		for (const header of Headers) {
-			ajax.setRequestHeader(header, headers[header]);
-		}
-
-		// attempt to manually set the csrf token to the current active cookie
-		const csrf = CsrfTokenRegex.exec(document.cookie);
-		if (csrf) {
-			ajax.setRequestHeader("x-csrf-token", csrf[1]);
-		}
-		else {
-			// default to the request's csrf token
-			ajax.setRequestHeader("x-csrf-token", headers["x-csrf-token"]);
-		}
-		ajax.send(formdata);
+		})
 	});
 }
 
@@ -182,65 +203,81 @@ consumer.start();
 
 const CsrfTokenRegex = /ct0=\s*(\w+);/;
 function blockUser(user, user_id, reason, attempt=1) {
-	api.storage.local.get({ headers: null }).then((items) => {
-		const headers = items.headers;
-		const formdata = new FormData();
-		formdata.append("user_id", user_id);
+	const root = window.location.href.match(/^https?:\/\/(?:\w+\.)?twitter.com(?=$|\/)/)[0];
+	let url = null;
 
-		const ajax = new XMLHttpRequest();
+	if (root.includes("tweetdeck")) {
+		url = "https://api.twitter.com/1.1/";
+	} else {
+		url = `${root}/i/api/1.1/`;
+	}
 
-		ajax.addEventListener('load', event => {
-			if (event.target.status === 403) {
+	if (options.mute) {
+		url += "mutes/users/create.json";
+	} else {
+		url += "blocks/create.json";
+	}
+
+	api.storage.local.get({ headers: null }).then(items => {
+		const body = `user_id=${user_id}`;
+		let headers = {
+			"content-length": body.length.toString(),
+			"content-type": "application/x-www-form-urlencoded",
+			"accept-encoding": "gzip, deflate, br",
+			"accept-language": "en-US,en;q=0.9",
+			accept: "*/*",
+		};
+
+		for (const header of Headers) {
+			headers[header] = items.headers[header];
+		}
+
+		// attempt to manually set the csrf token to the current active cookie
+		const csrf = CsrfTokenRegex.exec(document.cookie);
+		if (csrf) {
+			headers["x-csrf-token"] = csrf[1];
+		} else {
+			// default to the request's csrf token
+			headers["x-csrf-token"] = items.headers["x-csrf-token"];
+		}
+
+		const options = {
+			body,
+			headers,
+			method: "POST",
+			credentials: "include",
+		};
+		console.debug(logstr, "block request:", { url, ...options });
+
+		fetch(url, options).then(response => {
+			console.debug(logstr, "block response:", response);
+
+			if (response.status === 403) {
 				// user has been logged out, we need to stop queue and re-add
 				consumer.stop();
 				queue.push({user, user_id, reason});
 				console.log(logstr, "user is logged out, queue consumer has been halted.");
 			}
-			else if (event.target.status === 404) {
+			else if (response.status === 404) {
 				console.log(logstr, `did not block ${FormatLegacyName(user)}, user no longer exists`);
 			}
-			else if (event.target.status >= 300) {
+			else if (response.status >= 300) {
 				queue.push({user, user_id, reason});
-				console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, event);
+				console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, response);
 			}
 			else {
 				blockCounter.increment();
 				console.log(logstr, `blocked ${FormatLegacyName(user)} due to ${ReasonMap[reason]}.`);
 				api.storage.local.set({ [EventKey]: { type: UserBlockedEvent, user, user_id, reason } })
 			}
-		});
-		ajax.addEventListener('error', error => {
-			console.error(logstr, 'error:', error);
-
+		}).catch(error => {
 			if (attempt < 3) {
 				blockUser(user, user_id, reason, attempt + 1);
 			} else {
 				queue.push({user, user_id, reason});
 				console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, error);
 			}
-		});
-
-		if (options.mute) {
-			ajax.open('POST', "https://twitter.com/i/api/1.1/mutes/users/create.json");
-		}
-		else {
-			ajax.open('POST', "https://twitter.com/i/api/1.1/blocks/create.json");
-		}
-
-		for (const header of Headers) {
-			ajax.setRequestHeader(header, headers[header]);
-		}
-
-		// attempt to manually set the csrf token to the current active cookie
-		const csrf = CsrfTokenRegex.exec(document.cookie);
-		if (csrf) {
-			ajax.setRequestHeader("x-csrf-token", csrf[1]);
-		}
-		else {
-			// default to the request's csrf token
-			ajax.setRequestHeader("x-csrf-token", headers["x-csrf-token"]);
-		}
-		ajax.send(formdata);
+		})
 	});
 }
 
