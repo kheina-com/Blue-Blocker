@@ -8,6 +8,7 @@ import {
   Headers,
   ReasonBlueVerified,
   ReasonNftAvatar,
+  ReasonBusinessVerified,
   ReasonMap,
 } from './constants';
 
@@ -258,6 +259,10 @@ export function BlockBlueVerified(user: BlueBlockerUser, headers: any, config: C
   }
 
   const formattedUserName = formatLegacyName(user);
+  const hasBlockableVerifiedTypes = blockableVerifiedTypes.has(user.legacy?.verified_type || '');
+  const hasBlockableAffiliateLabels = blockableAffiliateLabels.has(
+    user.affiliates_highlighted_label?.label?.userLabelType || '',
+  );
 
   // since we can be fairly certain all user objects will be the same, break this into a separate function
   if (user.legacy?.verified_type && !blockableVerifiedTypes.has(user.legacy.verified_type)) {
@@ -266,7 +271,7 @@ export function BlockBlueVerified(user: BlueBlockerUser, headers: any, config: C
   if (user.legacy?.blocking) {
     return;
   }
-  if (user.is_blue_verified) {
+  if (user.is_blue_verified || hasBlockableVerifiedTypes || hasBlockableAffiliateLabels) {
     if (
       // group for if the user has unblocked them previously
       // you cannot store sets in sync memory, so this will be a janky object
@@ -307,10 +312,7 @@ export function BlockBlueVerified(user: BlueBlockerUser, headers: any, config: C
     } else if (
       // verified via an affiliated organization instead of blue
       config.skipAffiliated &&
-      (blockableAffiliateLabels.has(
-        user.affiliates_highlighted_label?.label?.userLabelType || '',
-      ) ||
-        user.legacy?.verified_type === 'Business')
+      (hasBlockableAffiliateLabels || hasBlockableVerifiedTypes)
     ) {
       console.log(
         logstr,
@@ -326,7 +328,9 @@ export function BlockBlueVerified(user: BlueBlockerUser, headers: any, config: C
         `did not block Twitter Blue verified user ${formattedUserName} because they have over a million followers and Elon is an idiot.`,
       );
     } else {
-      queueBlockUser(user, String(user.rest_id), headers, ReasonBlueVerified);
+      let reason = ReasonBlueVerified;
+      if (hasBlockableVerifiedTypes) reason = ReasonBusinessVerified;
+      queueBlockUser(user, String(user.rest_id), headers, reason);
     }
   } else if (config.blockNftAvatars && user.has_nft_avatar) {
     if (

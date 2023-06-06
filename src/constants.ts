@@ -34,7 +34,9 @@ export const Headers = [
 ];
 export const ReasonBlueVerified: number = 0;
 export const ReasonNftAvatar: number = 1;
+export const ReasonBusinessVerified: number = 2;
 export const ReasonMap = {
   [ReasonBlueVerified]: 'Twitter Blue verified',
   [ReasonNftAvatar]: 'NFT avatar',
+  [ReasonBusinessVerified]: 'Twitter Business verified',
 };
