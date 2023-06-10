@@ -20,13 +20,13 @@ export const InstructionsPaths = {
 		"home_timeline_urt",
 		"instructions",
 	],
-  SearchTimeline: [
-    "data",
-    "search_by_raw_query",
-    "search_timeline",
-    "timeline",
-    "instructions",
-  ],
+	SearchTimeline: [
+		"data",
+		"search_by_raw_query",
+		"search_timeline",
+		"timeline",
+		"instructions",
+	],
 	UserTweets: [
 		"data",
 		"user",
