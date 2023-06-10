@@ -1,5 +1,5 @@
 (function(xhr) {
-	const RequestRegex = /^https?:\/\/(?:\w+\.)?twitter.com\/[\w\/\.\-\_\=]+\/(HomeLatestTimeline|HomeTimeline|SearchTimeline|UserTweets|timeline\/home\.json|TweetDetail|search\/typeahead\.json|search\/adaptive\.json)(?:$|\?)/;
+	const RequestRegex = /^https?:\/\/(?:\w+\.)?twitter.com\/[\w\/\.\-\_\=]+\/(HomeLatestTimeline|HomeTimeline|Followers|Following|SearchTimeline|UserTweets|UserCreatorSubscriptions|timeline\/home\.json|TweetDetail|search\/typeahead\.json|search\/adaptive\.json)(?:$|\?)/;
 
 	let XHR = XMLHttpRequest.prototype;
 	let open = XHR.open;
