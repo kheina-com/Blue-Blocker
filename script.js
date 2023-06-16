@@ -41,6 +41,9 @@ document.addEventListener("blue-blocker-event", function (e) {
 				case "SearchTimeline":
 				case "UserTweets":
 				case "TweetDetail":
+				case "Following":
+				case "Followers":
+				case "UserCreatorSubscriptions":
 					return HandleInstructionsResponse(e, parsed_body, config);
 				case "timeline/home.json":
 				case "search/adaptive.json":

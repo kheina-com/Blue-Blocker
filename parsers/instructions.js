@@ -5,6 +5,15 @@ import { BlockBlueVerified } from "../shared.js";
 // the response body. since it doesn't match one specific request, it has
 // its own file
 
+const UserTimelineInstructionPath = [
+	"data",
+	"user",
+	"result",
+	"timeline",
+	"timeline",
+	"instructions",
+];
+
 // when parsing a timeline response body, these are the paths to navigate in the json to retrieve the "instructions" object
 // the key to this object is the capture group from the request regex in inject.js
 export const InstructionsPaths = {
@@ -20,6 +29,9 @@ export const InstructionsPaths = {
 		"home_timeline_urt",
 		"instructions",
 	],
+	Followers: UserTimelineInstructionPath,
+	Following: UserTimelineInstructionPath,
+	UserCreatorSubscriptions: UserTimelineInstructionPath,
 	SearchTimeline: [
 		"data",
 		"search_by_raw_query",
@@ -86,6 +98,25 @@ export function ParseTimelineTweet(tweet, config) {
 	handleTweetObject(tweet, config);
 }
 
+function handleUserObject(userOuterObj, config) {
+	let userObj = userOuterObj.user_results.result;
+
+	if (userObj.__typename === "UserUnavailable") {
+		console.log(logstr, "user is unavailable", userObj);
+		return;
+	}
+
+	if (userObj.__typename !== "User") {
+		console.error(logstr, "could not parse user object", userObj);
+		return;
+	}
+	BlockBlueVerified(userOuterObj.user_results.result, config);
+}
+
+export function ParseTimelineUser(userOuterObj, config) {
+	handleUserObject(userOuterObj, config);
+}
+
 export function HandleInstructionsResponse(e, body, config) {
 	// pull the "instructions" object from the tweet
 	let instructions = body;
@@ -132,6 +163,8 @@ export function HandleInstructionsResponse(e, body, config) {
 			case "TimelineTimelineItem":
 				if (tweet.content.itemContent.itemType=="TimelineTweet") {
 					ParseTimelineTweet(tweet.content.itemContent, config);
+				} else if (tweet.content.itemContent.itemType=="TimelineUser") {
+					ParseTimelineUser(tweet.content.itemContent, config);
 				}
 				break;
 
