@@ -10,17 +10,103 @@ import {
   ReasonNftAvatar,
   ReasonBusinessVerified,
   ReasonMap,
+  LegacyVerifiedUrl,
 } from './constants';
+import { commafy } from './utilities';
 
 // Define constants that shouldn't be exported to the rest of the addon
 const queue = new BlockQueue(api.storage.local);
 const blockCounter = new BlockCounter(api.storage.local);
 const blockCache = new Set();
+const verifiedUsersCount = 407521;
 
 export var options = { ...DefaultOptions };
 export function SetOptions(items: any) {
   options = items;
 }
+
+function populateDb() {
+	console.log(logstr, "downloading legacy verified users database.");
+	let items: number = 0;
+	fetch(LegacyVerifiedUrl)
+		.then(r => r.text())
+		.then(body => {
+			let intact: boolean = false;
+
+			body.split("\n").forEach(line => {
+				if (line === "Twitter ID, Screen name, Followers") {
+					intact = true;
+				}
+				else if (!intact) {
+					// error
+				}
+
+				const transaction = db.transaction(["verified_users"], "readwrite");
+				const store = transaction.objectStore("verified_users");
+				const [user_id, handle, _] = line.split(",");
+				const item = { user_id, handle };
+				const req = store.add(item);
+
+				req.onsuccess = () => {
+					items++;
+				};
+
+				req.onerror = e => {
+					console.log(logstr, "transaction error with item", item, e);
+				};
+			})
+		})
+		.then(() => {
+			console.log(logstr, "loaded", commafy(items), "legacy verified users");
+		});
+}
+
+let db: IDBDatabase;
+(() => {
+	// indexedDB.deleteDatabase("blue-blocker-legacy-verified-users").onsuccess = () => console.log(logstr, "deleted db");
+	// return;
+
+	const DBOpenRequest = indexedDB.open("blue-blocker-legacy-verified-users", 1);
+
+	DBOpenRequest.onsuccess = () => {
+		db = DBOpenRequest.result;
+
+		api.storage.sync.get({ skipVerified: true }).then(opts => {
+			if (!opts.skipVerified) {
+				return;
+			}
+
+			console.log(logstr, "checking verified user database.");
+
+			try {
+				const transaction = db.transaction(["verified_users"], "readwrite");
+				const store = transaction.objectStore("verified_users");
+
+				const req = store.index("user_id").count();
+				req.onsuccess = () => {
+					console.log(logstr, "found", commafy(req.result), "legacy verified users, should be", verifiedUsersCount);
+				};
+				req.onerror = e => {
+					console.error(logstr, e)
+				};
+			}
+			catch (DOMException) {
+				populateDb();
+			}
+		});
+	};
+
+	DBOpenRequest.onupgradeneeded = () => {
+		db = DBOpenRequest.result;
+
+		if (db.objectStoreNames.contains("verified_users")) {
+			return;
+		}
+
+		db.createObjectStore("verified_users", { keyPath: "user_id" });
+		console.log(logstr, "created database.");
+	};
+})()
 
 function unblockUser(user: any, user_id: any, headers: any, reason: number, attempt = 1) {
   api.storage.sync.get({ unblocked: {} }).then((items) => {
