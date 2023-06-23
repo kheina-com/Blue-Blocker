@@ -14,77 +14,129 @@ import {
 	EventKey,
 	MessageEvent,
 } from './constants';
-import { IsUserLegacyVerified } from './utilities';
+import { IsUserLegacyVerified, FormatLegacyName } from './utilities';
 
 // Define constants that shouldn't be exported to the rest of the addon
 const queue = new BlockQueue(api.storage.local);
 const blockCounter = new BlockCounter(api.storage.local);
 const blockCache = new Set();
 
-export var options = { ...DefaultOptions };
+export var options: Config = { ...DefaultOptions };
 export function SetOptions(items: any) {
 	options = items;
 }
 
-function unblockUser(user: any, user_id: any, headers: any, reason: number, attempt = 1) {
-	api.storage.sync.get({ unblocked: {} }).then((items) => {
+export function SetHeaders(headers: { [k: string]: string }) {
+	api.storage.local.get({ headers: { }}).then(items => {
+		// so basically we want to only update items that have values
+		for (const [header, value] of Object.entries(headers)) {
+			items.headers[header.toLowerCase()] = value;
+		}
+		api.storage.local.set(items);
+		console.debug(logstr, "updated headers:", items.headers);
+	});
+}
+
+function unblockUser(user: BlueBlockerUser, user_id: string, reason: number, attempt: number = 1) {
+	api.storage.sync.get({ unblocked: { } }).then(items => {
 		items.unblocked[String(user_id)] = null;
 		api.storage.sync.set(items);
 	});
-	const formdata = new FormData();
-	formdata.append('user_id', user_id);
 
-	const xhr = new XMLHttpRequest();
+	const match = window.location.href.match(/^https?:\/\/(?:\w+\.)?twitter.com(?=$|\/)/);
 
-	xhr.addEventListener('load', (event) => {
-		if (xhr.status === 403) {
-			// user has been logged out, we need to stop queue and re-add
-			console.log(logstr, 'user is logged out, failed to unblock user.');
-			return;
-		} else if (xhr.status >= 300) {
-			queue.push({ user, user_id, headers, reason });
-			console.error(logstr, `failed to unblock ${formatLegacyName(user)}:`, user, event);
-		} else {
-			const t = document.createElement('div');
-			t.className = 'toast';
-			t.innerText = `unblocked @${user.legacy.screen_name}, they won't be blocked again.`;
-			const ele = document.getElementById('injected-blue-block-toasts');
-			if (ele) {
-				ele.appendChild(t);
-				setTimeout(() => ele.removeChild(t), 30e3);
-				console.log(logstr, `unblocked ${formatLegacyName(user)}`);
-			}
-		}
-	});
-	xhr.addEventListener('error', (error) => {
-		console.error(logstr, 'error:', error);
+	if (!match) {
+		throw new Error("unexpected or incorrectly formatted url");
+	}
 
-		if (attempt < 3) {
-			unblockUser(user, user_id, headers, reason, attempt + 1);
-		} else {
-			console.error(logstr, `failed to unblock ${formatLegacyName(user)}:`, user, error);
-		}
-	});
+	const root: string = match[0];
+	let url: string = "";
+
+	if (root.includes("tweetdeck")) {
+		url = "https://api.twitter.com/1.1/";
+	} else {
+		url = `${root}/i/api/1.1/`;
+	}
 
 	if (options.mute) {
-		xhr.open('POST', 'https://twitter.com/i/api/1.1/mutes/users/destroy.json');
+		url += "mutes/users/destroy.json";
 	} else {
-		xhr.open('POST', 'https://twitter.com/i/api/1.1/blocks/destroy.json');
+		url += "blocks/destroy.json";
 	}
 
-	for (const header of Headers) {
-		xhr.setRequestHeader(header, headers[header]);
-	}
+	api.storage.local.get({ headers: null }).then(items => {
+		const body = `user_id=${user_id}`;
+		const headers: { [k: string]: string } = {
+			"content-length": body.length.toString(),
+			"content-type": "application/x-www-form-urlencoded",
+			"accept-encoding": "gzip, deflate, br",
+			"accept-language": "en-US,en;q=0.9",
+			accept: "*/*",
+		};
 
-	// attempt to manually set the csrf token to the current active cookie
-	const csrf = CsrfTokenRegex.exec(document.cookie);
-	if (csrf) {
-		xhr.setRequestHeader('x-csrf-token', csrf[1]);
-	} else {
-		// default to the request's csrf token
-		xhr.setRequestHeader('x-csrf-token', headers['x-csrf-token']);
-	}
-	xhr.send(formdata);
+		for (const header of Headers) {
+			headers[header] = items.headers[header];
+		}
+
+		// attempt to manually set the csrf token to the current active cookie
+		const csrf = CsrfTokenRegex.exec(document.cookie);
+		if (csrf) {
+			headers["x-csrf-token"] = csrf[1];
+		} else {
+			// default to the request's csrf token
+			headers["x-csrf-token"] = items.headers["x-csrf-token"];
+		}
+
+		fetch(url, {
+			body,
+			headers,
+			method: "POST",
+			credentials: "include",
+		}).then(response => {
+			if (response.status === 403) {
+				// user has been logged out, we need to stop queue and re-add
+				console.log(logstr, "user is logged out, failed to unblock user.");
+			}
+			else if (response.status === 404) {
+				// notice the wording here is different than the blocked 404. the difference is that if the user
+				// is unbanned, they will still be blocked and we want the user to know about that
+
+				const t = document.createElement("div");
+				t.className = "toast";
+				t.innerText = `could not unblock @${user.legacy.screen_name}, user has been suspended or no longer exists.`;
+				const ele = document.getElementById("injected-blue-block-toasts");
+				if (!ele) {
+					throw new Error("blue blocker was unable to create or find toasts div.");
+				}
+
+				ele.appendChild(t);
+				setTimeout(() => ele.removeChild(t), options.popupTimer * 1000);
+				console.log(logstr, `failed to unblock ${FormatLegacyName(user)}, user no longer exists`);
+			}
+			else if (response.status >= 300) {
+				console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, response);
+			}
+			else {
+				const t = document.createElement("div");
+				t.className = "toast";
+				t.innerText = `unblocked @${user.legacy.screen_name}, they won't be blocked again.`;
+				const ele = document.getElementById("injected-blue-block-toasts");
+				if (!ele) {
+					throw new Error("blue blocker was unable to create or find toasts div.");
+				}
+
+				ele.appendChild(t);
+				setTimeout(() => ele.removeChild(t), options.popupTimer * 1000);
+				console.log(logstr, `unblocked ${FormatLegacyName(user)}`);
+			}
+		}).catch(error => {
+			if (attempt < 3) {
+				unblockUser(user, user_id, reason, attempt + 1);
+			} else {
+				console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, error);
+			}
+		});
+	});
 }
 
 const UserBlockedEvent = 'UserBlockedEvent';
@@ -162,13 +214,13 @@ export function ClearCache() {
 	blockCache.clear();
 }
 
-function queueBlockUser(user: BlueBlockerUser, user_id: string, headers: any, reason: number) {
+function queueBlockUser(user: BlueBlockerUser, user_id: string, reason: number) {
 	if (blockCache.has(user_id)) {
 		return;
 	}
 	blockCache.add(user_id);
-	queue.push({ user, user_id, headers, reason });
-	console.log(logstr, `queued ${formatLegacyName(user)} for a block due to ${ReasonMap[reason]}.`);
+	queue.push({ user, user_id, reason });
+	console.log(logstr, `queued ${FormatLegacyName(user)} for a block due to ${ReasonMap[reason]}.`);
 	consumer.start();
 }
 
@@ -183,8 +235,8 @@ function checkBlockQueue() {
 				consumer.stop();
 				return;
 			}
-			const { user, user_id, headers, reason } = item;
-			blockUser(user, user_id, headers, reason);
+			const { user, user_id, reason } = item;
+			blockUser(user, user_id, reason);
 		})
 		.catch((error) =>
 			api.storage.local.set({
@@ -204,61 +256,94 @@ const consumer = new QueueConsumer(api.storage.local, checkBlockQueue, async () 
 consumer.start();
 
 const CsrfTokenRegex = /ct0=\s*(\w+);/;
-function blockUser(user: any, user_id: string, headers: any, reason: number, attempt = 1) {
-	const formdata = new FormData();
-	formdata.append('user_id', user_id);
+function blockUser(user: any, user_id: string, reason: number, attempt = 1) {
+	const match = window.location.href.match(/^https?:\/\/(?:\w+\.)?twitter.com(?=$|\/)/);
 
-	const xhr = new XMLHttpRequest();
+	if (!match) {
+		throw new Error("unexpected or incorrectly formatted url");
+	}
 
-	xhr.addEventListener('load', (event) => {
-		if (xhr.status === 403) {
-			// user has been logged out, we need to stop queue and re-add
-			consumer.stop();
-			queue.push({ user, user_id, headers, reason });
-			console.log(logstr, 'user is logged out, queue consumer has been halted.');
-			return;
-		} else if (xhr.status >= 300) {
-			queue.push({ user, user_id, headers, reason });
-			console.error(logstr, `failed to block ${formatLegacyName(user)}:`, user, event);
-		} else {
-			blockCounter.increment();
-			console.log(logstr, `blocked ${formatLegacyName(user)} due to ${ReasonMap[reason]}.`);
-			api.storage.local.set({
-				[EventKey]: { type: UserBlockedEvent, user, user_id, headers, reason },
-			});
-		}
-	});
-	xhr.addEventListener('error', (error) => {
-		console.error(logstr, 'error:', error);
+	const root: string = match[0];
+	let url: string = "";
 
-		if (attempt < 3) {
-			blockUser(user, user_id, headers, reason, attempt + 1);
-		} else {
-			queue.push({ user, user_id, headers, reason });
-			console.error(logstr, `failed to block ${formatLegacyName(user)}:`, user, error);
-		}
-	});
+	if (root.includes("tweetdeck")) {
+		url = "https://api.twitter.com/1.1/";
+	} else {
+		url = `${root}/i/api/1.1/`;
+	}
 
 	if (options.mute) {
-		xhr.open('POST', 'https://twitter.com/i/api/1.1/mutes/users/create.json');
+		url += "mutes/users/create.json";
 	} else {
-		xhr.open('POST', 'https://twitter.com/i/api/1.1/blocks/create.json');
+		url += "blocks/create.json";
 	}
 
-	for (const header of Headers) {
-		xhr.setRequestHeader(header, headers[header]);
-	}
+	api.storage.local.get({ headers: null }).then(items => {
+		const body = `user_id=${user_id}`;
+		let headers: { [k: string]: string } = {
+			"content-length": body.length.toString(),
+			"content-type": "application/x-www-form-urlencoded",
+			"accept-encoding": "gzip, deflate, br",
+			"accept-language": "en-US,en;q=0.9",
+			accept: "*/*",
+		};
 
-	// attempt to manually set the csrf token to the current active cookie
-	const csrf = CsrfTokenRegex.exec(document.cookie);
-	if (csrf) {
-		xhr.setRequestHeader('x-csrf-token', csrf[1]);
-	} else {
-		// default to the request's csrf token
-		xhr.setRequestHeader('x-csrf-token', headers['x-csrf-token']);
-	}
-	xhr.send(formdata);
-}
+		for (const header of Headers) {
+			headers[header] = items.headers[header];
+		}
+
+		// attempt to manually set the csrf token to the current active cookie
+		const csrf = CsrfTokenRegex.exec(document.cookie);
+		if (csrf) {
+			headers["x-csrf-token"] = csrf[1];
+		} else {
+			// default to the request's csrf token
+			headers["x-csrf-token"] = items.headers["x-csrf-token"];
+		}
+
+		const options: {
+			body: string,
+			headers: { [k: string]: string },
+			method: string,
+			credentials: RequestCredentials,
+		} = {
+			body,
+			headers,
+			method: "POST",
+			credentials: "include",
+		};
+		console.debug(logstr, "block request:", { url, ...options });
+
+		fetch(url, options).then(response => {
+			console.debug(logstr, "block response:", response);
+
+			if (response.status === 403) {
+				// user has been logged out, we need to stop queue and re-add
+				consumer.stop();
+				queue.push({user, user_id, reason});
+				console.log(logstr, "user is logged out, queue consumer has been halted.");
+			}
+			else if (response.status === 404) {
+				console.log(logstr, `did not block ${FormatLegacyName(user)}, user no longer exists`);
+			}
+			else if (response.status >= 300) {
+				queue.push({user, user_id, reason});
+				console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, response);
+			}
+			else {
+				blockCounter.increment();
+				console.log(logstr, `blocked ${FormatLegacyName(user)} due to ${ReasonMap[reason]}.`);
+				api.storage.local.set({ [EventKey]: { type: UserBlockedEvent, user, user_id, reason } })
+			}
+		}).catch(error => {
+			if (attempt < 3) {
+				blockUser(user, user_id, reason, attempt + 1);
+			} else {
+				queue.push({user, user_id, reason});
+				console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, error);
+			}
+		});
+	});}
 
 const blockableAffiliateLabels = new Set(['AutomatedLabel']);
 const blockableVerifiedTypes = new Set(['Business']);
@@ -273,7 +358,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, headers: any, con
 		return;
 	}
 
-	const formattedUserName = formatLegacyName(user);
+	const formattedUserName = FormatLegacyName(user);
 	const hasBlockableVerifiedTypes = blockableVerifiedTypes.has(user.legacy?.verified_type || '');
 	const hasBlockableAffiliateLabels = blockableAffiliateLabels.has(
 		user.affiliates_highlighted_label?.label?.userLabelType || '',
@@ -345,9 +430,9 @@ export async function BlockBlueVerified(user: BlueBlockerUser, headers: any, con
 		} else {
 			let reason = ReasonBlueVerified;
 			if (hasBlockableVerifiedTypes) reason = ReasonBusinessVerified;
-			queueBlockUser(user, String(user.rest_id), headers, reason);
+			queueBlockUser(user, String(user.rest_id), reason);
 		}
-	} else if (config.blockNftAvatars && user.has_nft_avatar) {
+	} else if (config.blockNftAvatars && (user.has_nft_avatar || user.profile_image_shape === "Hexagon")) {
 		if (
 			// group for block-following option
 			!config.blockFollowing &&
@@ -367,13 +452,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, headers: any, con
 				`did not block user with NFT avatar ${formattedUserName} because they follow you.`,
 			);
 		} else {
-			queueBlockUser(user, String(user.rest_id), headers, ReasonNftAvatar);
+			queueBlockUser(user, String(user.rest_id), ReasonNftAvatar);
 		}
 	}
-}
-
-function formatLegacyName(user: BlueBlockerUser) {
-	const legacyName = user.legacy.name;
-	const screenName = user.legacy.screen_name;
-	return `${legacyName} (@${screenName})`;
 }

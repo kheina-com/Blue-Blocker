@@ -43,6 +43,6 @@ api.runtime.onMessageExternal.addListener(async (message, sender, respond) => {
 
 		default:
 			console.error(logstr, "got a message that couldn't be handled from sender:", sender, message);
-			respond({ status: errorStatus, message: "unknown action" })
+			respond({ status: errorStatus, message: "unknown action" });
 	}
 });
