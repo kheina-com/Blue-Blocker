@@ -4,12 +4,16 @@ import { crx } from '@crxjs/vite-plugin';
 import manifest from './src/manifest';
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(() => {
 	return {
 		build: {
 			emptyOutDir: true,
 			outDir: 'build',
 			rollupOptions: {
+				input: {
+					// all non-popup pages need to be added here
+					queue: './src/pages/queue/index.html',
+				},
 				output: {
 					chunkFileNames: 'assets/chunk-[hash].js',
 				},

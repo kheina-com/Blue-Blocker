@@ -26,14 +26,9 @@ export default defineManifest({
 	web_accessible_resources: [
 		{
 			resources: [
-				"src/constants.ts",
-				"src/utilities.ts",
-				"src/shared.ts",
+				// only files that are accessed from web pages need to be listed here. ie: injected files and assets
 				"src/injected/*",
-				"src/parsers/*",
-				"src/assets/*",
-				"src/models/*",
-				"src/popup/*",
+				"icon/*",
 			],
 			matches: ["*://*.twitter.com/*", "*://twitter.com/*"],
 		},
