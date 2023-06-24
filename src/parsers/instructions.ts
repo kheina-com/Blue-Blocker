@@ -58,7 +58,7 @@ const IgnoreTweetTypes = new Set([
 	"TimelineTimelineCursor",
 ]);
 
-function handleTweetObject(obj: any, headers: any, config: Config) {
+function handleTweetObject(obj: any, config: Config) {
 	let ptr = obj;
 	for (const key of UserObjectPath) {
 		if (ptr.hasOwnProperty(key)) {
@@ -69,25 +69,24 @@ function handleTweetObject(obj: any, headers: any, config: Config) {
 		console.error(logstr, 'could not parse tweet', obj);
 		return;
 	}
-	BlockBlueVerified(ptr, headers, config);
+	BlockBlueVerified(ptr, config);
 }
 
-export function ParseTimelineTweet(tweet: any, headers: any, config: Config) {
+export function ParseTimelineTweet(tweet: any, config: Config) {
 	if (tweet.itemType == 'TimelineTimelineCursor') {
 		return;
 	}
 
 	// Handle retweets and quoted tweets (check the retweeted user, too)
 	if (tweet?.tweet_results?.result?.quoted_status_result) {
-		handleTweetObject(tweet.tweet_results.result.quoted_status_result.result, headers, config);
+		handleTweetObject(tweet.tweet_results.result.quoted_status_result.result, config);
 	} else if (tweet?.tweet_results?.result?.legacy?.retweeted_status_result) {
 		handleTweetObject(
 			tweet.tweet_results.result.legacy.retweeted_status_result.result,
-			headers,
 			config,
 		);
 	}
-	handleTweetObject(tweet, headers, config);
+	handleTweetObject(tweet, config);
 }
 
 export function HandleInstructionsResponse(
@@ -146,13 +145,13 @@ export function HandleInstructionsResponse(
 
 			case 'TimelineTimelineItem':
 				if (tweet.content.itemContent?.itemType == 'TimelineTweet') {
-					ParseTimelineTweet(tweet.content.itemContent, e.detail.request.headers, config);
+					ParseTimelineTweet(tweet.content.itemContent, config);
 				}
 				break;
 
 			case 'TimelineTimelineModule':
 				for (const innerTweet of tweet.content.items || []) {
-					ParseTimelineTweet(innerTweet.item.itemContent, e.detail.request.headers, config);
+					ParseTimelineTweet(innerTweet.item.itemContent, config);
 				}
 				break;
 

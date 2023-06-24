@@ -1,4 +1,4 @@
-import { api, DefaultOptions } from '../constants.js';
+import { api, logstr,  DefaultOptions, SoupcanExtensionId } from '../constants.js';
 import { abbreviate, commafy } from '../utilities.js';
 import './style.css';
 
@@ -27,6 +27,9 @@ document.addEventListener("DOMContentLoaded", () => {
 	const popupTimer = document.getElementById("popup-timer") as HTMLInputElement;
 	const popupTimerValue = document.getElementById("popup-timer-value") as HTMLElement;
 
+	const soupcanIntegrationOption = document.getElementById("soupcan-integration-option") as HTMLElement;
+	const soupcanIntegration = document.getElementById("soupcan-integration") as HTMLInputElement;
+
 	api.storage.sync.get(DefaultOptions).then(_config => {
 		const config = _config as Config;
 		suspendBlockCollection.checked = config.suspendedBlockCollection;
@@ -41,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		skipFollowerCountOption.style.display = config.skip1Mplus ? "" : "none";
 		skipFollowerCountValue.textContent = abbreviate(config.skipFollowerCount);
 		blockNftAvatars.checked = config.blockNftAvatars;
+		soupcanIntegration.checked = config.soupcanIntegration;
 
 		blockInterval.value = config.blockInterval.toString();
 		blockIntervalValue.textContent = config.blockInterval.toString() + "s";
@@ -48,6 +52,14 @@ document.addEventListener("DOMContentLoaded", () => {
 		popupTimerOption.style.display = config.showBlockPopups ? "" : "none";
 		popupTimer.value = config.popupTimer.toString();
 		popupTimerValue.textContent = config.popupTimer.toString() + "s";
+	});
+
+	api.management.get(SoupcanExtensionId).then(e => {
+		console.log(e);
+		soupcanIntegrationOption.style.display = "";
+	}).catch(e => {
+		console.log(e);
+		soupcanIntegrationOption.style.display = "none";
 	});
 
 	// set the block value immediately
@@ -185,6 +197,19 @@ document.addEventListener("DOMContentLoaded", () => {
 		}).then(() => {
 			// Update status to let user know options were saved.
 			const status = document.getElementById("block-nft-avatars-status") as HTMLElement;
+			status.textContent = "saved";
+			setTimeout(() => status.textContent = null, 1000);
+		});
+	});
+
+	soupcanIntegration.addEventListener("input", e => {
+		const target = e.target as HTMLInputElement;
+		api.storage.sync.set({
+			soupcanIntegration: target.checked,
+		}).then(() => {
+			console.log(logstr, "set soupcanIntegration to", target.checked);
+			// Update status to let user know options were saved.
+			const status = document.getElementById("soupcan-integration-status") as HTMLElement;
 			status.textContent = "saved";
 			setTimeout(() => status.textContent = null, 1000);
 		});

@@ -29,7 +29,6 @@ export function SetHeaders(headers: { [k: string]: string }) {
 			items.headers[header.toLowerCase()] = value;
 		}
 		api.storage.local.set(items);
-		console.debug(logstr, "updated headers:", items.headers);
 	});
 }
 
@@ -349,13 +348,17 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 
 const blockableAffiliateLabels = new Set(['AutomatedLabel']);
 const blockableVerifiedTypes = new Set(['Business']);
-export async function BlockBlueVerified(user: BlueBlockerUser, headers: any, config: Config) {
+export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 	// We're not currently adding anything to the queue so give up.
 	if (config.suspendedBlockCollection) {
 		return;
 	}
 
-	if (!user?.rest_id) {
+	if (
+		user.rest_id === undefined ||
+		user?.legacy.name === undefined ||
+		user?.legacy.screen_name === undefined
+	) {
 		console.error(logstr, 'invalid user object passed to BlockBlueVerified');
 		return;
 	}
@@ -373,6 +376,8 @@ export async function BlockBlueVerified(user: BlueBlockerUser, headers: any, con
 	if (user.legacy?.blocking) {
 		return;
 	}
+
+	// TODO: we should be able to move unified logic (just following and followed-by for now) above the groups
 
 	// step 1: is user verified
 	if (user.is_blue_verified || hasBlockableVerifiedTypes || hasBlockableAffiliateLabels) {
@@ -405,7 +410,6 @@ export async function BlockBlueVerified(user: BlueBlockerUser, headers: any, con
 			);
 		} else if (
 			// group for skip-verified option
-			// TODO: look to see if there's some other way to check legacy verified
 			config.skipVerified &&
 			await IsUserLegacyVerified(user.rest_id, user.legacy.screen_name)
 		) {
@@ -430,12 +434,16 @@ export async function BlockBlueVerified(user: BlueBlockerUser, headers: any, con
 			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they have over ${commafy(config.skipFollowerCount)} followers and Elon is an idiot.`);
 		} else {
 			let reason = ReasonBlueVerified;
-			if (hasBlockableVerifiedTypes) reason = ReasonBusinessVerified;
+			if (hasBlockableVerifiedTypes) {
+				reason = ReasonBusinessVerified;
+			}
 			queueBlockUser(user, String(user.rest_id), reason);
+			return;
 		}
 	}
+
 	// step 2: is user an nft bro
-	else if (config.blockNftAvatars && (user.has_nft_avatar || user.profile_image_shape === "Hexagon")) {
+	if (config.blockNftAvatars && (user.has_nft_avatar || user.profile_image_shape === "Hexagon")) {
 		if (
 			// group for block-following option
 			!config.blockFollowing &&
@@ -456,20 +464,46 @@ export async function BlockBlueVerified(user: BlueBlockerUser, headers: any, con
 			);
 		} else {
 			queueBlockUser(user, String(user.rest_id), ReasonNftAvatar);
+			return;
 		}
 	}
-	// step 3: soupcan integration
-	else if (config.soupcanIntegration) {
+
+	// step 3: external addon integrations
+	if (config.soupcanIntegration) {
 		// fire an event here to soupcan and check for transphobia
-		new Promise(resolve => {
-			chrome.runtime.sendMessage(
-				SoupcanExtensionId,
-				{ action: "check_twitter_user", screen_name: user.legacy.screen_name },
-				resolve,
-			);
-		}).then(response => {
-			if (response) {
+		chrome.runtime.sendMessage(
+			SoupcanExtensionId,
+			{ action: "check_twitter_user", screen_name: user.legacy.screen_name },
+		).then(response => {
+			if (response?.status !== "transphobic") {
+				// just exit, don't bother reporting since this will trigger for most users. remember, ALL users pass through this function.
+			} else if (
+				// group for block-following option
+				!config.blockFollowing &&
+				(user.legacy?.following || user.super_following)
+			) {
+				console.log(
+					logstr,
+					`did not block transphobic user ${formattedUserName} because you follow them.`,
+				);
+			} else if (
+				// group for block-followers option
+				!config.blockFollowers &&
+				user.legacy?.followed_by
+			) {
+				console.log(
+					logstr,
+					`did not block transphobic user ${formattedUserName} because they follow you.`,
+				);
+			} else {
 				queueBlockUser(user, String(user.rest_id), ReasonNftAvatar);
+			}
+		}).catch(e => {
+			if (e.message === "Could not establish connection. Receiving end does not exist.") {
+				api.storage.sync.set({ soupcanIntegration: false });
+				console.log(logstr, "looks like soupcan was uninstalled, disabling integration.");
+			} else {
+				console.error(logstr, "an unknown error occurred while messaging soupcan:", e);
 			}
 		});
 	}

@@ -27,7 +27,6 @@ export function HandleTypeahead(e: CustomEvent<BlueBlockerEvent>, body: Body, co
         super_following: false, // meh
         rest_id: user.id_str,
       } as BlueBlockerUser,
-      e.detail.request.headers,
       config,
     );
   }

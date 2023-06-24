@@ -30,7 +30,6 @@ export function HandleForYou(e: CustomEvent<BlueBlockerEvent>, body: Body, confi
         super_following: user.ext?.superFollowMetadata?.r?.ok?.superFollowing,
         rest_id: user_id,
       } as BlueBlockerUser,
-      e.detail.request.headers,
       config,
     );
   }
