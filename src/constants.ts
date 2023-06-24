@@ -23,6 +23,7 @@ export const DefaultOptions: Config = {
 	blockInterval: 15,
 	popupTimer: 30,
 	skipFollowerCount: 1e6,
+	soupcanIntegration: false,
 
 	// this isn"t set, but is used
 	// TODO: when migrating to firefox manifest v3, check to see if sets can be stored yet
@@ -57,3 +58,5 @@ export const LegacyVerifiedUrl: string = "https://gist.githubusercontent.com/tra
 export const EventKey = "MultiTabEvent";
 export const ErrorEvent = "ErrorEvent";
 export const MessageEvent = "MessageEvent";
+export const Browser = chrome.runtime.getManifest()?.browser_specific_settings?.gecko === null ? "chrome" : "firefox";
+export const SoupcanExtensionId = Browser === "chrome" ? "hcneafegcikghlbibfmlgadahjfckonj" : "soupcan@beth.lgbt";

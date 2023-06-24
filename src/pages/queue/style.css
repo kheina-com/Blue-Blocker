@@ -76,7 +76,7 @@ main {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	background: url('../assets/icon.png') var(--bg2color);
+	background: url('/icon/icon.png') var(--bg2color);
 	background-repeat: no-repeat;
 	background-size: 2.5em;
 	background-position-x: 1em;
@@ -94,7 +94,7 @@ main {
 	margin-bottom: 0;
 }
 #block-queue div.error {
-	background: url('../assets/error.png') var(--bg1color);
+	background: url('/icon/error.png') var(--bg2color);
 	background-repeat: no-repeat;
 	background-size: 2.5em;
 	background-position-x: 1em;

@@ -45,45 +45,45 @@ export async function PopulateVerifiedDb() {
 	console.log(logstr, "downloading legacy verified users database.");
 	const items: { [k: string]: { user_id: string, handle: string } | boolean } = { __legacy_db_loaded__: true };
 	let count: number = 0;
-	const expected = 407521;
+	const expected = 407520;
 
 	fetch(LegacyVerifiedUrl)
-		.then(r => r.text())
-		.then(body => {
-			let intact: boolean = false;
+	.then(r => r.text())
+	.then(body => {
+		let intact: boolean = false;
 
-			body.split("\n").forEach(line => {
-				if (line === "Twitter ID, Screen name, Followers") {
-					intact = true;
-					return;
-				}
-				else if (!intact) {
-					throw new Error("legacy verified users database was mangled or otherwise unable to be parsed");
-				}
-
-				const [user_id, handle, _] = line.split(",");
-				const item = { user_id, handle };
-				const key = `user_id:${user_id}`;
-
-				items[key] = item;
-				count++;
-			});
-
-			if (count !== expected) {
-				throw new Error("legacy verified users database did not contain the expected number of users");
+		body.split("\n").forEach(line => {
+			if (line === "Twitter ID, Screen name, Followers") {
+				intact = true;
+				return;
 			}
-		})
-		.then(() => api.storage.local.set(items))
-		.then(() => {
-			const message = `loaded ${commafy(count)} legacy verified users`;
-			console.log(logstr, message);
-			api.storage.local.set({
-				[EventKey]: {
-					type: MessageEvent,
-					message,
-				},
-			});
+			else if (!intact) {
+				throw new Error("legacy verified users database was mangled or otherwise unable to be parsed");
+			}
+
+			const [user_id, handle, _] = line.split(",");
+			const item = { user_id, handle };
+			const key = `user_id:${user_id}`;
+
+			items[key] = item;
+			count++;
 		});
+
+		if (count !== expected) {
+			throw new Error("legacy verified users database did not contain the expected number of users");
+		}
+	})
+	.then(() => api.storage.local.set(items))
+	.then(() => {
+		const message = `loaded ${commafy(count)} legacy verified users!`;
+		console.log(logstr, message);
+		api.storage.local.set({
+			[EventKey]: {
+				type: MessageEvent,
+				message,
+			},
+		});
+	});
 }
 
 export async function IsUserLegacyVerified(user_id: string, handle: string): Promise<boolean> {

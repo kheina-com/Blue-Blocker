@@ -10,6 +10,7 @@ import {
 	ReasonNftAvatar,
 	ReasonBusinessVerified,
 	ReasonMap,
+	SoupcanExtensionId,
 	ErrorEvent,
 	EventKey,
 	MessageEvent,
@@ -164,17 +165,18 @@ api.storage.local.onChanged.addListener((items) => {
 
 			case UserBlockedEvent:
 				if (options.showBlockPopups) {
-					const { user, user_id, headers, reason } = e;
+					const event = e as BlockUser;
+					const { user, user_id, reason } = event;
 					const t = document.createElement('div');
 					t.className = 'toast';
 					const name =
-						user.legacy.name.length > 25
-							? user.legacy.name.substring(0, 23).trim() + '...'
-							: user.legacy.name;
-					t.innerHTML = `blocked ${name} (<a href="/${user.legacy.screen_name}">@${user.legacy.screen_name}</a>)`;
+						user.name.length > 25
+							? user.name.substring(0, 23).trim() + '...'
+							: user.name;
+					t.innerHTML = `blocked ${name} (<a href="/${user.screen_name}">@${user.screen_name}</a>)`;
 					const b = document.createElement('button');
 					b.onclick = () => {
-						unblockUser(user, user_id, headers, reason);
+						unblockUser(user, user_id, reason);
 						t.removeChild(b);
 					};
 					b.innerText = 'undo';
@@ -371,6 +373,8 @@ export async function BlockBlueVerified(user: BlueBlockerUser, headers: any, con
 	if (user.legacy?.blocking) {
 		return;
 	}
+
+	// step 1: is user verified
 	if (user.is_blue_verified || hasBlockableVerifiedTypes || hasBlockableAffiliateLabels) {
 		if (
 			// group for if the user has unblocked them previously
@@ -429,7 +433,9 @@ export async function BlockBlueVerified(user: BlueBlockerUser, headers: any, con
 			if (hasBlockableVerifiedTypes) reason = ReasonBusinessVerified;
 			queueBlockUser(user, String(user.rest_id), reason);
 		}
-	} else if (config.blockNftAvatars && (user.has_nft_avatar || user.profile_image_shape === "Hexagon")) {
+	}
+	// step 2: is user an nft bro
+	else if (config.blockNftAvatars && (user.has_nft_avatar || user.profile_image_shape === "Hexagon")) {
 		if (
 			// group for block-following option
 			!config.blockFollowing &&
@@ -451,5 +457,20 @@ export async function BlockBlueVerified(user: BlueBlockerUser, headers: any, con
 		} else {
 			queueBlockUser(user, String(user.rest_id), ReasonNftAvatar);
 		}
+	}
+	// step 3: soupcan integration
+	else if (config.soupcanIntegration) {
+		// fire an event here to soupcan and check for transphobia
+		new Promise(resolve => {
+			chrome.runtime.sendMessage(
+				SoupcanExtensionId,
+				{ action: "check_twitter_user", screen_name: user.legacy.screen_name },
+				resolve,
+			);
+		}).then(response => {
+			if (response) {
+				queueBlockUser(user, String(user.rest_id), ReasonNftAvatar);
+			}
+		});
 	}
 }

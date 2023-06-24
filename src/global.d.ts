@@ -14,6 +14,7 @@ interface Config {
 	unblocked: { [k: string]: null },
 	popupTimer: number,
 	skipFollowerCount: number,
+	soupcanIntegration: boolean,
 }
 
 interface BlueBlockerUser {

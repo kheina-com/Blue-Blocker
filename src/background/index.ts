@@ -34,6 +34,11 @@ api.storage.sync.onChanged.addListener((items) => {
 			// disable soupcan integration
 		}
 	}
+
+	// TODO: DELETE ME
+	if (items.hasOwnProperty('skipVerified') && items.skipVerified.newValue === false) {
+		api.storage.local.set({ __legacy_db_loaded__: false });
+	}
 });
 
 const queue = new BlockQueue(api.storage.local);
