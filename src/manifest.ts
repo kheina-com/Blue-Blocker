@@ -9,7 +9,7 @@ export default defineManifest({
 		"128": "icon/icon-128.png",
 	},
 	action: {
-		default_popup: "src/popup/popup.html",
+		default_popup: "src/popup/index.html",
 		default_icon: "icon/icon.png",
 	},
 	background: {

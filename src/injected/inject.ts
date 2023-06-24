@@ -1,8 +1,7 @@
 //@ts-ignore
 
 (function (xhr) {
-	const RequestRegex =
-		/^https?:\/\/(?:\w+\.)?twitter.com\/[\w\/\.\-\_\=]+\/(HomeLatestTimeline|HomeTimeline|UserTweets|timeline\/home\.json|TweetDetail|search\/typeahead\.json|search\/adaptive\.json)(?:$|\?)/;
+	const RequestRegex = /^https?:\/\/(?:\w+\.)?twitter.com\/[\w\/\.\-\_\=]+\/(HomeLatestTimeline|HomeTimeline|SearchTimeline|UserTweets|timeline\/home\.json|TweetDetail|search\/typeahead\.json|search\/adaptive\.json)(?:$|\?)/;
 
 	let XHR = <BlueBlockerXLMRequest>XMLHttpRequest.prototype;
 	let open = XHR.open;
@@ -27,7 +26,7 @@
 		this.addEventListener('load', () => {
 			// determine if request is a timeline/tweet-returning request
 			const parsedUrl = RequestRegex.exec(this._url);
-			if (this._url && parsedUrl?.length) {
+			if (this._url && parsedUrl && parsedUrl.length > 0) {
 				document.dispatchEvent(new CustomEvent("blue-blocker-event", {
 					detail: {
 						parsedUrl,

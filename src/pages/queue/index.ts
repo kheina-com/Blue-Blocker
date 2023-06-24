@@ -1,17 +1,19 @@
-import { BlockQueue } from "../models/block_queue.js";
-import { FormatLegacyName } from "../utilities.js";
-import { api, logstr } from "../constants.js";
+import { BlockQueue } from "../../models/block_queue.js";
+import { FormatLegacyName, RefId } from "../../utilities.js";
+import { api, logstr } from "../../constants.js";
+import "./style.css";
 
 // Define constants that shouldn't be exported to the rest of the addon
 const queue = new BlockQueue(api.storage.local);
 
 // we need to obtain and hold on to the critical point as long as this tab is
 // open so that any twitter tabs that are open are unable to block users
+const refId = RefId();
 setInterval(async () => {
-	await queue.getCriticalPoint()
+	await queue.getCriticalPoint(refId);
 }, 500);
 
-async function unqueueUser(user_id, safelist) {
+async function unqueueUser(user_id: string, safelist: boolean) {
 	// because this page holds onto the critical point, we can modify the queue
 	// without worrying about if it'll affect another tab
 	if (safelist) {
@@ -34,24 +36,25 @@ async function unqueueUser(user_id, safelist) {
 }
 
 // interval doesn't run immediately, so do that here
-queue.getCriticalPoint()
+queue.getCriticalPoint(refId)
 .then(() => api.storage.local.get({ BlockQueue: [] }))
 .then(items => {
-	const queueDiv = document.getElementById("block-queue");
+	const queue = items.BlockQueue as BlockUser[];
+	const queueDiv = document.getElementById("block-queue") as HTMLElement;
 
-	if (items.BlockQueue.length === 0) {
+	if (queue.length === 0) {
 		queueDiv.textContent = "your block queue is empty";
 		return;
 	}
 
-	queueDiv.innerHTML = null;
+	queueDiv.innerHTML = "";
 
-	items.BlockQueue.forEach(item => {
+	queue.forEach(item => {
 		const { user, user_id } = item;
 		const div = document.createElement("div");
 
 		const p = document.createElement("p");
-		p.innerHTML = `${user.legacy.name} (<a href="https://twitter.com/${user.legacy.screen_name}" target="_blank">@${user.legacy.screen_name}</a>)`;
+		p.innerHTML = `${user.name} (<a href="https://twitter.com/${user.screen_name}" target="_blank">@${user.screen_name}</a>)`;
 		div.appendChild(p);
 
 		const remove = document.createElement("button");

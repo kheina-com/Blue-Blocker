@@ -1,5 +1,5 @@
 import { ClearCache, SetHeaders } from '../shared';
-import { api, DefaultOptions, ErrorEvent, EventKey } from '../constants';
+import { api, logstr, DefaultOptions, ErrorEvent, EventKey } from '../constants';
 import { HandleInstructionsResponse } from '../parsers/instructions';
 import { HandleForYou } from '../parsers/timeline';
 import { HandleTypeahead } from '../parsers/search';
@@ -46,6 +46,7 @@ document.addEventListener('blue-blocker-event', function (e: CustomEvent<BlueBlo
 			switch (e.detail.parsedUrl[1]) {
 				case 'HomeLatestTimeline':
 				case 'HomeTimeline':
+				case "SearchTimeline":
 				case 'UserTweets':
 				case 'TweetDetail':
 					return HandleInstructionsResponse(e, parsed_body, config);
@@ -55,6 +56,7 @@ document.addEventListener('blue-blocker-event', function (e: CustomEvent<BlueBlo
 				case 'search/typeahead.json':
 					return HandleTypeahead(e, parsed_body, config);
 				default:
+					console.error(logstr, "found an unexpected url that we don't know how to handle");
 					api.storage.local.set({
 						[EventKey]: {
 							type: ErrorEvent,
@@ -67,7 +69,7 @@ document.addEventListener('blue-blocker-event', function (e: CustomEvent<BlueBlo
 			api.storage.local.set({
 				[EventKey]: {
 					type: ErrorEvent,
-					message: 'expected error occurred while parsing request body',
+					message: "unexpected error occurred while parsing request body",
 					detail: { error, body_str, event: e },
 				},
 			});

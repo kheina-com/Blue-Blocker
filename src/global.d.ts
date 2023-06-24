@@ -68,3 +68,10 @@ interface BlueBlockerXLMRequest extends XMLHttpRequest {
 	_requestHeaders: any,
 	_startTime: string,
 }
+
+interface BlockUser {
+	user_id: string,
+	user: { name: string, screen_name: string },
+	reason: number,
+	external_reason?: string,
+}

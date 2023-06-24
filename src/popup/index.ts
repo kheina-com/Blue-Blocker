@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			// Update status to let user know options were saved.
 			const status = document.getElementById("suspend-block-collection-status") as HTMLElement;
 			status.textContent = target.checked ? "paused" : "resumed";
-			api.action.setIcon({ path: target.checked ? "/icon/icon-128-greyscale.png" : "/icon/icon-128.png"});
+			api.action.setIcon({ path: target.checked ? "/icon/icon-128-greyscale.png" : "/icon/icon-128.png" });
 			setTimeout(() => status.textContent = null, 1000);
 		});
 	});
