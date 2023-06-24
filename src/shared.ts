@@ -14,7 +14,7 @@ import {
 	EventKey,
 	MessageEvent,
 } from './constants';
-import { IsUserLegacyVerified, FormatLegacyName } from './utilities';
+import { commafy, IsUserLegacyVerified, FormatLegacyName } from './utilities';
 
 // Define constants that shouldn't be exported to the rest of the addon
 const queue = new BlockQueue(api.storage.local);
@@ -37,7 +37,7 @@ export function SetHeaders(headers: { [k: string]: string }) {
 	});
 }
 
-function unblockUser(user: BlueBlockerUser, user_id: string, reason: number, attempt: number = 1) {
+function unblockUser(user: { name: string, screen_name: string }, user_id: string, reason: number, attempt: number = 1) {
 	api.storage.sync.get({ unblocked: { } }).then(items => {
 		items.unblocked[String(user_id)] = null;
 		api.storage.sync.set(items);
@@ -103,7 +103,7 @@ function unblockUser(user: BlueBlockerUser, user_id: string, reason: number, att
 
 				const t = document.createElement("div");
 				t.className = "toast";
-				t.innerText = `could not unblock @${user.legacy.screen_name}, user has been suspended or no longer exists.`;
+				t.innerText = `could not unblock @${user.screen_name}, user has been suspended or no longer exists.`;
 				const ele = document.getElementById("injected-blue-block-toasts");
 				if (!ele) {
 					throw new Error("blue blocker was unable to create or find toasts div.");
@@ -119,7 +119,7 @@ function unblockUser(user: BlueBlockerUser, user_id: string, reason: number, att
 			else {
 				const t = document.createElement("div");
 				t.className = "toast";
-				t.innerText = `unblocked @${user.legacy.screen_name}, they won't be blocked again.`;
+				t.innerText = `unblocked @${user.screen_name}, they won't be blocked again.`;
 				const ele = document.getElementById("injected-blue-block-toasts");
 				if (!ele) {
 					throw new Error("blue blocker was unable to create or find toasts div.");
@@ -147,64 +147,66 @@ api.storage.local.onChanged.addListener((items) => {
 	}
 	const e = items[EventKey].newValue;
 
-	switch (e.type) {
-		case MessageEvent:
-			if (options.showBlockPopups) {
+	api.storage.sync.get(DefaultOptions).then(options => {
+		switch (e.type) {
+			case MessageEvent:
+				if (options.showBlockPopups) {
+					const t = document.createElement('div');
+					t.className = 'toast';
+					t.innerText = e.message;
+					const ele = document.getElementById('injected-blue-block-toasts');
+					if (ele) {
+						ele.appendChild(t);
+						setTimeout(() => ele.removeChild(t), options.popupTimer * 1000);
+					}
+				}
+				break;
+
+			case UserBlockedEvent:
+				if (options.showBlockPopups) {
+					const { user, user_id, headers, reason } = e;
+					const t = document.createElement('div');
+					t.className = 'toast';
+					const name =
+						user.legacy.name.length > 25
+							? user.legacy.name.substring(0, 23).trim() + '...'
+							: user.legacy.name;
+					t.innerHTML = `blocked ${name} (<a href="/${user.legacy.screen_name}">@${user.legacy.screen_name}</a>)`;
+					const b = document.createElement('button');
+					b.onclick = () => {
+						unblockUser(user, user_id, headers, reason);
+						t.removeChild(b);
+					};
+					b.innerText = 'undo';
+					t.appendChild(b);
+					const ele = document.getElementById('injected-blue-block-toasts');
+					if (ele) {
+						ele.appendChild(t);
+						setTimeout(() => ele.removeChild(t), options.popupTimer * 1000);
+					}
+				}
+				break;
+
+			case ErrorEvent:
+				// skip checking options, since errors should always be shown
+				const { message, detail } = e;
+				console.error(logstr, `${message}:`, detail);
+
 				const t = document.createElement('div');
-				t.className = 'toast';
-				t.innerText = e.message;
+				t.className = 'toast error';
+				t.innerHTML = `<p>an error occurred! check the console and create an issue on <a href="https://github.com/kheina-com/Blue-Blocker/issues" target="_blank">GitHub</a></p>`;
+
 				const ele = document.getElementById('injected-blue-block-toasts');
 				if (ele) {
 					ele.appendChild(t);
-					setTimeout(() => ele.removeChild(t), 30e3);
+					setTimeout(() => ele.removeChild(t), 60e3);
 				}
-			}
-			break;
+				break;
 
-		case UserBlockedEvent:
-			if (options.showBlockPopups) {
-				const { user, user_id, headers, reason } = e;
-				const t = document.createElement('div');
-				t.className = 'toast';
-				const name =
-					user.legacy.name.length > 25
-						? user.legacy.name.substring(0, 23).trim() + '...'
-						: user.legacy.name;
-				t.innerHTML = `blocked ${name} (<a href="/${user.legacy.screen_name}">@${user.legacy.screen_name}</a>)`;
-				const b = document.createElement('button');
-				b.onclick = () => {
-					unblockUser(user, user_id, headers, reason);
-					t.removeChild(b);
-				};
-				b.innerText = 'undo';
-				t.appendChild(b);
-				const ele = document.getElementById('injected-blue-block-toasts');
-				if (ele) {
-					ele.appendChild(t);
-					setTimeout(() => ele.removeChild(t), 30e3);
-				}
-			}
-			break;
-
-		case ErrorEvent:
-			// skip checking options, since errors should always be shown
-			const { message, detail } = e;
-			console.error(logstr, `${message}:`, detail);
-
-			const t = document.createElement('div');
-			t.className = 'toast error';
-			t.innerHTML = `<p>an error occurred! check the console and create an issue on <a href="https://github.com/kheina-com/Blue-Blocker/issues" target="_blank">GitHub</a></p>`;
-
-			const ele = document.getElementById('injected-blue-block-toasts');
-			if (ele) {
-				ele.appendChild(t);
-				setTimeout(() => ele.removeChild(t), 60e3);
-			}
-			break;
-
-		default:
-			console.error(logstr, 'unknown multitab event occurred:', e);
-	}
+			default:
+				console.error(logstr, 'unknown multitab event occurred:', e);
+		}
+	});
 });
 
 // retrieve settings immediately on startup
@@ -219,8 +221,8 @@ function queueBlockUser(user: BlueBlockerUser, user_id: string, reason: number) 
 		return;
 	}
 	blockCache.add(user_id);
-	queue.push({ user, user_id, reason });
-	console.log(logstr, `queued ${FormatLegacyName(user)} for a block due to ${ReasonMap[reason]}.`);
+	queue.push({ user_id, reason, user: { name: user.legacy.name, screen_name: user.legacy.screen_name } });
+	console.log(logstr, `queued ${FormatLegacyName(user.legacy)} for a block due to ${ReasonMap[reason]}.`);
 	consumer.start();
 }
 
@@ -256,7 +258,7 @@ const consumer = new QueueConsumer(api.storage.local, checkBlockQueue, async () 
 consumer.start();
 
 const CsrfTokenRegex = /ct0=\s*(\w+);/;
-function blockUser(user: any, user_id: string, reason: number, attempt = 1) {
+function blockUser(user: { name: string, screen_name: string }, user_id: string, reason: number, attempt = 1) {
 	const match = window.location.href.match(/^https?:\/\/(?:\w+\.)?twitter.com(?=$|\/)/);
 
 	if (!match) {
@@ -358,7 +360,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, headers: any, con
 		return;
 	}
 
-	const formattedUserName = FormatLegacyName(user);
+	const formattedUserName = FormatLegacyName(user.legacy);
 	const hasBlockableVerifiedTypes = blockableVerifiedTypes.has(user.legacy?.verified_type || '');
 	const hasBlockableAffiliateLabels = blockableAffiliateLabels.has(
 		user.affiliates_highlighted_label?.label?.userLabelType || '',
@@ -421,12 +423,9 @@ export async function BlockBlueVerified(user: BlueBlockerUser, headers: any, con
 		} else if (
 			// verified by follower count
 			config.skip1Mplus &&
-			user.legacy?.followers_count > 1000000
+			user.legacy?.followers_count > config.skipFollowerCount
 		) {
-			console.log(
-				logstr,
-				`did not block Twitter Blue verified user ${formattedUserName} because they have over a million followers and Elon is an idiot.`,
-			);
+			console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they have over ${commafy(config.skipFollowerCount)} followers and Elon is an idiot.`);
 		} else {
 			let reason = ReasonBlueVerified;
 			if (hasBlockableVerifiedTypes) reason = ReasonBusinessVerified;

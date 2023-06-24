@@ -58,7 +58,7 @@ export async function PopulateVerifiedDb() {
 					return;
 				}
 				else if (!intact) {
-					// error
+					throw new Error("legacy verified users database was mangled or otherwise unable to be parsed");
 				}
 
 				const [user_id, handle, _] = line.split(",");
@@ -68,6 +68,10 @@ export async function PopulateVerifiedDb() {
 				items[key] = item;
 				count++;
 			});
+
+			if (count !== expected) {
+				throw new Error("legacy verified users database did not contain the expected number of users");
+			}
 		})
 		.then(() => api.storage.local.set(items))
 		.then(() => {
@@ -88,15 +92,15 @@ export async function IsUserLegacyVerified(user_id: string, handle: string): Pro
 
 	if (!items.__legacy_db_loaded__) {
 		return false;
-		// TODO: THROW ERROR
+		// TODO: THROW ERROR ??
 	}
 
 	const user = items[key];
 	return (user_id === user?.user_id && handle === user?.handle)
 }
 
-export function FormatLegacyName(user: BlueBlockerUser) {
-	const legacyName = user.legacy?.name;
-	const screenName = user.legacy?.screen_name;
+export function FormatLegacyName(user: { name: string, screen_name: string }) {
+	const legacyName = user?.name;
+	const screenName = user?.screen_name;
 	return `${legacyName} (@${screenName})`;
 }

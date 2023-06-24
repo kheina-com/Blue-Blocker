@@ -5,6 +5,7 @@ import { BlockQueue } from '../models/block_queue';
 api.action.setBadgeBackgroundColor({ color: '#666' });
 api.action.setBadgeTextColor({ color: '#fff' });
 
+// TODO: change to message listener
 api.storage.local.onChanged.addListener((items) => {
 	if (items.hasOwnProperty('BlockCounter')) {
 		api.action.setBadgeText({
@@ -37,6 +38,7 @@ api.runtime.onMessageExternal.addListener(async (message, sender, respond) => {
 	switch (message?.action) {
 		case blockAction:
 			// expected message format: { action, user_id: string, name: string, screen_name: string, reason: string }
+			// TODO: figure out a better structure of user that only takes the things we need for blocking (name, handle)
 			await queue.push({ user_id: message.user_id, user: { name: message.name, screen_name: message.screen_name }, reason: ReasonExternal });
 			respond({ status: successStatus, message: "user queued for blocking" });
 			break;

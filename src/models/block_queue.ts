@@ -1,9 +1,10 @@
 import { RefId } from '../utilities';
 
 interface BlockUser {
-	user: BlueBlockerUser;
-	user_id: string;
-	reason: number;
+	user_id: string,
+	user: { name: string, screen_name: string },
+	reason: number,
+	external_reason?: string,
 }
 
 const criticalPointKey = 'BlockQueueCriticalPoint';

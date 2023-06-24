@@ -22,7 +22,7 @@ export default defineManifest({
 			js: ["src/content/index.ts"],
 		},
 	],
-	permissions: ["storage", "unlimitedStorage"],
+	permissions: ["storage", "unlimitedStorage", "management"],
 	web_accessible_resources: [
 		{
 			resources: [
