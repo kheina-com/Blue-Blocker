@@ -481,10 +481,11 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 	// step 3: external addon integrations
 	if (config.soupcanIntegration) {
 		// fire an event here to soupcan and check for transphobia
-		chrome.runtime.sendMessage(
-			SoupcanExtensionId,
-			{ action: "check_twitter_user", screen_name: user.legacy.screen_name },
-		).then(response => {
+		try {
+			const response = await chrome.runtime.sendMessage(
+				SoupcanExtensionId,
+				{ action: "check_twitter_user", screen_name: user.legacy.screen_name },
+			);
 			console.debug(logstr, `soupcan response for @${user.legacy.screen_name}:`, response);
 			if (response?.status !== "transphobic") {
 				// just exit, don't bother reporting since this will trigger for most users. remember, ALL users pass through this function.
@@ -518,13 +519,14 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 			} else {
 				queueBlockUser(user, String(user.rest_id), ReasonTransphobia);
 			}
-		}).catch(e => {
+		} catch (_e) {
+			const e = _e as Error;
 			if (e.message === "Could not establish connection. Receiving end does not exist.") {
 				api.storage.sync.set({ soupcanIntegration: false });
 				console.log(logstr, "looks like soupcan was uninstalled, disabling integration.");
 			} else {
 				console.error(logstr, "an unknown error occurred while messaging soupcan:", e);
 			}
-		});
+		}
 	}
 }
