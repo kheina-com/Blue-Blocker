@@ -26,12 +26,10 @@ script {
 html * {
 	font-family: Bitstream Vera Sans, DejaVu Sans, Arial, Helvetica, sans-serif;
 }
-html,
-body {
+html, body {
 	background: var(--bg1color);
 	color: var(--textcolor);
 }
-
 body {
 	width: 25em;
 	margin: 25px;
@@ -101,6 +99,14 @@ a:link, a:visited
 a:hover {
 	color: var(--interact) !important;
 	opacity: 1 !important;
+}
+
+.emoji {
+	max-width: 1.2em;
+	max-height: 1.2em;
+	position: relative;
+	margin-top: -0.25em;
+	vertical-align: middle;
 }
 
 .option p {

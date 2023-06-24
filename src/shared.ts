@@ -446,6 +446,15 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 	// step 2: is user an nft bro
 	if (config.blockNftAvatars && (user.has_nft_avatar || user.profile_image_shape === "Hexagon")) {
 		if (
+			// group for if the user has unblocked them previously
+			// you cannot store sets in sync memory, so this will be a janky object
+			config.unblocked.hasOwnProperty(String(user.rest_id))
+		) {
+			console.log(
+				logstr,
+				`did not block user with NFT avatar ${formattedUserName} because you unblocked them previously.`,
+			);
+		} else if (
 			// group for block-following option
 			!config.blockFollowing &&
 			(user.legacy?.following || user.super_following)
@@ -476,9 +485,18 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 			SoupcanExtensionId,
 			{ action: "check_twitter_user", screen_name: user.legacy.screen_name },
 		).then(response => {
-			console.debug(logstr, "soupcan response:", response);
+			console.debug(logstr, `soupcan response for @${user.legacy.screen_name}:`, response);
 			if (response?.status !== "transphobic") {
 				// just exit, don't bother reporting since this will trigger for most users. remember, ALL users pass through this function.
+			} else if (
+				// group for if the user has unblocked them previously
+				// you cannot store sets in sync memory, so this will be a janky object
+				config.unblocked.hasOwnProperty(String(user.rest_id))
+			) {
+				console.log(
+					logstr,
+					`did not block transphobic user ${formattedUserName} because you unblocked them previously.`,
+				);
 			} else if (
 				// group for block-following option
 				!config.blockFollowing &&

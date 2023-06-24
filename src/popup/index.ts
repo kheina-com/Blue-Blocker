@@ -17,18 +17,22 @@ document.addEventListener("DOMContentLoaded", () => {
 	const skipVerified = document.getElementById("skip-verified") as HTMLInputElement;
 	const skipAffiliated = document.getElementById("skip-affiliated") as HTMLInputElement;
 	const skip1Mplus = document.getElementById("skip-1mplus") as HTMLInputElement;
+
 	const skipFollowerCount = document.getElementById("skip-follower-count") as HTMLInputElement;
 	const skipFollowerCountOption = document.getElementById("skip-follower-count-option") as HTMLElement;
 	const skipFollowerCountValue = document.getElementById("skip-follower-count-value") as HTMLElement;
+
 	const blockNftAvatars = document.getElementById("block-nft-avatars") as HTMLInputElement;
-	const blockInterval = document.getElementById("block-interval") as HTMLInputElement;
-	const blockIntervalValue = document.getElementById("block-interval-value") as HTMLInputElement;
-	const popupTimerOption = document.getElementById("popup-timer-slider") as HTMLElement;
-	const popupTimer = document.getElementById("popup-timer") as HTMLInputElement;
-	const popupTimerValue = document.getElementById("popup-timer-value") as HTMLElement;
 
 	const soupcanIntegrationOption = document.getElementById("soupcan-integration-option") as HTMLElement;
 	const soupcanIntegration = document.getElementById("soupcan-integration") as HTMLInputElement;
+
+	const blockInterval = document.getElementById("block-interval") as HTMLInputElement;
+	const blockIntervalValue = document.getElementById("block-interval-value") as HTMLInputElement;
+
+	const popupTimerOption = document.getElementById("popup-timer-slider") as HTMLElement;
+	const popupTimer = document.getElementById("popup-timer") as HTMLInputElement;
+	const popupTimerValue = document.getElementById("popup-timer-value") as HTMLElement;
 
 	api.storage.sync.get(DefaultOptions).then(_config => {
 		const config = _config as Config;
@@ -54,11 +58,9 @@ document.addEventListener("DOMContentLoaded", () => {
 		popupTimerValue.textContent = config.popupTimer.toString() + "s";
 	});
 
-	api.management.get(SoupcanExtensionId).then(e => {
-		console.log(e);
+	api.management.get(SoupcanExtensionId).then(() => {
 		soupcanIntegrationOption.style.display = "";
-	}).catch(e => {
-		console.log(e);
+	}).catch(() => {
 		soupcanIntegrationOption.style.display = "none";
 	});
 
