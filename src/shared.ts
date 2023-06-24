@@ -21,11 +21,6 @@ const queue = new BlockQueue(api.storage.local);
 const blockCounter = new BlockCounter(api.storage.local);
 const blockCache = new Set();
 
-export var options: Config = { ...DefaultOptions };
-export function SetOptions(items: any) {
-	options = items;
-}
-
 export function SetHeaders(headers: { [k: string]: string }) {
 	api.storage.local.get({ headers: { }}).then(items => {
 		// so basically we want to only update items that have values
@@ -58,83 +53,88 @@ function unblockUser(user: { name: string, screen_name: string }, user_id: strin
 		url = `${root}/i/api/1.1/`;
 	}
 
-	if (options.mute) {
-		url += "mutes/users/destroy.json";
-	} else {
-		url += "blocks/destroy.json";
-	}
-
-	api.storage.local.get({ headers: null }).then(items => {
-		const body = `user_id=${user_id}`;
-		const headers: { [k: string]: string } = {
-			"content-length": body.length.toString(),
-			"content-type": "application/x-www-form-urlencoded",
-			"accept-encoding": "gzip, deflate, br",
-			"accept-language": "en-US,en;q=0.9",
-			accept: "*/*",
-		};
-
-		for (const header of Headers) {
-			headers[header] = items.headers[header];
-		}
-
-		// attempt to manually set the csrf token to the current active cookie
-		const csrf = CsrfTokenRegex.exec(document.cookie);
-		if (csrf) {
-			headers["x-csrf-token"] = csrf[1];
+	api.storage.sync.get(DefaultOptions).then(_config => {
+		const config = _config as Config;
+		if (config.mute) {
+			url += "mutes/users/destroy.json";
 		} else {
-			// default to the request's csrf token
-			headers["x-csrf-token"] = items.headers["x-csrf-token"];
+			url += "blocks/destroy.json";
 		}
 
-		fetch(url, {
-			body,
-			headers,
-			method: "POST",
-			credentials: "include",
-		}).then(response => {
-			if (response.status === 403) {
-				// user has been logged out, we need to stop queue and re-add
-				console.log(logstr, "user is logged out, failed to unblock user.");
-			}
-			else if (response.status === 404) {
-				// notice the wording here is different than the blocked 404. the difference is that if the user
-				// is unbanned, they will still be blocked and we want the user to know about that
+		api.storage.local.get({ headers: null })
+		.then(items => items.headers as { [k: string]: string })
+		.then((req_headers: { [k: string]: string }) => {
+			const body = `user_id=${user_id}`;
+			const headers: { [k: string]: string } = {
+				"content-length": body.length.toString(),
+				"content-type": "application/x-www-form-urlencoded",
+				"accept-encoding": "gzip, deflate, br",
+				"accept-language": "en-US,en;q=0.9",
+				accept: "*/*",
+			};
 
-				const t = document.createElement("div");
-				t.className = "toast";
-				t.innerText = `could not unblock @${user.screen_name}, user has been suspended or no longer exists.`;
-				const ele = document.getElementById("injected-blue-block-toasts");
-				if (!ele) {
-					throw new Error("blue blocker was unable to create or find toasts div.");
-				}
+			for (const header of Headers) {
+				headers[header] = req_headers[header];
+			}
 
-				ele.appendChild(t);
-				setTimeout(() => ele.removeChild(t), options.popupTimer * 1000);
-				console.log(logstr, `failed to unblock ${FormatLegacyName(user)}, user no longer exists`);
-			}
-			else if (response.status >= 300) {
-				console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, response);
-			}
-			else {
-				const t = document.createElement("div");
-				t.className = "toast";
-				t.innerText = `unblocked @${user.screen_name}, they won't be blocked again.`;
-				const ele = document.getElementById("injected-blue-block-toasts");
-				if (!ele) {
-					throw new Error("blue blocker was unable to create or find toasts div.");
-				}
-
-				ele.appendChild(t);
-				setTimeout(() => ele.removeChild(t), options.popupTimer * 1000);
-				console.log(logstr, `unblocked ${FormatLegacyName(user)}`);
-			}
-		}).catch(error => {
-			if (attempt < 3) {
-				unblockUser(user, user_id, reason, attempt + 1);
+			// attempt to manually set the csrf token to the current active cookie
+			const csrf = CsrfTokenRegex.exec(document.cookie);
+			if (csrf) {
+				headers["x-csrf-token"] = csrf[1];
 			} else {
-				console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, error);
+				// default to the request's csrf token
+				headers["x-csrf-token"] = req_headers["x-csrf-token"];
 			}
+
+			fetch(url, {
+				body,
+				headers,
+				method: "POST",
+				credentials: "include",
+			}).then(response => {
+				if (response.status === 403) {
+					// user has been logged out, we need to stop queue and re-add
+					console.log(logstr, "user is logged out, failed to unblock user.");
+				}
+				else if (response.status === 404) {
+					// notice the wording here is different than the blocked 404. the difference is that if the user
+					// is unbanned, they will still be blocked and we want the user to know about that
+
+					const t = document.createElement("div");
+					t.className = "toast";
+					t.innerText = `could not unblock @${user.screen_name}, user has been suspended or no longer exists.`;
+					const ele = document.getElementById("injected-blue-block-toasts");
+					if (!ele) {
+						throw new Error("blue blocker was unable to create or find toasts div.");
+					}
+
+					ele.appendChild(t);
+					setTimeout(() => ele.removeChild(t), config.popupTimer * 1000);
+					console.log(logstr, `failed to unblock ${FormatLegacyName(user)}, user no longer exists`);
+				}
+				else if (response.status >= 300) {
+					console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, response);
+				}
+				else {
+					const t = document.createElement("div");
+					t.className = "toast";
+					t.innerText = `unblocked @${user.screen_name}, they won't be blocked again.`;
+					const ele = document.getElementById("injected-blue-block-toasts");
+					if (!ele) {
+						throw new Error("blue blocker was unable to create or find toasts div.");
+					}
+
+					ele.appendChild(t);
+					setTimeout(() => ele.removeChild(t), config.popupTimer * 1000);
+					console.log(logstr, `unblocked ${FormatLegacyName(user)}`);
+				}
+			}).catch(error => {
+				if (attempt < 3) {
+					unblockUser(user, user_id, reason, attempt + 1);
+				} else {
+					console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, error);
+				}
+			});
 		});
 	});
 }
@@ -209,9 +209,6 @@ api.storage.local.onChanged.addListener((items) => {
 	});
 });
 
-// retrieve settings immediately on startup
-api.storage.sync.get(DefaultOptions).then(SetOptions);
-
 export function ClearCache() {
 	blockCache.clear();
 }
@@ -228,31 +225,28 @@ function queueBlockUser(user: BlueBlockerUser, user_id: string, reason: number) 
 
 function checkBlockQueue() {
 	let event: any = null;
-	api.storage.sync
-		.get(DefaultOptions)
-		.then((items) => SetOptions(items))
-		.then(() => queue.shift())
-		.then((item) => {
-			if (item === undefined) {
-				consumer.stop();
-				return;
-			}
-			const { user, user_id, reason } = item;
-			blockUser(user, user_id, reason);
-		})
-		.catch((error) =>
-			api.storage.local.set({
-				[EventKey]: {
-					type: ErrorEvent,
-					message: 'unexpected error occurred while processing block queue',
-					detail: { error, event },
-				},
-			}),
-		);
+	queue.shift()
+	.then(item => {
+		if (item === undefined) {
+			consumer.stop();
+			return;
+		}
+		const { user, user_id, reason } = item;
+		blockUser(user, user_id, reason);
+	})
+	.catch((error) =>
+		api.storage.local.set({
+			[EventKey]: {
+				type: ErrorEvent,
+				message: 'unexpected error occurred while processing block queue',
+				detail: { error, event },
+			},
+		}),
+	);
 }
 
 const consumer = new QueueConsumer(api.storage.local, checkBlockQueue, async () => {
-	const items = await api.storage.sync.get({ blockInterval: options.blockInterval });
+	const items = await api.storage.sync.get({ blockInterval: DefaultOptions.blockInterval });
 	return items.blockInterval * 1000;
 });
 consumer.start();
@@ -274,78 +268,82 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 		url = `${root}/i/api/1.1/`;
 	}
 
-	if (options.mute) {
-		url += "mutes/users/create.json";
-	} else {
-		url += "blocks/create.json";
-	}
-
-	api.storage.local.get({ headers: null }).then(items => {
-		const body = `user_id=${user_id}`;
-		let headers: { [k: string]: string } = {
-			"content-length": body.length.toString(),
-			"content-type": "application/x-www-form-urlencoded",
-			"accept-encoding": "gzip, deflate, br",
-			"accept-language": "en-US,en;q=0.9",
-			accept: "*/*",
-		};
-
-		for (const header of Headers) {
-			headers[header] = items.headers[header];
-		}
-
-		// attempt to manually set the csrf token to the current active cookie
-		const csrf = CsrfTokenRegex.exec(document.cookie);
-		if (csrf) {
-			headers["x-csrf-token"] = csrf[1];
+	api.storage.sync.get(DefaultOptions).then(_config => {
+		const config = _config as Config;
+		if (config.mute) {
+			url += "mutes/users/create.json";
 		} else {
-			// default to the request's csrf token
-			headers["x-csrf-token"] = items.headers["x-csrf-token"];
+			url += "blocks/create.json";
 		}
 
-		const options: {
-			body: string,
-			headers: { [k: string]: string },
-			method: string,
-			credentials: RequestCredentials,
-		} = {
-			body,
-			headers,
-			method: "POST",
-			credentials: "include",
-		};
-		console.debug(logstr, "block request:", { url, ...options });
+		api.storage.local.get({ headers: null }).then(items => {
+			const body = `user_id=${user_id}`;
+			let headers: { [k: string]: string } = {
+				"content-length": body.length.toString(),
+				"content-type": "application/x-www-form-urlencoded",
+				"accept-encoding": "gzip, deflate, br",
+				"accept-language": "en-US,en;q=0.9",
+				accept: "*/*",
+			};
 
-		fetch(url, options).then(response => {
-			console.debug(logstr, "block response:", response);
+			for (const header of Headers) {
+				headers[header] = items.headers[header];
+			}
 
-			if (response.status === 403) {
-				// user has been logged out, we need to stop queue and re-add
-				consumer.stop();
-				queue.push({user, user_id, reason});
-				console.log(logstr, "user is logged out, queue consumer has been halted.");
-			}
-			else if (response.status === 404) {
-				console.log(logstr, `did not block ${FormatLegacyName(user)}, user no longer exists`);
-			}
-			else if (response.status >= 300) {
-				queue.push({user, user_id, reason});
-				console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, response);
-			}
-			else {
-				blockCounter.increment();
-				console.log(logstr, `blocked ${FormatLegacyName(user)} due to ${ReasonMap[reason]}.`);
-				api.storage.local.set({ [EventKey]: { type: UserBlockedEvent, user, user_id, reason } })
-			}
-		}).catch(error => {
-			if (attempt < 3) {
-				blockUser(user, user_id, reason, attempt + 1);
+			// attempt to manually set the csrf token to the current active cookie
+			const csrf = CsrfTokenRegex.exec(document.cookie);
+			if (csrf) {
+				headers["x-csrf-token"] = csrf[1];
 			} else {
-				queue.push({user, user_id, reason});
-				console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, error);
+				// default to the request's csrf token
+				headers["x-csrf-token"] = items.headers["x-csrf-token"];
 			}
+
+			const options: {
+				body: string,
+				headers: { [k: string]: string },
+				method: string,
+				credentials: RequestCredentials,
+			} = {
+				body,
+				headers,
+				method: "POST",
+				credentials: "include",
+			};
+			console.debug(logstr, "block request:", { url, ...options });
+
+			fetch(url, options).then(response => {
+				console.debug(logstr, "block response:", response);
+
+				if (response.status === 403) {
+					// user has been logged out, we need to stop queue and re-add
+					consumer.stop();
+					queue.push({user, user_id, reason});
+					console.log(logstr, "user is logged out, queue consumer has been halted.");
+				}
+				else if (response.status === 404) {
+					console.log(logstr, `did not block ${FormatLegacyName(user)}, user no longer exists`);
+				}
+				else if (response.status >= 300) {
+					queue.push({user, user_id, reason});
+					console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, response);
+				}
+				else {
+					blockCounter.increment();
+					console.log(logstr, `blocked ${FormatLegacyName(user)} due to ${ReasonMap[reason]}.`);
+					api.storage.local.set({ [EventKey]: { type: UserBlockedEvent, user, user_id, reason } })
+				}
+			}).catch(error => {
+				if (attempt < 3) {
+					blockUser(user, user_id, reason, attempt + 1);
+				} else {
+					queue.push({user, user_id, reason});
+					console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, error);
+				}
+			});
 		});
-	});}
+	});
+}
 
 const blockableAffiliateLabels = new Set(['AutomatedLabel']);
 const blockableVerifiedTypes = new Set(['Business']);
