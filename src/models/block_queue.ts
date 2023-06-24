@@ -1,5 +1,11 @@
 import { RefId } from '../utilities';
 
+interface BlockUser {
+	user_id: string,
+	user: { name: string, screen_name: string },
+	reason: number,
+	external_reason?: string,
+}
 
 const criticalPointKey = 'BlockQueueCriticalPoint';
 const interval = 1000;
@@ -14,7 +20,8 @@ export class BlockQueue {
 		this.queue = [];
 		this.timeout = null;
 	}
-	async getCriticalPoint(refId: number) {
+	async getCriticalPoint(refId: number): Promise<boolean> {
+		// console.debug(logstr, refId, "attempting to obtain critical point");
 		let cpRefId = null;
 		do {
 			const cp = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey];
@@ -26,20 +33,24 @@ export class BlockQueue {
 			if (!cp || cp.refId === refId || cp.time <= new Date().valueOf()) {
 				// try to access the critical point
 				await this.storage.set({
-					[criticalPointKey]: { refId: refId, time: new Date().valueOf() + interval * 1.5 },
+					[criticalPointKey]: { refId, time: new Date().valueOf() + interval * 1.5 },
 				});
 				await new Promise((r) => setTimeout(r, 10)); // wait a second to make sure any other sets have resolved
 				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey].refId;
 			} else {
 				// sleep for a little bit to let the other tab(s) release the critical point
+				// console.debug(logstr, refId, "failed to obtain critical point, sleeping");
 				await new Promise((r) => setTimeout(r, 50));
 			}
 		} while (cpRefId !== refId);
+		// console.debug(logstr, refId, "obtained critical point");
+		return true;
 	}
 	async releaseCriticalPoint(refId: number) {
 		const cp = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey];
 		if (cp?.refId === refId && cp.time > new Date().valueOf()) {
 			// critical point belongs to us, so we can safely release it
+			// console.debug(logstr, refId, "released critical point");
 			await this.storage.set({ [criticalPointKey]: null });
 		}
 	}
@@ -48,6 +59,7 @@ export class BlockQueue {
 		await this.getCriticalPoint(refId);
 		// sync simply adds the in-memory queue to the stored queue
 		const oldQueue = (await this.storage.get({ BlockQueue: [] })).BlockQueue;
+		// TODO: do this via user_id only, user objects won't always be equal
 		const newQueue: { [user_id: string]: BlockUser } = {};
 		for (const user of [...oldQueue, ...this.queue]) {
 			newQueue[user.user_id] = user;

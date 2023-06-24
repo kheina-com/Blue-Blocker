@@ -51,7 +51,7 @@ export class BlockCounter {
 		await this.storage.set(items);
 		this.releaseCriticalPoint(refId);
 	}
-	async increment(value = 1) {
+	async increment(value: number = 1) {
 		this.value += value;
 		if (this.timeout) {
 			clearTimeout(this.timeout);

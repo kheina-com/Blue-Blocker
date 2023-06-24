@@ -1,4 +1,4 @@
-import { api, logstr, ReasonExternal } from '../constants';
+import { api, logstr, ReasonExternal, SoupcanExtensionId } from '../constants';
 import { abbreviate, PopulateVerifiedDb } from '../utilities';
 import { BlockQueue } from '../models/block_queue';
 
@@ -44,8 +44,13 @@ api.storage.sync.onChanged.addListener((items) => {
 const queue = new BlockQueue(api.storage.local);
 const [errorStatus, successStatus] = ["ERROR", "SUCCESS"];
 const [blockAction] = ["BLOCK"];
+const allowedExtensionIds = new Set([SoupcanExtensionId]);
 
 api.runtime.onMessageExternal.addListener(async (message, sender, respond) => {
+	if (!allowedExtensionIds.has(sender?.id ?? "")) {
+		return;
+	}
+
 	// messages are ALWAYS expected to be:
 	// 	1. objects
 	// 	2. contain a string value stored under message.action. should be one defined above
@@ -54,7 +59,7 @@ api.runtime.onMessageExternal.addListener(async (message, sender, respond) => {
 		case blockAction:
 			// expected message format: { action, user_id: string, name: string, screen_name: string, reason: string }
 			// TODO: figure out a better structure of user that only takes the things we need for blocking (name, handle)
-			await queue.push({ user_id: message.user_id, user: { name: message.name, screen_name: message.screen_name }, reason: ReasonExternal });
+			await queue.push({ user_id: message.user_id, user: { name: message.name, screen_name: message.screen_name }, reason: ReasonExternal, external_reason: message.reason });
 			respond({ status: successStatus, message: "user queued for blocking" });
 			break;
 

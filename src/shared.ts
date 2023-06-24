@@ -14,6 +14,7 @@ import {
 	ErrorEvent,
 	EventKey,
 	MessageEvent,
+	ReasonTransphobia,
 } from './constants';
 import { commafy, IsUserLegacyVerified, FormatLegacyName } from './utilities';
 
@@ -475,6 +476,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 			SoupcanExtensionId,
 			{ action: "check_twitter_user", screen_name: user.legacy.screen_name },
 		).then(response => {
+			console.debug(logstr, "soupcan response:", response);
 			if (response?.status !== "transphobic") {
 				// just exit, don't bother reporting since this will trigger for most users. remember, ALL users pass through this function.
 			} else if (
@@ -496,7 +498,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 					`did not block transphobic user ${formattedUserName} because they follow you.`,
 				);
 			} else {
-				queueBlockUser(user, String(user.rest_id), ReasonNftAvatar);
+				queueBlockUser(user, String(user.rest_id), ReasonTransphobia);
 			}
 		}).catch(e => {
 			if (e.message === "Could not establish connection. Receiving end does not exist.") {

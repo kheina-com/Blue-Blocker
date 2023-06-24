@@ -10,6 +10,7 @@ export class QueueConsumer {
 	private _timeout: number | null;
 	private _interval: number | null;
 	private _func_timeout: number | null;
+	private _refId: number;
 	/*
 		storage: the storage type used to sync tabs. likely chrome.storage.local
 		func: the function used to consume from the queue
@@ -27,8 +28,10 @@ export class QueueConsumer {
 		this._timeout = null;
 		this._interval = null;
 		this._func_timeout = null;
+		this._refId = RefId();  // consumer is assigned to a tab, so keep it in the class
 	}
-	async getCriticalPoint(refId: number) {
+	async getCriticalPoint(): Promise<boolean> {
+		// console.debug(logstr, this._refId, "attempting to obtain critical point");
 		let cpRefId = null;
 		do {
 			this._interval = await this.interval(this.storage);
@@ -38,35 +41,35 @@ export class QueueConsumer {
 			// cp.refId !== this.refId: we do not have the critical point
 			// 	cp.refId !== this.refId && cp.time > now: another tab is running the consumer and is active
 			// 	cp.refId !== this.refId && cp.time <= now: another tab is running the consumer and is inactive
-			if (!cp || cp.refId === refId || cp.time <= new Date().valueOf()) {
+			if (!cp || cp.refId === this._refId || cp.time <= new Date().valueOf()) {
 				// try to access the critical point
 				await this.storage.set({
 					[criticalPointKey]: {
-						refId,
+						refId: this._refId,
 						time: new Date().valueOf() + (this._interval || 0) * 1.5,
 					},
 				});
 				await new Promise((r) => setTimeout(r, 10)); // wait a second to make sure any other sets have resolved
 				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey].refId;
 			} else {
+				// console.debug(logstr, this._refId, "failed to obtain critical point");
 				return false;
 			}
-		} while (cpRefId !== refId);
+		} while (cpRefId !== this._refId);
+		// console.debug(logstr, this._refId, "obtained critical point");
 		return true;
 	}
-	async releaseCriticalPoint(refId: number) {
+	async releaseCriticalPoint() {
 		const cp = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey];
-		if (cp?.refId === refId && cp.time > new Date().valueOf()) {
+		if (cp?.refId === this._refId && cp.time > new Date().valueOf()) {
 			// critical point belongs to us, so we can safely release it
+			// console.debug(logstr, this._refId, "released critical point");
 			await this.storage.set({ [criticalPointKey]: null });
 		}
 	}
 	async sync() {
-		const refId = RefId();
-		if (this._interval) {
-			this._timeout = setTimeout(() => this.sync(), this._interval);
-		}
-		if (await this.getCriticalPoint(refId)) {
+		// console.debug(logstr, this._refId, "syncing. _interval:", this._interval, "_timeout:", this._timeout, "_func_timeout:", this._func_timeout);
+		if (await this.getCriticalPoint()) {
 			// we got and/or already had the critical point
 			if (this._interval) {
 				this._func_timeout = setTimeout(this.func, this._interval);
@@ -75,12 +78,17 @@ export class QueueConsumer {
 			clearTimeout(this._func_timeout);
 			this._func_timeout = null;
 		}
+		if (this._interval) {
+			this._timeout = setTimeout(() => this.sync(), this._interval);
+		}
+		// console.debug(logstr, this._refId, "finished syncing. _interval:", this._interval, "_timeout:", this._timeout, "_func_timeout:", this._func_timeout);
 	}
 	start() {
 		if (this._timeout) {
 			// we're already running
 			return;
 		}
+		// console.debug(logstr, "queue consumer started");
 		this.sync();
 	}
 	stop() {
@@ -92,5 +100,7 @@ export class QueueConsumer {
 			clearTimeout(this._func_timeout);
 			this._func_timeout = null;
 		}
+		this.releaseCriticalPoint();
+		// console.debug(logstr, "queue consumer stopped");
 	}
 }
