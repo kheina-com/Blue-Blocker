@@ -5,7 +5,7 @@ import { BlockQueue } from '../models/block_queue';
 api.action.setBadgeBackgroundColor({ color: '#666' });
 api.action.setBadgeTextColor({ color: '#fff' });
 
-// TODO: change to message listener
+// TODO: change to message listener ?
 api.storage.local.onChanged.addListener((items) => {
 	if (items.hasOwnProperty('BlockCounter')) {
 		api.action.setBadgeText({
@@ -14,15 +14,25 @@ api.storage.local.onChanged.addListener((items) => {
 	}
 });
 
+api.storage.sync.get({ skipVerified: false, suspendedBlockCollection: false, soupcan: false }).then(items => {
+	// set initial extension state
+	api.action.setIcon({ path: items.suspendedBlockCollection ? "/icon/icon-128-greyscale.png" : "/icon/icon-128.png"});
+	if (items.skipVerified) {
+		PopulateVerifiedDb();
+	}
+});
+
 // populate verified db
 api.storage.sync.onChanged.addListener((items) => {
 	if (items.hasOwnProperty('skipVerified') && items.skipVerified.newValue) {
 		PopulateVerifiedDb();
 	}
-});
-api.storage.sync.get({ skipVerified: false }).then(items => {
-	if (items.skipVerified) {
-		PopulateVerifiedDb();
+	if (items.hasOwnProperty('soupcan')) {
+		if (items.soupcan.newValue) {
+			// enable soupcan integration
+		} else {
+			// disable soupcan integration
+		}
 	}
 });
 
