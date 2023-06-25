@@ -7,6 +7,48 @@ document.addEventListener("DOMContentLoaded", () => {
 	const version = document.getElementById("version") as HTMLElement;
 	version.textContent = "v" + api.runtime.getManifest().version;
 
+	const basicTabButton = document.getElementById("button-basic") as HTMLElement;
+	const advancedTabButton = document.getElementById("button-advanced") as HTMLElement;
+
+	const basicTabContent = document.getElementById("basic") as HTMLElement;
+	const advancedTabContent = document.getElementById("advanced") as HTMLElement;
+
+	function selectTab(tab: string) {
+		const basicTabButtonBorder = basicTabButton.lastChild as HTMLElement;
+		const advancedTabButtonBorder = advancedTabButton.lastChild as HTMLElement;
+
+		switch (tab) {
+			case "basic":
+				basicTabButtonBorder.style.borderBottomWidth = "5px";
+				advancedTabButtonBorder.style.borderBottomWidth = "0";
+
+				basicTabContent.style.display = "block";
+				advancedTabContent.style.display = "none";
+				break;
+
+			case "advanced":
+				basicTabButtonBorder.style.borderBottomWidth = "0";
+				advancedTabButtonBorder.style.borderBottomWidth = "5px";
+
+				basicTabContent.style.display = "none";
+				advancedTabContent.style.display = "block";
+				break;
+
+			default:
+				throw new Error("invalid button value. must be one of: 'basic', 'advanced'.");
+		}
+
+		api.storage.local.set({
+			popupActiveTab: tab,
+		}).then(() => {
+			console.debug(logstr, "set active tab:", tab);
+		});
+	}
+
+	api.storage.local.get({ popupActiveTab: "basic" }).then(items => selectTab(items.popupActiveTab));
+	basicTabButton.addEventListener("click", () => selectTab("basic"));
+	advancedTabButton.addEventListener("click", () => selectTab("advanced"));
+
 	const blockedUsersCount = document.getElementById("blocked-users-count") as HTMLElement;
 	const blockedUserQueueLength = document.getElementById("blocked-user-queue-length") as HTMLElement;
 	const suspendBlockCollection = document.getElementById("suspend-block-collection") as HTMLInputElement;

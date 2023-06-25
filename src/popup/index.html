@@ -13,128 +13,191 @@
 		<span id="version"></span>
 		<h2><img src="/icon/icon.png" alt="🅱️" style="height: 1.2em">lue Blocker</h2>
 		<p class="blocked-users-count">blocked <span id="blocked-users-count"></span> users so far! (<span id="blocked-user-queue-length"></span> queued: <a href="/src/pages/queue/index.html" target="_blank">view</a>)</p>
-		<div class="option">
-			<input type="checkbox" id="suspend-block-collection">
-			<label ref="label" for="suspend-block-collection" >
-				<div class="checkmark">
-					<div></div>
-				</div>
-				<p>pause user collection</p>
-			</label>
-			<span id="suspend-block-collection-status"></span>
+		<div class="tabs">
+			<a id="button-basic">Basic<div class="border"></div></a>
+			<div class="separator"></div>
+			<a id="button-advanced">Advanced<div class="border"></div></a>
 		</div>
-		<div class="option">
-			<input type="checkbox" id="show-block-popups">
-			<label ref="label" for="show-block-popups" >
-				<div class="checkmark">
-					<div></div>
-				</div>
-				<p>show a popup for each blocked user</p>
-			</label>
-			<span id="show-block-popups-status"></span>
-		</div>
-		<div class="option">
-			<input type="checkbox" id="mute-instead-of-block">
-			<label ref="label" for="mute-instead-of-block" >
-				<div class="checkmark">
-					<div></div>
-				</div>
-				<p>mute users instead of blocking them</p>
-			</label>
-			<span id="mute-instead-of-block-status"></span>
-		</div>
-		<div class="option">
-			<input type="checkbox" id="block-following">
-			<label ref="label" for="block-following" >
-				<div class="checkmark">
-					<div></div>
-				</div>
-				<p>block people I follow</p>
-			</label>
-			<span id="block-following-status"></span>
-		</div>
-		<div class="option">
-			<input type="checkbox" id="block-followers">
-			<label ref="label" for="block-followers" >
-				<div class="checkmark">
-					<div></div>
-				</div>
-				<p>block people who follow me</p>
-			</label>
-			<span id="block-followers-status"></span>
-		</div>
-		<div class="option">
-			<input type="checkbox" id="skip-verified">
-			<label ref="label" for="skip-verified" >
-				<div class="checkmark">
-					<div></div>
-				</div>
-				<p>skip legacy verified users</p>
-			</label>
-			<span id="skip-verified-status"></span>
-		</div>
-		<div class="option">
-			<input type="checkbox" id="skip-affiliated">
-			<label ref="label" for="skip-affiliated" >
-				<div class="checkmark">
-					<div></div>
-				</div>
-				<p>skip users verified via businesses (<svg viewBox="0 0 22 22" role="img" class="gold-check" data-testid="icon-verified"><g><linearGradient gradientUnits="userSpaceOnUse" id="10-a" x1="4.411" x2="18.083" y1="2.495" y2="21.508"><stop offset="0" stop-color="#f4e72a"></stop><stop offset=".539" stop-color="#cd8105"></stop><stop offset=".68" stop-color="#cb7b00"></stop><stop offset="1" stop-color="#f4ec26"></stop><stop offset="1" stop-color="#f4e72a"></stop></linearGradient><linearGradient gradientUnits="userSpaceOnUse" id="10-b" x1="5.355" x2="16.361" y1="3.395" y2="19.133"><stop offset="0" stop-color="#f9e87f"></stop><stop offset=".406" stop-color="#e2b719"></stop><stop offset=".989" stop-color="#e2b719"></stop></linearGradient><g clip-rule="evenodd" fill-rule="evenodd"><path d="M13.324 3.848L11 1.6 8.676 3.848l-3.201-.453-.559 3.184L2.06 8.095 3.48 11l-1.42 2.904 2.856 1.516.559 3.184 3.201-.452L11 20.4l2.324-2.248 3.201.452.559-3.184 2.856-1.516L18.52 11l1.42-2.905-2.856-1.516-.559-3.184zm-7.09 7.575l3.428 3.428 5.683-6.206-1.347-1.247-4.4 4.795-2.072-2.072z" fill="url(#10-a)"></path><path d="M13.101 4.533L11 2.5 8.899 4.533l-2.895-.41-.505 2.88-2.583 1.37L4.2 11l-1.284 2.627 2.583 1.37.505 2.88 2.895-.41L11 19.5l2.101-2.033 2.895.41.505-2.88 2.583-1.37L17.8 11l1.284-2.627-2.583-1.37-.505-2.88zm-6.868 6.89l3.429 3.428 5.683-6.206-1.347-1.247-4.4 4.795-2.072-2.072z" fill="url(#10-b)"></path><path d="M6.233 11.423l3.429 3.428 5.65-6.17.038-.033-.005 1.398-5.683 6.206-3.429-3.429-.003-1.405.005.003z" fill="#d18800"></path></g></g></svg>)</p>
-			</label>
-			<span id="skip-affiliated-status"></span>
-		</div>
-		<div class="option">
-			<input type="checkbox" id="skip-1mplus">
-			<label ref="label" for="skip-1mplus" >
-				<div class="checkmark">
-					<div></div>
-				</div>
-				<p>skip users with over <span id="skip-follower-count-value">1M</span> followers</p>
-			</label>
-			<span id="skip-1mplus-status"></span>
-		</div>
-		<div class="option" id="skip-follower-count-option">
-			<p>threshold: <input id="skip-follower-count"> followers</p>
-			<span id="skip-follower-count-status"></span>
-		</div>
-		<div class="option">
-			<input type="checkbox" id="block-nft-avatars">
-			<label ref="label" for="block-nft-avatars" >
-				<div class="checkmark">
-					<div></div>
-				</div>
-				<p>block users with NFT avatars</p>
-			</label>
-			<span id="block-nft-avatars-status"></span>
-		</div>
-		<div class="option" id="soupcan-integration-option">
-			<input type="checkbox" id="soupcan-integration">
-			<label ref="label" for="soupcan-integration" >
-				<div class="checkmark">
-					<div></div>
-				</div>
-				<p>block transphobic users via Soupcan <img src="/icon/soupcan.png" alt="🥫" class="emoji"></p>
-			</label>
-			<span id="soupcan-integration-status"></span>
-		</div>
-		<div>
+		<div class="tab" id="basic">
 			<div class="option">
-				<p>block interval</p>
-				<span id="block-interval-status"></span>
+				<input type="checkbox" id="suspend-block-collection">
+				<label ref="label" for="suspend-block-collection" >
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>pause user collection</p>
+				</label>
+				<span id="suspend-block-collection-status"></span>
 			</div>
-			<div class="slider">
-				<input type="range" min="5" max="60" value="15" id="block-interval">
-				<span id="block-interval-value"></span>
+			<div class="option">
+				<input type="checkbox" id="show-block-popups">
+				<label ref="label" for="show-block-popups" >
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>show a popup for each blocked user</p>
+				</label>
+				<span id="show-block-popups-status"></span>
+			</div>
+			<div class="option">
+				<input type="checkbox" id="mute-instead-of-block">
+				<label ref="label" for="mute-instead-of-block" >
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>mute users instead of blocking them</p>
+				</label>
+				<span id="mute-instead-of-block-status"></span>
+			</div>
+			<div class="option">
+				<input type="checkbox" id="skip-1mplus">
+				<label ref="label" for="skip-1mplus" >
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>skip users with over <span id="skip-follower-count-value">1M</span> followers</p>
+				</label>
+				<span id="skip-1mplus-status"></span>
+			</div>
+			<div class="option" id="skip-follower-count-option">
+				<p>threshold: <input id="skip-follower-count"> followers</p>
+				<span id="skip-follower-count-status"></span>
+			</div>
+			<div>
+				<div class="option">
+					<p>block interval</p>
+					<span id="block-interval-status"></span>
+				</div>
+				<div class="slider">
+					<input type="range" min="5" max="60" value="15" id="block-interval">
+					<span id="block-interval-value"></span>
+				</div>
 			</div>
 		</div>
-		<div id="popup-timer-slider">
+		<div class="tab" id="advanced">
 			<div class="option">
-				<p>popup timer</p>
-				<span id="popup-timer-status"></span>
+				<input type="checkbox" id="suspend-block-collection">
+				<label ref="label" for="suspend-block-collection" >
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>pause user collection</p>
+				</label>
+				<span id="suspend-block-collection-status"></span>
 			</div>
-			<div class="slider">
-				<input type="range" min="5" max="60" value="15" id="popup-timer">
-				<span id="popup-timer-value"></span>
+			<div class="option">
+				<input type="checkbox" id="show-block-popups">
+				<label ref="label" for="show-block-popups" >
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>show a popup for each blocked user</p>
+				</label>
+				<span id="show-block-popups-status"></span>
+			</div>
+			<div class="option">
+				<input type="checkbox" id="mute-instead-of-block">
+				<label ref="label" for="mute-instead-of-block" >
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>mute users instead of blocking them</p>
+				</label>
+				<span id="mute-instead-of-block-status"></span>
+			</div>
+			<div class="option">
+				<input type="checkbox" id="block-following">
+				<label ref="label" for="block-following" >
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>block people I follow</p>
+				</label>
+				<span id="block-following-status"></span>
+			</div>
+			<div class="option">
+				<input type="checkbox" id="block-followers">
+				<label ref="label" for="block-followers" >
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>block people who follow me</p>
+				</label>
+				<span id="block-followers-status"></span>
+			</div>
+			<div class="option">
+				<input type="checkbox" id="skip-verified">
+				<label ref="label" for="skip-verified" >
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>skip legacy verified users</p>
+				</label>
+				<span id="skip-verified-status"></span>
+			</div>
+			<div class="option">
+				<input type="checkbox" id="skip-affiliated">
+				<label ref="label" for="skip-affiliated" >
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>skip users verified via businesses (<svg viewBox="0 0 22 22" role="img" class="gold-check" data-testid="icon-verified"><g><linearGradient gradientUnits="userSpaceOnUse" id="10-a" x1="4.411" x2="18.083" y1="2.495" y2="21.508"><stop offset="0" stop-color="#f4e72a"></stop><stop offset=".539" stop-color="#cd8105"></stop><stop offset=".68" stop-color="#cb7b00"></stop><stop offset="1" stop-color="#f4ec26"></stop><stop offset="1" stop-color="#f4e72a"></stop></linearGradient><linearGradient gradientUnits="userSpaceOnUse" id="10-b" x1="5.355" x2="16.361" y1="3.395" y2="19.133"><stop offset="0" stop-color="#f9e87f"></stop><stop offset=".406" stop-color="#e2b719"></stop><stop offset=".989" stop-color="#e2b719"></stop></linearGradient><g clip-rule="evenodd" fill-rule="evenodd"><path d="M13.324 3.848L11 1.6 8.676 3.848l-3.201-.453-.559 3.184L2.06 8.095 3.48 11l-1.42 2.904 2.856 1.516.559 3.184 3.201-.452L11 20.4l2.324-2.248 3.201.452.559-3.184 2.856-1.516L18.52 11l1.42-2.905-2.856-1.516-.559-3.184zm-7.09 7.575l3.428 3.428 5.683-6.206-1.347-1.247-4.4 4.795-2.072-2.072z" fill="url(#10-a)"></path><path d="M13.101 4.533L11 2.5 8.899 4.533l-2.895-.41-.505 2.88-2.583 1.37L4.2 11l-1.284 2.627 2.583 1.37.505 2.88 2.895-.41L11 19.5l2.101-2.033 2.895.41.505-2.88 2.583-1.37L17.8 11l1.284-2.627-2.583-1.37-.505-2.88zm-6.868 6.89l3.429 3.428 5.683-6.206-1.347-1.247-4.4 4.795-2.072-2.072z" fill="url(#10-b)"></path><path d="M6.233 11.423l3.429 3.428 5.65-6.17.038-.033-.005 1.398-5.683 6.206-3.429-3.429-.003-1.405.005.003z" fill="#d18800"></path></g></g></svg>)</p>
+				</label>
+				<span id="skip-affiliated-status"></span>
+			</div>
+			<div class="option">
+				<input type="checkbox" id="skip-1mplus">
+				<label ref="label" for="skip-1mplus" >
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>skip users with over <span id="skip-follower-count-value">1M</span> followers</p>
+				</label>
+				<span id="skip-1mplus-status"></span>
+			</div>
+			<div class="option" id="skip-follower-count-option">
+				<p>threshold: <input id="skip-follower-count"> followers</p>
+				<span id="skip-follower-count-status"></span>
+			</div>
+			<div class="option">
+				<input type="checkbox" id="block-nft-avatars">
+				<label ref="label" for="block-nft-avatars" >
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>block users with NFT avatars</p>
+				</label>
+				<span id="block-nft-avatars-status"></span>
+			</div>
+			<div class="option" id="soupcan-integration-option">
+				<input type="checkbox" id="soupcan-integration">
+				<label ref="label" for="soupcan-integration" >
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>block transphobic users via Soupcan <img src="/icon/soupcan.png" alt="🥫" class="emoji"></p>
+				</label>
+				<span id="soupcan-integration-status"></span>
+			</div>
+			<div>
+				<div class="option">
+					<p>block interval</p>
+					<span id="block-interval-status"></span>
+				</div>
+				<div class="slider">
+					<input type="range" min="5" max="60" value="15" id="block-interval">
+					<span id="block-interval-value"></span>
+				</div>
+			</div>
+			<div id="popup-timer-slider">
+				<div class="option">
+					<p>popup timer</p>
+					<span id="popup-timer-status"></span>
+				</div>
+				<div class="slider">
+					<input type="range" min="5" max="60" value="15" id="popup-timer">
+					<span id="popup-timer-value"></span>
+				</div>
 			</div>
 		</div>
 	</body>
