@@ -522,6 +522,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 				);
 			} else {
 				queueBlockUser(user, String(user.rest_id), ReasonTransphobia);
+				return;
 			}
 		} catch (_e) {
 			const e = _e as Error;
