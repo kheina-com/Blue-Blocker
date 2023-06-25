@@ -56,6 +56,10 @@ export const LegacyVerifiedUrl: string = "https://gist.githubusercontent.com/tra
 export const Browser = chrome.runtime.getManifest()?.browser_specific_settings?.gecko === undefined ? "chrome" : "firefox";
 export const SoupcanExtensionId = Browser === "chrome" ? "hcneafegcikghlbibfmlgadahjfckonj" : "soupcan@beth.lgbt";
 
+// internal message actions
+export const [IsVerifiedAction] = ["is_verified"];
+export const [ErrorStatus, SuccessStatus] = ["ERROR", "SUCCESS"];
+
 // multi-tab event keys
 export const EventKey = "MultiTabEvent";
 export const ErrorEvent = "ErrorEvent";

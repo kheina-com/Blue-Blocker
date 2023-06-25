@@ -16,7 +16,7 @@ import {
 	MessageEvent,
 	ReasonTransphobia,
 } from './constants';
-import { commafy, IsUserLegacyVerified, FormatLegacyName } from './utilities';
+import { commafy, FormatLegacyName, IsUserLegacyVerified } from './utilities';
 
 // Define constants that shouldn't be exported to the rest of the addon
 const queue = new BlockQueue(api.storage.local);
@@ -32,6 +32,8 @@ export function SetHeaders(headers: { [k: string]: string }) {
 		api.storage.local.set(items);
 	});
 }
+
+setInterval(blockCache.clear, 10 * 60e3);  // clear the cache every 10 minutes
 
 function unblockUser(user: { name: string, screen_name: string }, user_id: string, reason: number, attempt: number = 1) {
 	api.storage.sync.get({ unblocked: { } }).then(items => {
@@ -143,6 +145,8 @@ function unblockUser(user: { name: string, screen_name: string }, user_id: strin
 const UserBlockedEvent = 'UserBlockedEvent';
 api.storage.local.onChanged.addListener((items) => {
 	// we're using local storage as a really dirty event driver
+	// TODO: replace this with chrome.tabs.sendmessage at some point. (requires adding tabs permission)
+
 	if (!items.hasOwnProperty(EventKey)) {
 		return;
 	}
@@ -210,10 +214,6 @@ api.storage.local.onChanged.addListener((items) => {
 		}
 	});
 });
-
-export function ClearCache() {
-	blockCache.clear();
-}
 
 function queueBlockUser(user: BlueBlockerUser, user_id: string, reason: number) {
 	if (blockCache.has(user_id)) {

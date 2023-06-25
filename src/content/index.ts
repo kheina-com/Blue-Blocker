@@ -1,4 +1,4 @@
-import { ClearCache, SetHeaders } from '../shared';
+import { SetHeaders } from '../shared';
 import { api, logstr, DefaultOptions, ErrorEvent, EventKey } from '../constants';
 import { HandleInstructionsResponse } from '../parsers/instructions';
 import { HandleForYou } from '../parsers/timeline';
@@ -15,7 +15,7 @@ script.type = 'text/javascript';
 document.head.prepend(script);
 
 let l = document.createElement('link');
-l.href = api.runtime.getURL('src/injected/toasts.css'); // MUST BE ABSOLUTE PATH
+l.href = api.runtime.getURL('src/injected/style.css'); // MUST BE ABSOLUTE PATH
 l.rel = 'stylesheet';
 (document.head || document.documentElement).appendChild(l);
 
@@ -24,12 +24,6 @@ t.id = 'injected-blue-block-toasts';
 document.body.appendChild(t);
 
 document.addEventListener('blue-blocker-event', function (e: CustomEvent<BlueBlockerEvent>) {
-	// TODO: we may want to seriously consider clearing the cache on a much less frequent
-	// cadence since we're no longer able to block users immediately and need the queue
-
-	// TODO: probably also check status code here so that we're not parsing error responses
-	// for no reason
-
 	if (e.detail.status < 300) {
 		SetHeaders(e.detail.request.headers);
 	} else {
@@ -37,7 +31,6 @@ document.addEventListener('blue-blocker-event', function (e: CustomEvent<BlueBlo
 		return;
 	}
 
-	ClearCache();
 	api.storage.sync.get(DefaultOptions).then(_config => {
 		const config = _config as Config;
 		const body_str = e.detail.body;
