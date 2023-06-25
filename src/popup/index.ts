@@ -58,7 +58,10 @@ document.addEventListener("DOMContentLoaded", () => {
 		popupTimerValue.textContent = config.popupTimer.toString() + "s";
 	});
 
-	api.management.get(SoupcanExtensionId).then(() => {
+	api.management.get(SoupcanExtensionId).then(e => {
+		if (!e.enabled) {
+			throw new Error("extension not enabled");
+		}
 		soupcanIntegrationOption.style.display = "";
 	}).catch(() => {
 		soupcanIntegrationOption.style.display = "none";
