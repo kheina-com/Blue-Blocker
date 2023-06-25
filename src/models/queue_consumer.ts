@@ -1,3 +1,4 @@
+import { logstr } from '../constants';
 import { RefId } from '../utilities';
 
 const criticalPointKey = 'QueueConsumerCriticalPoint';
@@ -5,10 +6,10 @@ const criticalPointKey = 'QueueConsumerCriticalPoint';
 // this should hold true for multiple windows and multiple tabs all running the same code.
 export class QueueConsumer {
 	storage: typeof chrome.storage.local | typeof browser.storage.local;
-	func: any;
-	interval: any;
+	func: () => Promise<void>;
+	interval: (storage: typeof chrome.storage.local | typeof browser.storage.local) => Promise<number>;
 	private _timeout: number | null;
-	private _interval: number | null;
+	private _interval: number;
 	private _func_timeout: number | null;
 	private _refId: number;
 	/*
@@ -18,15 +19,15 @@ export class QueueConsumer {
 	*/
 	constructor(
 		storage: typeof chrome.storage.local | typeof browser.storage.local,
-		func: Function,
-		interval_func: Function,
+		func: () => Promise<any>,
+		interval_func: (storage: typeof chrome.storage.local | typeof browser.storage.local) => Promise<number>,
 	) {
 		// idk
 		this.storage = storage;
 		this.func = func;
 		this.interval = interval_func;
 		this._timeout = null;
-		this._interval = null;
+		this._interval = 100;
 		this._func_timeout = null;
 		this._refId = RefId();  // consumer is assigned to a tab, so keep it in the class
 	}
@@ -71,24 +72,28 @@ export class QueueConsumer {
 		// console.debug(logstr, this._refId, "syncing. _interval:", this._interval, "_timeout:", this._timeout, "_func_timeout:", this._func_timeout);
 		if (await this.getCriticalPoint()) {
 			// we got and/or already had the critical point
-			if (this._interval) {
-				this._func_timeout = setTimeout(this.func, this._interval);
+			// if we just got it, func will be null and we can schedule it
+			// if we already had it, it already finished or its waiting on queue
+			if (this._func_timeout === null) {
+				this._func_timeout = setTimeout(() => this.func().then(() => { this._func_timeout = null; this.sync(); }), this._interval);
 			}
-		} else if (this._func_timeout) {
-			clearTimeout(this._func_timeout);
-			this._func_timeout = null;
-		}
-		if (this._interval) {
+			this._timeout = null;  // set timeout to null, just for the running check in start
+		} else {
+			// we couldn't get the critical point, so cancel func if its scheduled, then set timeout to check again
+			if (this._func_timeout) {
+				clearTimeout(this._func_timeout);
+				this._func_timeout = null;
+			}
 			this._timeout = setTimeout(() => this.sync(), this._interval);
 		}
 		// console.debug(logstr, this._refId, "finished syncing. _interval:", this._interval, "_timeout:", this._timeout, "_func_timeout:", this._func_timeout);
 	}
 	start() {
-		if (this._timeout) {
+		if (this._timeout || this._func_timeout) {
 			// we're already running
 			return;
 		}
-		// console.debug(logstr, "queue consumer started");
+		console.debug(logstr, "queue consumer started");
 		this.sync();
 	}
 	stop() {
@@ -101,6 +106,6 @@ export class QueueConsumer {
 			this._func_timeout = null;
 		}
 		this.releaseCriticalPoint();
-		// console.debug(logstr, "queue consumer stopped");
+		console.debug(logstr, "queue consumer stopped");
 	}
 }

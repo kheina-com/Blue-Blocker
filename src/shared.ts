@@ -225,29 +225,29 @@ function queueBlockUser(user: BlueBlockerUser, user_id: string, reason: number) 
 	consumer.start();
 }
 
-function checkBlockQueue() {
-	queue.shift()
-	.then(item => {
-		if (item === undefined) {
-			consumer.stop();
-			return;
-		}
-		const { user, user_id, reason } = item;
-		blockUser(user, user_id, reason);
-	})
-	.catch(error => {
-		if (error.message === "failed to obtain critical point") {
-			// the queue page is open or another tab is processing, just exit
-			return;
-		}
-		console.error(logstr, "unexpected error occurred while processing block queue", error);
-		api.storage.local.set({
-			[EventKey]: {
-				type: ErrorEvent,
-				message: "unexpected error occurred while processing block queue",
-				detail: { error, event: null },
-			},
+function checkBlockQueue(): Promise<void> {
+	return new Promise<void>(resolve => {
+		queue.shift()
+		.then(item => {
+			if (item === undefined) {
+				consumer.stop();
+				return;
+			}
+			const { user, user_id, reason } = item;
+			blockUser(user, user_id, reason);
+			resolve();
 		})
+		.catch(error => {
+			console.error(logstr, "unexpected error occurred while processing block queue", error);
+			api.storage.local.set({
+				[EventKey]: {
+					type: ErrorEvent,
+					message: "unexpected error occurred while processing block queue",
+					detail: { error, event: null },
+				},
+			})
+			resolve();
+		});
 	});
 }
 

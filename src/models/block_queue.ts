@@ -41,8 +41,7 @@ export class BlockQueue {
 				// rather than continually try to obtain the critical point, exit
 				// if the consumer only queues the next run after successfully finishing the last, this can go back to only sleeping
 				// console.debug(logstr, refId, "failed to obtain critical point, sleeping");
-				// await new Promise((r) => setTimeout(r, 50));
-				return false;
+				await new Promise((r) => setTimeout(r, 50));
 			}
 		} while (cpRefId !== refId);
 		// console.debug(logstr, refId, "obtained critical point");
