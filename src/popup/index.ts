@@ -1,4 +1,4 @@
-import { api, logstr,  DefaultOptions, SoupcanExtensionId } from '../constants.js';
+import { api, logstr, DefaultOptions, SoupcanExtensionId } from '../constants.js';
 import { abbreviate, commafy } from '../utilities.js';
 import './style.css';
 

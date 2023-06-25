@@ -226,7 +226,6 @@ function queueBlockUser(user: BlueBlockerUser, user_id: string, reason: number) 
 }
 
 function checkBlockQueue() {
-	let event: any = null;
 	queue.shift()
 	.then(item => {
 		if (item === undefined) {
@@ -236,15 +235,20 @@ function checkBlockQueue() {
 		const { user, user_id, reason } = item;
 		blockUser(user, user_id, reason);
 	})
-	.catch((error) =>
+	.catch(error => {
+		if (error.message === "failed to obtain critical point") {
+			// the queue page is open or another tab is processing, just exit
+			return;
+		}
+		console.error(logstr, "unexpected error occurred while processing block queue", error);
 		api.storage.local.set({
 			[EventKey]: {
 				type: ErrorEvent,
-				message: 'unexpected error occurred while processing block queue',
-				detail: { error, event },
+				message: "unexpected error occurred while processing block queue",
+				detail: { error, event: null },
 			},
-		}),
-	);
+		})
+	});
 }
 
 const consumer = new QueueConsumer(api.storage.local, checkBlockQueue, async () => {

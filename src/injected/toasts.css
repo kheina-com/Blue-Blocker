@@ -46,7 +46,7 @@
 	min-height: calc(2em + 4px);
 }
 #injected-blue-block-toasts .toast.error {
-	background: url('../icon/error.png') var(--bg1color);
+	background: url('/icon/error.png') var(--bg1color);
 	background-repeat: no-repeat;
 	background-size: 2.5em;
 	background-position-x: 1em;
