@@ -1,13 +1,13 @@
 # built package files
-/build
+build
 *.zip
 firefox-manifest.json
 
 # dependencies
-/node_modules
+node_modules
 
 # testing
-/coverage
+coverage
 
 # misc
 .DS_Store
