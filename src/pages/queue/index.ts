@@ -39,17 +39,17 @@ async function unqueueUser(user_id: string, safelist: boolean) {
 queue.getCriticalPoint(refId)
 .then(() => api.storage.local.get({ BlockQueue: [] }))
 .then(items => {
-	const queue = items.BlockQueue as BlockUser[];
+	const cue = items.BlockQueue as BlockUser[];
 	const queueDiv = document.getElementById("block-queue") as HTMLElement;
 
-	if (queue.length === 0) {
+	if (cue.length === 0) {
 		queueDiv.textContent = "your block queue is empty";
 		return;
 	}
 
 	queueDiv.innerHTML = "";
 
-	queue.forEach(item => {
+	cue.forEach(item => {
 		const { user, user_id } = item;
 		const div = document.createElement("div");
 
