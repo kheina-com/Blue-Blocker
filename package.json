@@ -2,7 +2,7 @@
 	"name": "blue-blocker",
 	"version": "0.3.0",
 	"author": "DanielleMiu",
-	"description": "",
+	"description": "Blocks all Twitter Blue verified users on twitter.com",
 	"type": "module",
 	"license": "MPL-2.0",
 	"keywords": [
