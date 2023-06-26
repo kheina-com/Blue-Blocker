@@ -8,7 +8,6 @@ interface BlockUser {
 }
 
 const criticalPointKey = 'BlockQueueCriticalPoint';
-const interval = 1000;
 export class BlockQueue {
 	storage: typeof chrome.storage.local | typeof browser.storage.local;
 	queue: BlockUser[];
@@ -20,7 +19,7 @@ export class BlockQueue {
 		this.queue = [];
 		this.timeout = null;
 	}
-	async getCriticalPoint(refId: number): Promise<boolean> {
+	async getCriticalPoint(refId: number, interval: number = 1000): Promise<boolean> {
 		// console.debug(logstr, refId, "attempting to obtain critical point");
 		let cpRefId: number | null = null;
 		let sleep: number = 50;

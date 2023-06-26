@@ -9,8 +9,9 @@ const queue = new BlockQueue(api.storage.local);
 // we need to obtain and hold on to the critical point as long as this tab is
 // open so that any twitter tabs that are open are unable to block users
 const refId = RefId();
+const interval = 5000;
 setInterval(async () => {
-	await queue.getCriticalPoint(refId);
+	await queue.getCriticalPoint(refId, interval);
 }, 500);
 
 async function unqueueUser(user_id: string, safelist: boolean) {
