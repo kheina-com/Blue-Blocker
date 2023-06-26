@@ -53,6 +53,15 @@ queue.getCriticalPoint(refId)
 		const { user, user_id } = item;
 		const div = document.createElement("div");
 
+		// required for users enqueued before 0.3.0
+		if (user.hasOwnProperty("legacy")) {
+			// @ts-ignore
+			for (const [key, value] of Object.entries(user.legacy)) {
+				// @ts-ignore
+				user[key] = value;
+			}
+		}
+
 		const p = document.createElement("p");
 		p.innerHTML = `${user.name} (<a href="https://twitter.com/${user.screen_name}" target="_blank">@${user.screen_name}</a>)`;
 		div.appendChild(p);

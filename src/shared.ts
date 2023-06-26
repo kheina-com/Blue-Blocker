@@ -228,12 +228,23 @@ function queueBlockUser(user: BlueBlockerUser, user_id: string, reason: number) 
 function checkBlockQueue(): Promise<void> {
 	return new Promise<void>(resolve => {
 		queue.shift()
-		.then(item => {
+		.then(_item => {
+			const item = _item as BlockUser;
 			if (item === undefined) {
 				consumer.stop();
 				return;
 			}
 			const { user, user_id, reason } = item;
+
+			// required for users enqueued before 0.3.0
+			if (user.hasOwnProperty("legacy")) {
+				// @ts-ignore
+				for (const [key, value] of Object.entries(user.legacy)) {
+					// @ts-ignore
+					user[key] = value;
+				}
+			}
+
 			blockUser(user, user_id, reason);
 			resolve();
 		})
