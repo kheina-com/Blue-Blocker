@@ -75,7 +75,7 @@ export class QueueConsumer {
 			// if we just got it, func will be null and we can schedule it
 			// if we already had it, it already finished or its waiting on queue
 			if (this._func_timeout === null) {
-				this._func_timeout = setTimeout(() => this.func().then(() => { this._func_timeout = null; this.sync(); }), this._interval);
+				this._func_timeout = setTimeout(() => this.func().finally(() => { this._func_timeout = null; this.sync(); }), this._interval);
 			}
 			this._timeout = null;  // set timeout to null, just for the running check in start
 		} else {

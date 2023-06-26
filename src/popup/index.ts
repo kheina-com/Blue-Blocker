@@ -212,7 +212,6 @@ document.addEventListener("DOMContentLoaded", () => {
 		api.storage.sync.set({
 			soupcanIntegration: target.checked,
 		}).then(() => {
-			console.log(logstr, "set soupcanIntegration to", target.checked);
 			// Update status to let user know options were saved.
 			const status = document.getElementById("soupcan-integration-status") as HTMLElement;
 			status.textContent = "saved";

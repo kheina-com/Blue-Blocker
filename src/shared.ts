@@ -77,7 +77,9 @@ function unblockUser(user: { name: string, screen_name: string }, user_id: strin
 			};
 
 			for (const header of Headers) {
-				headers[header] = req_headers[header];
+				if (req_headers[header]) {
+					headers[header] = req_headers[header];
+				}
 			}
 
 			// attempt to manually set the csrf token to the current active cookie
@@ -89,48 +91,50 @@ function unblockUser(user: { name: string, screen_name: string }, user_id: strin
 				headers["x-csrf-token"] = req_headers["x-csrf-token"];
 			}
 
-			fetch(url, {
+			const options: {
+				body: string,
+				headers: { [k: string]: string },
+				method: string,
+				credentials: RequestCredentials,
+			} = {
 				body,
 				headers,
 				method: "POST",
 				credentials: "include",
-			}).then(response => {
+			};
+			console.debug(logstr, "unblock request:", { url, ...options });
+
+			fetch(url, options).then(response => {
+				const t = document.createElement("div");
+				t.className = "toast";
+				t.innerText = `unblocked @${user.screen_name}, they won't be blocked again.`;
+				const ele = document.getElementById("injected-blue-block-toasts");
+				if (!ele) {
+					throw new Error("blue blocker was unable to create or find toasts div.");
+				}
+
 				if (response.status === 403) {
 					// user has been logged out, we need to stop queue and re-add
+					t.innerText = `could not unblock @${user.screen_name}, you may have been logged out.`;
 					console.log(logstr, "user is logged out, failed to unblock user.");
 				}
 				else if (response.status === 404) {
 					// notice the wording here is different than the blocked 404. the difference is that if the user
 					// is unbanned, they will still be blocked and we want the user to know about that
-
-					const t = document.createElement("div");
-					t.className = "toast";
 					t.innerText = `could not unblock @${user.screen_name}, user has been suspended or no longer exists.`;
-					const ele = document.getElementById("injected-blue-block-toasts");
-					if (!ele) {
-						throw new Error("blue blocker was unable to create or find toasts div.");
-					}
-
-					ele.appendChild(t);
-					setTimeout(() => ele.removeChild(t), config.popupTimer * 1000);
 					console.log(logstr, `failed to unblock ${FormatLegacyName(user)}, user no longer exists`);
 				}
 				else if (response.status >= 300) {
+					t.innerText = `could not unblock @${user.screen_name}, twitter gave an unfamiliar response code.`;
 					console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, response);
 				}
 				else {
-					const t = document.createElement("div");
-					t.className = "toast";
 					t.innerText = `unblocked @${user.screen_name}, they won't be blocked again.`;
-					const ele = document.getElementById("injected-blue-block-toasts");
-					if (!ele) {
-						throw new Error("blue blocker was unable to create or find toasts div.");
-					}
-
-					ele.appendChild(t);
-					setTimeout(() => ele.removeChild(t), config.popupTimer * 1000);
 					console.log(logstr, `unblocked ${FormatLegacyName(user)}`);
 				}
+
+				ele.appendChild(t);
+				setTimeout(() => ele.removeChild(t), config.popupTimer * 1000);
 			}).catch(error => {
 				if (attempt < 3) {
 					unblockUser(user, user_id, reason, attempt + 1);
@@ -293,9 +297,11 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 			url += "blocks/create.json";
 		}
 
-		api.storage.local.get({ headers: null }).then(items => {
+		api.storage.local.get({ headers: null })
+		.then(items => items.headers as { [k: string]: string })
+		.then((req_headers: { [k: string]: string }) => {
 			const body = `user_id=${user_id}`;
-			let headers: { [k: string]: string } = {
+			const headers: { [k: string]: string } = {
 				"content-length": body.length.toString(),
 				"content-type": "application/x-www-form-urlencoded",
 				"accept-encoding": "gzip, deflate, br",
@@ -304,7 +310,9 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 			};
 
 			for (const header of Headers) {
-				headers[header] = items.headers[header];
+				if (req_headers[header]) {
+					headers[header] = req_headers[header];
+				}
 			}
 
 			// attempt to manually set the csrf token to the current active cookie
@@ -313,7 +321,7 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 				headers["x-csrf-token"] = csrf[1];
 			} else {
 				// default to the request's csrf token
-				headers["x-csrf-token"] = items.headers["x-csrf-token"];
+				headers["x-csrf-token"] = req_headers["x-csrf-token"];
 			}
 
 			const options: {
@@ -537,6 +545,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 			}
 		} catch (_e) {
 			const e = _e as Error;
+			console.debug(logstr, `soupcan error for @${user.legacy.screen_name}:`, e);
 			if (e.message === "Could not establish connection. Receiving end does not exist.") {
 				api.storage.sync.set({ soupcanIntegration: false });
 				console.log(logstr, "looks like soupcan was uninstalled, disabling integration.");
