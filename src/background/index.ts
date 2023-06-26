@@ -1,5 +1,6 @@
-import { api, logstr, ErrorStatus, IsVerifiedAction, ReasonExternal, SoupcanExtensionId, SuccessStatus, DefaultOptions } from '../constants';
-import { abbreviate, CheckDbIsUserLegacyVerified, PopulateVerifiedDb } from '../utilities';
+import { api, logstr, ErrorStatus, IsVerifiedAction, MessageStatus, ReasonExternal, SoupcanExtensionId, SuccessStatus, DefaultOptions } from '../constants';
+import { abbreviate } from '../utilities';
+import { CheckDbIsUserLegacyVerified, PopulateVerifiedDb } from './db';
 import { BlockQueue } from '../models/block_queue';
 
 api.action.setBadgeBackgroundColor({ color: "#666" });
@@ -32,30 +33,43 @@ api.storage.sync.onChanged.addListener(async items => {
 	}
 });
 
+interface Response {
+	status: MessageStatus,
+}
+
+interface SuccessResponse {
+	status: "SUCCESS",
+	result: any,
+}
+
+interface ErrorResponse {
+	status: "ERROR",
+	message: string,
+	error?: Error,
+}
+
 api.runtime.onMessage.addListener((m, s, r) => { (async (_message, sender, respond) => {
 	// messages are ALWAYS expected to be:
 	// 	1. objects
 	// 	2. contain a string value stored under message.action. should be one defined above
 	// other message contents change based on the defined action
+	let response: Response;
 	switch (_message?.action) {
 		case IsVerifiedAction:
 			const message = _message as { action: string, user_id: string, handle: string };
 			try {
 				const isVerified = await CheckDbIsUserLegacyVerified(message.user_id, message.handle);
-				const response = { status: SuccessStatus, result: isVerified };
-				respond(response);
+				response = { status: SuccessStatus, result: isVerified } as SuccessResponse;
 			} catch (e) {
-				const response = { status: ErrorStatus, message: "unknown error", error: e };
-				respond(response);
+				response = { status: ErrorStatus, message: "unknown error", error: e } as ErrorResponse;
 			}
 			break;
 
 		default:
 			console.error(logstr, "got a message that couldn't be handled from sender:", sender, _message);
-			const response = { status: ErrorStatus, message: "unknown action", error: null };
-			respond(response);
+			response = { status: ErrorStatus, message: "unknown action" } as ErrorResponse;
 	}
-	return true;
+	respond(response);
 })(m, s, r); return true });
 
 ////////////////////////////////////////////////// EXTERNAL MESSAGE HANDLING //////////////////////////////////////////////////
@@ -73,22 +87,21 @@ api.runtime.onMessageExternal.addListener((m, s, r) => { (async (_message, sende
 	// 	1. objects
 	// 	2. contain a string value stored under message.action. should be one defined above
 	// other message contents change based on the defined action
+	let response: Response;
 	switch (_message?.action) {
 		case blockAction:
 			const message = _message as { action: string, user_id: string, name: string, screen_name: string, reason: string };
 			try {
 				await queue.push({ user_id: message.user_id, user: { name: message.name, screen_name: message.screen_name }, reason: ReasonExternal, external_reason: message.reason });
-				const response = { status: SuccessStatus, message: "user queued for blocking" };
-				respond(response);
+				response = { status: SuccessStatus, result: "user queued for blocking" } as SuccessResponse;
 			} catch (e) {
-				const response = { status: ErrorStatus, message: "unknown error", error: e };
-				respond(response);
+				response = { status: ErrorStatus, message: "unknown error", error: e } as ErrorResponse;
 			}
-			return;
+			break;
 
 		default:
 			console.error(logstr, "got a message that couldn't be handled from sender:", sender, _message);
-			const response = { status: ErrorStatus, message: "unknown action", error: null };
-			respond(response);
-		}
+			response = { status: ErrorStatus, message: "unknown action" } as ErrorResponse;
+	}
+	respond(response);
 })(m, s, r); return true });

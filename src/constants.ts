@@ -61,7 +61,9 @@ export const SoupcanExtensionId = Browser === "chrome" ? "hcneafegcikghlbibfmlga
 
 // internal message actions
 export const [IsVerifiedAction] = ["is_verified"];
-export const [ErrorStatus, SuccessStatus] = ["ERROR", "SUCCESS"];
+export type MessageStatus = "SUCCESS" | "ERROR";
+export const SuccessStatus: MessageStatus = "SUCCESS";
+export const ErrorStatus: MessageStatus = "ERROR";
 
 // multi-tab event keys
 export const EventKey = "MultiTabEvent";
