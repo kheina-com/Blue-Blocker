@@ -14,7 +14,8 @@ export class BlockCounter {
 		this.timeout = null;
 	}
 	async getCriticalPoint(refId: number) {
-		let cpRefId = null;
+		let cpRefId: number | null = null;
+		let sleep: number = 50;
 		do {
 			const cp = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey];
 			// cp === null: the critical point is up for grabs
@@ -25,13 +26,14 @@ export class BlockCounter {
 			if (!cp || cp.refId === refId || cp.time <= new Date().valueOf()) {
 				// try to access the critical point
 				await this.storage.set({
-					[criticalPointKey]: { refId: refId, time: new Date().valueOf() + interval * 1.5 },
+					[criticalPointKey]: { refId, time: new Date().valueOf() + interval * 1.5 },
 				});
 				await new Promise((r) => setTimeout(r, 10)); // wait a second to make sure any other sets have resolved
-				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey].refId;
+				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey]?.refId;
 			} else {
 				// sleep for a little bit to let the other tab(s) release the critical point
-				await new Promise((r) => setTimeout(r, 50));
+				await new Promise((r) => setTimeout(r, sleep));
+				sleep = Math.min(sleep ** 2, interval);
 			}
 		} while (cpRefId !== refId);
 	}
