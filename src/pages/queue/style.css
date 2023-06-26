@@ -1,0 +1,144 @@
+html {
+	--transition: ease;
+	--fadetime: 0.15s;
+	--interact: #1da1f2;
+	--bg0color: #000000;
+	--bg1color: #1e1f25;
+	--bg2color: #151416;
+	--bg3color: var(--bordercolor);
+	--blockquote: var(--bordercolor);
+	--textcolor: #DDD;
+	--bordercolor: #2D333A;
+	--linecolor: var(--bordercolor);
+	--borderhover: var(--interact);
+	--subtle: #EEEEEE80;
+	--shadowcolor: #00000080;
+	--activeshadowcolor: #000000B3;
+	--screen-cover: #00000080;
+	--border-size: 1px;
+	--border-radius: 3px;
+
+	background: var(--bg0color);
+}
+html * {
+	font-family: Bitstream Vera Sans, DejaVu Sans, Arial, Helvetica, sans-serif;
+}
+body {
+	background: var(--bg1color);
+	color: var(--textcolor);
+}
+html, body, main, h1, p {
+	margin: 0;
+}
+
+::-webkit-scrollbar {
+	width: 12px;
+	height:12px;
+}
+::-webkit-scrollbar-track {
+	background: var(--bg2color);
+}
+::-webkit-scrollbar-thumb {
+	background: #4D535A;
+	border-radius: 4px;
+	border: 2px solid var(--bg2color);
+}
+::-webkit-scrollbar-thumb:hover {
+	background: var(--interact);
+}
+::-webkit-scrollbar-corner {
+	background: var(--bg0color);
+}
+
+main {
+	color: var(--textcolor);
+	text-align: center;
+	width: 100%;
+	background: #1E1F25;
+}
+.inner {
+	padding: 25px;
+}
+.subtitle {
+	margin-bottom: 25px;
+}
+
+
+#block-queue {
+	bottom: 0;
+	display: inline-flex;
+	align-items: flex-start;
+	justify-content: center;
+	flex-direction: column;
+}
+
+#block-queue div {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background: url('/icon/icon.png') var(--bg2color);
+	background-repeat: no-repeat;
+	background-size: 2.5em;
+	background-position-x: 1em;
+	background-position-y: center;
+	pointer-events: all;
+	padding: 1em 1.5em 1em 4.25em;
+	margin: 0 0 25px;
+	border: var(--border-size) solid var(--bordercolor);
+	border-radius: var(--border-radius);
+	color: var(--textcolor);
+	box-shadow: 0 2px 3px 1px var(--shadowcolor);
+	min-height: calc(2em + 4px);
+}
+#block-queue div:last-child {
+	margin-bottom: 0;
+}
+#block-queue div.error {
+	background: url('/icon/error.png') var(--bg2color);
+	background-repeat: no-repeat;
+	background-size: 2.5em;
+	background-position-x: 1em;
+	background-position-y: center;
+}
+
+#block-queue div a,
+#block-queue div a:active,
+#block-queue div a:focus {
+	color: var(--textcolor);
+	text-shadow: 0 2px 3px 1px var(--shadowcolor);
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
+	cursor: pointer;
+}
+
+#block-queue div a:hover {
+	text-shadow: 0 0 10px 3px var(--activeshadowcolor);
+	color: var(--interact);
+}
+
+#block-queue div button,
+#block-queue div button:active,
+#block-queue div button:focus {
+	margin-left: 1em;
+	font-size: 1em;
+	padding: 0.5em 1em;
+	color: var(--textcolor);
+	background: var(--bg1color);
+	box-shadow: 0 2px 3px 1px var(--shadowcolor);
+	border: var(--border-size) solid var(--bordercolor);
+	border-radius: var(--border-radius);
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
+	cursor: pointer;
+}
+
+#block-queue div button:hover {
+	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
+	border-color: var(--interact);
+	color: var(--interact);
+}
+
