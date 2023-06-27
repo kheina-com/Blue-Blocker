@@ -26,6 +26,14 @@ function checkHandler(target: HTMLInputElement, config: Config, key: string, opt
 		api.storage.sync.set({
 			[key]: target.checked,
 		}).then(() => (options.callback ?? (_ => {
+			document.getElementsByName(target.id + "-status").forEach(status => {
+				status.textContent = statusText;
+				setTimeout(() => status.textContent = null, 1000);
+			});
+			document.getElementsByName(optionName)
+			.forEach(e => e.style.display = target.checked ? "" : "none");
+		}))(target)).then(() => {
+			// update the checkmark last so that it can be used as the saved status indicator
 			ele.forEach(label => {
 				if (target.checked) {
 					label.classList.add("checked");
@@ -33,15 +41,7 @@ function checkHandler(target: HTMLInputElement, config: Config, key: string, opt
 					label.classList.remove("checked");
 				}
 			});
-
-			document.getElementsByName(target.id + "-status").forEach(status => {
-				status.textContent = statusText;
-				setTimeout(() => status.textContent = null, 1000);
-			});
-
-			document.getElementsByName(optionName)
-			.forEach(e => e.style.display = target.checked ? "" : "none");
-		}))(target));
+		});
 	});
 }
 
