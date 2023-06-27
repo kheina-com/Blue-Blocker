@@ -28,8 +28,8 @@ firefox:
 
 	cp LICENSE build/LICENSE
 	cp readme.md build/readme.md
-	cd build
-	zip "blue-blocker-firefox-${VERSION}.zip" *
+	cd build; zip "blue-blocker-firefox-${VERSION}.zip" -r *
+	mv "build/blue-blocker-firefox-${VERSION}.zip" "blue-blocker-firefox-${VERSION}.zip"
 
 .PHONY: chrome
 chrome:
@@ -39,5 +39,5 @@ chrome:
 
 	cp LICENSE build/LICENSE
 	cp readme.md build/readme.md
-	cd build
-	zip "blue-blocker-firefox-${VERSION}.zip" *
+	cd build; zip "blue-blocker-chrome-${VERSION}.zip" -r *
+	mv "build/blue-blocker-chrome-${VERSION}.zip" "blue-blocker-chrome-${VERSION}.zip"
