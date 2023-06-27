@@ -116,7 +116,7 @@ h2 img {
 	width: var(--border-size);
 }
 .tabs a {
-	padding: 20px 25px;
+	padding: 1em 1.5em;
 	position: relative;
 	flex: 1;
 	text-align: center;
@@ -159,14 +159,18 @@ h2 img {
 	vertical-align: middle;
 }
 
+.option {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
 .option p {
 	text-align: center;
 	margin: 0;
 }
 
-.option {
-	display: flex;
-	justify-content: space-between;
+.integration {
+	display: none;
 }
 
 input[type="checkbox"] {
@@ -242,8 +246,10 @@ label.checked div.checkmark div {
 	transform: rotate(45deg);
 }
 
-.skip-follower-count.option {
-	margin-left: 2em;
+.skip-follower-count.option,
+.block-promoted-tweets.option {
+	margin-left: 0.5em;
+	margin-top: -0.5em;
 }
 
 input::-webkit-outer-spin-button,

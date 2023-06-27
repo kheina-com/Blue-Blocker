@@ -49,7 +49,6 @@ function inputMirror(name: string, value: any, onInput: (e: Event) => void, onIn
 	const ele = [...document.getElementsByName(name)] as HTMLInputElement[];
 	ele.forEach(input => {
 		input.value = value;
-		onInput({ target: input } as unknown as Event);
 		input.addEventListener(onInputEvent, onInput);
 		input.addEventListener(onInputEvent === "input" ? "change" : "input", _e => {
 			const e = _e.target as HTMLInputElement;
@@ -58,9 +57,10 @@ function inputMirror(name: string, value: any, onInput: (e: Event) => void, onIn
 	});
 }
 
-function sliderMirror(name: string, value: string) {
+function sliderMirror(name: string, key: "popupTimer" | "blockInterval", config: Config) {
 	const ele = [...document.getElementsByName(name)] as HTMLInputElement[];
 	ele.forEach(input => {
+		const value = config[key].toString()
 		input.value = value;
 		const onInput = (_e: Event) => {
 			const e = _e.target as HTMLInputElement;
@@ -77,7 +77,7 @@ function sliderMirror(name: string, value: string) {
 			document.getElementsByName(target.name + "-value")
 			.forEach(e => e.innerText = textValue);
 			api.storage.sync.set({
-				blockInterval: targetValue,
+				[key]: targetValue,
 			}).then(() => {
 				// Update status to let user know options were saved.
 				document.getElementsByName(target.name + "-status").forEach(status => {
@@ -155,8 +155,6 @@ document.addEventListener("DOMContentLoaded", () => {
 	const blockNftAvatars = document.getElementById("block-nft-avatars") as HTMLInputElement;
 	const soupcanIntegration = document.getElementById("soupcan-integration") as HTMLInputElement;
 
-	const soupcanIntegrationOption = document.getElementById("soupcan-integration-option") as HTMLElement;
-
 	api.storage.sync.get(DefaultOptions).then(_config => {
 		const config = _config as Config;
 		checkHandler(suspendBlockCollection, config, "suspendedBlockCollection", {
@@ -184,6 +182,9 @@ document.addEventListener("DOMContentLoaded", () => {
 			optionName: "",  // integration isn't controlled by the toggle, so unset
 		});
 	
+		document.getElementsByName("skip-follower-count-value")
+		.forEach(e => e.innerText = abbreviate(config.skipFollowerCount));
+
 		inputMirror("skip-follower-count", config.skipFollowerCount, e => {
 			const target = e.target as HTMLInputElement;
 			const value = parseInt(target.value);
@@ -201,17 +202,24 @@ document.addEventListener("DOMContentLoaded", () => {
 			});
 		});
 
-		sliderMirror("block-interval", config.blockInterval.toString());
-		sliderMirror("popup-timer", config.popupTimer.toString());
+		sliderMirror("block-interval", "blockInterval", config);
+		sliderMirror("popup-timer", "popupTimer", config);
 	});
 
-	api.management.get(SoupcanExtensionId).then(e => {
-		if (!e.enabled) {
+	// @ts-ignore
+	api.runtime.sendMessage(
+		SoupcanExtensionId,
+		{ action: "check_twitter_user", screen_name: "elonmusk" },
+	).then((r: any) => {
+		// we could check if response is the expected shape here, if we really wanted
+		console.debug(logstr, "soupcan response for @elonmusk:", r);
+		if (!r) {
 			throw new Error("extension not enabled");
 		}
-		soupcanIntegrationOption.style.display = "";
-	}).catch(() => {
-		soupcanIntegrationOption.style.display = "none";
+		document.getElementsByName("soupcan-integration-option").forEach(e => e.style.display = "block");
+	}).catch((e: Error) => {
+		console.debug(logstr, "soupcan response for @elonmusk:", e);
+		document.getElementsByName("soupcan-integration-option").forEach(ele => ele.style.display = "none");
 	});
 
 	// set the block value immediately
