@@ -27,20 +27,32 @@ html * {
 	font-family: Bitstream Vera Sans, DejaVu Sans, Arial, Helvetica, sans-serif;
 }
 html, body {
-	background: var(--bg1color);
+	background: var(--bg2color);
 	color: var(--textcolor);
 }
 body {
-	width: 25em;
-	margin: 25px;
+	margin: 0;
 	padding: 0;
 	font-size: 1.1rem;
 }
-body > div {
-	margin-bottom: 1em;
+
+a,
+input,
+label,
+textarea {
+	cursor: pointer;
+	pointer-events: all;
+	text-decoration: none;
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
 }
-body > div:last-child, .last {
-	margin-bottom: 0;
+a:link, a:visited
+{ color: var(--textcolor); }
+a:hover {
+	color: var(--interact) !important;
+	opacity: 1 !important;
 }
 
 ::-webkit-scrollbar {
@@ -73,7 +85,7 @@ body > div:last-child, .last {
 
 /* popup title */
 h2 {
-	margin: 0;
+	margin: 1em 0 0;
 	text-align: center;
 }
 /* Blue Blocker logo in the popup title */
@@ -81,24 +93,62 @@ h2 img {
 	height: 1.2em !important; /* overwrite inline style that was added for development */
 	margin-bottom: -0.15em;
 }
+/* blocked users and queue subtitle */
+.blocked-users-count {
+	text-align: center;
+	color: var(--subtle);
+	font-size: 0.9em;
+	margin-top: 0;
+	margin-bottom: 0.25em;
+}
 
-a,
-input,
-label,
-textarea {
-	cursor: pointer;
-	pointer-events: all;
-	text-decoration: none;
+.tabs {
+	background: var(--bg2color);
+	position: -webkit-sticky;
+	position: sticky;
+	top: 0;
+	display: flex;
+	border-bottom: solid var(--border-size) var(--bordercolor);
+	z-index: 1000;
+}
+.tabs .separator {
+	background: var(--bordercolor);
+	width: var(--border-size);
+}
+.tabs a {
+	padding: 1em 1.5em;
+	position: relative;
+	flex: 1;
+	text-align: center;
+}
+.tabs .border {
+	position: absolute;
+	width: 100%;
+	left: 0;
+	bottom: 0;
 	-webkit-transition: var(--transition) var(--fadetime);
 	-moz-transition: var(--transition) var(--fadetime);
 	-o-transition: var(--transition) var(--fadetime);
 	transition: var(--transition) var(--fadetime);
+	border-bottom: solid 0 var(--interact);
 }
-a:link, a:visited
-{ color: var(--textcolor); }
-a:hover {
-	color: var(--interact) !important;
-	opacity: 1 !important;
+
+.tab {
+	background: var(--bg1color);
+	margin: 0;
+	padding: 1em 25px 25px;
+}
+.tab > div {
+	margin-bottom: 1em;
+}
+.tab > div:last-child, .last {
+	margin-bottom: 0;
+}
+.tab#quick {
+	min-width: 20em;
+}
+.tab#advanced {
+	min-width: 27em;
 }
 
 .emoji {
@@ -109,14 +159,18 @@ a:hover {
 	vertical-align: middle;
 }
 
+.option {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
 .option p {
 	text-align: center;
 	margin: 0;
 }
 
-.option {
-	display: flex;
-	justify-content: space-between;
+.integration {
+	display: none;
 }
 
 input[type="checkbox"] {
@@ -192,10 +246,20 @@ label.checked div.checkmark div {
 	transform: rotate(45deg);
 }
 
-#skip-follower-count-option {
-	margin-left: 2em;
+.skip-follower-count.option,
+.block-promoted-tweets.option {
+	margin-left: 0.5em;
+	margin-top: -0.5em;
 }
-input#skip-follower-count {
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+input[type=number] {
+	-moz-appearance: textfield;
+	appearance: textfield;
 	text-align: right;
 	width: 7em;
 	height: 1em;
@@ -213,12 +277,12 @@ input#skip-follower-count {
 	-o-transition: var(--transition) var(--fadetime);
 	transition: var(--transition) var(--fadetime);
 }
-input#skip-follower-count:hover {
+input[type=number]:hover {
 	color: var(--interact);
 	border-color: var(--borderhover);
 	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
 }
-input#skip-follower-count:focus {
+input[type=number]:focus {
 	color: var(--textcolor);
 }
 
@@ -226,14 +290,6 @@ input#skip-follower-count:focus {
 	margin: -0.2em 0;
 	width: 1.2em;
 	height: 1.2em;
-}
-
-.blocked-users-count {
-	text-align: center;
-	color: var(--subtle);
-	font-size: 0.9em;
-	margin-top: 0;
-	margin-bottom: 2em;
 }
 
 .slider {
