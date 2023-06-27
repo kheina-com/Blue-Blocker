@@ -216,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		if (!r) {
 			throw new Error("extension not enabled");
 		}
-		document.getElementsByName("soupcan-integration-option").forEach(e => e.style.display = "block");
+		document.getElementsByName("soupcan-integration-option").forEach(e => e.style.display = "flex");
 	}).catch((e: Error) => {
 		console.debug(logstr, "soupcan response for @elonmusk:", e);
 		document.getElementsByName("soupcan-integration-option").forEach(ele => ele.style.display = "none");
