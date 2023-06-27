@@ -200,9 +200,9 @@ api.storage.local.onChanged.addListener((items) => {
 
 			case ErrorEvent:
 				// skip checking options, since errors should always be shown
-				const { message, detail } = e;
-				console.error(logstr, `${message}:`, detail);
-
+				if (e.message) {
+					console.error(logstr, e.message, e);
+				}
 				const t = document.createElement('div');
 				t.className = 'toast error';
 				t.innerHTML = `<p>an error occurred! check the console and create an issue on <a href="https://github.com/kheina-com/Blue-Blocker/issues" target="_blank">GitHub</a></p>`;

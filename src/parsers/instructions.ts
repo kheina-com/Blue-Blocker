@@ -1,4 +1,4 @@
-import { logstr } from '../constants';
+import { api, logstr, EventKey, ErrorEvent } from '../constants';
 import { BlockBlueVerified } from '../shared';
 // This file contains a bit of a special case for responses. many responses
 // on twitter contain a shared type stored in an "instructions" key within
@@ -84,29 +84,38 @@ export function ParseTimelineTweet(tweet: any, config: Config) {
 	}
 
 	let promoted: boolean = false;
-	if (tweet?.itemContent.promotedMetadata !== undefined) {
+	if (tweet?.itemContent?.promotedMetadata !== undefined) {
 		promoted = true;
-	} else if (PromotedStrings.has(tweet?.clientEventInfo.component)) {
+	} else if (PromotedStrings.has(tweet?.clientEventInfo?.component)) {
 		promoted = true;
-	} else if (PromotedStrings.has(tweet?.clientEventInfo?.details?.timelinesDetails.injectionType)) {
+	} else if (PromotedStrings.has(tweet?.clientEventInfo?.details?.timelinesDetails?.injectionType)) {
 		promoted = true;
 	}
 
-	// Handle retweets and quoted tweets (check the retweeted user, too)
-	if (tweet?.itemContent?.tweet_results?.result?.quoted_status_result) {
-		handleTweetObject(
-			tweet.itemContent.tweet_results.result.quoted_status_result.result,
-			config,
-			promoted,
-		);
-	} else if (tweet?.itemContent?.tweet_results?.result?.legacy?.retweeted_status_result) {
-		handleTweetObject(
-			tweet.itemContent.tweet_results.result.legacy.retweeted_status_result.result,
-			config,
-			promoted,
-		);
+	try {
+		// Handle retweets and quoted tweets (check the retweeted user, too)
+		if (tweet?.itemContent?.tweet_results?.result?.quoted_status_result) {
+			handleTweetObject(
+				tweet.itemContent.tweet_results.result.quoted_status_result.result,
+				config,
+				promoted,
+			);
+		} else if (tweet?.itemContent?.tweet_results?.result?.legacy?.retweeted_status_result) {
+			handleTweetObject(
+				tweet.itemContent.tweet_results.result.legacy.retweeted_status_result.result,
+				config,
+				promoted,
+			);
+		}
+		handleTweetObject(tweet.itemContent, config, promoted);
+	} catch (e) {
+		console.error(logstr, "found unexpected tweet shape:", tweet);
+		api.storage.local.set({
+			[EventKey]: {
+				type: ErrorEvent,
+			},
+		});
 	}
-	handleTweetObject(tweet.itemContent, config, promoted);
 }
 
 export function HandleInstructionsResponse(
