@@ -49,21 +49,18 @@ document.addEventListener('blue-blocker-event', function (e: CustomEvent<BlueBlo
 				case 'search/typeahead.json':
 					return HandleTypeahead(e, parsed_body, config);
 				default:
-					console.error(logstr, "found an unexpected url that we don't know how to handle");
+					console.error(logstr, "found an unexpected url that we don't know how to handle", e);
 					api.storage.local.set({
 						[EventKey]: {
 							type: ErrorEvent,
-							message: "found an unexpected url that we don't know how to handle",
-							detail: e,
 						},
 					});
 			}
 		} catch (error) {
+			console.error(logstr, "unexpected error occurred while parsing request body", { error, body_str, event: e });
 			api.storage.local.set({
 				[EventKey]: {
 					type: ErrorEvent,
-					message: "unexpected error occurred while parsing request body",
-					detail: { error, body_str, event: e },
 				},
 			});
 		}

@@ -8,6 +8,12 @@ Summary
 	5. version timestamp follow the yyyy.MM.dd format
 ```
 
+# v0.3.1 [2023.06.27]
+- feat: overhaul popup menu to have new quickmenu for quick changes and an advanced tab for full options list (#141)
+- remove: management permissions requirement in manifest (#155)
+- chore: update integration logic to send test message instead of using management api
+- feat: block users promoting tweets (#5)
+
 ## v0.3.0 [2023.06.26]
 - chore: migrate to create-chrome-ext with typescript
 - chore: also check profile shape to detect nft avatars (#130)

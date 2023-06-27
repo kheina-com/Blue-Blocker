@@ -15,6 +15,7 @@ interface Config {
 	popupTimer: number,
 	skipFollowerCount: number,
 	soupcanIntegration: boolean,
+	blockPromoted: boolean,
 }
 
 interface BlueBlockerUser {
@@ -39,6 +40,7 @@ interface BlueBlockerUser {
 	},
 	super_following: boolean,
 	rest_id: string,
+	promoted_tweet?: boolean,
 }
 
 interface BlueBlockerEvent {
