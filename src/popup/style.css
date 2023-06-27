@@ -103,8 +103,13 @@ h2 img {
 }
 
 .tabs {
+	background: var(--bg2color);
+	position: -webkit-sticky;
+	position: sticky;
+	top: 0;
 	display: flex;
 	border-bottom: solid var(--border-size) var(--bordercolor);
+	z-index: 1000;
 }
 .tabs .separator {
 	background: var(--bordercolor);
@@ -139,11 +144,11 @@ h2 img {
 .tab > div:last-child, .last {
 	margin-bottom: 0;
 }
-.tab#basic {
-	width: 20em;
+.tab#quick {
+	min-width: 20em;
 }
 .tab#advanced {
-	width: 30em;
+	min-width: 27em;
 }
 
 .emoji {
@@ -237,10 +242,18 @@ label.checked div.checkmark div {
 	transform: rotate(45deg);
 }
 
-#skip-follower-count-option {
+.skip-follower-count.option {
 	margin-left: 2em;
 }
-input#skip-follower-count {
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+input[type=number] {
+	-moz-appearance: textfield;
+	appearance: textfield;
 	text-align: right;
 	width: 7em;
 	height: 1em;
@@ -258,12 +271,12 @@ input#skip-follower-count {
 	-o-transition: var(--transition) var(--fadetime);
 	transition: var(--transition) var(--fadetime);
 }
-input#skip-follower-count:hover {
+input[type=number]:hover {
 	color: var(--interact);
 	border-color: var(--borderhover);
 	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
 }
-input#skip-follower-count:focus {
+input[type=number]:focus {
 	color: var(--textcolor);
 }
 

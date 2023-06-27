@@ -2,53 +2,146 @@ import { api, logstr, DefaultOptions, SoupcanExtensionId } from '../constants.js
 import { abbreviate, commafy } from '../utilities.js';
 import './style.css';
 
+function checkHandler(target: HTMLInputElement, config: Config, key: string, options: { optionName?: string, callback?: (t: HTMLInputElement) => void, statusText?: string } = { }) {
+	// @ts-ignore
+	const value = config[key];
+	const optionName = options.optionName ?? target.id + "-option";
+	const statusText = options.statusText ?? "saved";
+
+	target.checked = value;
+	const ele = [...document.getElementsByName(target.id)] as HTMLInputElement[];
+	ele.forEach(label => {
+		if (value) {
+			label.classList.add("checked");
+		} else {
+			label.classList.remove("checked");
+		}
+	});
+
+	document.getElementsByName(optionName)
+	.forEach(e => e.style.display = value ? "" : "none");
+
+	target.addEventListener("input", e => {
+		const target = e.target as HTMLInputElement;
+		api.storage.sync.set({
+			[key]: target.checked,
+		}).then(() => (options.callback ?? (_ => {
+			ele.forEach(label => {
+				if (target.checked) {
+					label.classList.add("checked");
+				} else {
+					label.classList.remove("checked");
+				}
+			});
+
+			document.getElementsByName(target.id + "-status").forEach(status => {
+				status.textContent = statusText;
+				setTimeout(() => status.textContent = null, 1000);
+			});
+
+			document.getElementsByName(optionName)
+			.forEach(e => e.style.display = target.checked ? "" : "none");
+		}))(target));
+	});
+}
+
+function inputMirror(name: string, value: any, onInput: (e: Event) => void, onInputEvent: keyof HTMLElementEventMap = "input") {
+	const ele = [...document.getElementsByName(name)] as HTMLInputElement[];
+	ele.forEach(input => {
+		input.value = value;
+		onInput({ target: input } as unknown as Event);
+		input.addEventListener(onInputEvent, onInput);
+		input.addEventListener(onInputEvent === "input" ? "change" : "input", _e => {
+			const e = _e.target as HTMLInputElement;
+			ele.filter(i => i !== e).forEach(i => i.value = e.value);
+		});
+	});
+}
+
+function sliderMirror(name: string, value: string) {
+	const ele = [...document.getElementsByName(name)] as HTMLInputElement[];
+	ele.forEach(input => {
+		input.value = value;
+		const onInput = (_e: Event) => {
+			const e = _e.target as HTMLInputElement;
+			ele.filter(i => i !== e).forEach(i => i.value = e.value);
+			document.getElementsByName(e.name + "-value")
+			.forEach(v => v.textContent = e.value.toString() + "s");
+		};
+		onInput({ target: input } as unknown as Event);
+		input.addEventListener("input", onInput);
+		input.addEventListener("change", e => {
+			const target = e.target as HTMLInputElement;
+			const targetValue = parseInt(target.value);
+			const textValue = targetValue.toString() + "s";
+			document.getElementsByName(target.name + "-value")
+			.forEach(e => e.innerText = textValue);
+			api.storage.sync.set({
+				blockInterval: targetValue,
+			}).then(() => {
+				// Update status to let user know options were saved.
+				document.getElementsByName(target.name + "-status").forEach(status => {
+					status.textContent = "saved";
+					setTimeout(() => status.textContent = null, 1000);
+				});
+			});
+		});
+	});
+}
+
+const popupPromise = api.storage.local.get({ popupActiveTab: "quick" });
+
 // restore state from storage
 document.addEventListener("DOMContentLoaded", () => {
 	const version = document.getElementById("version") as HTMLElement;
 	version.textContent = "v" + api.runtime.getManifest().version;
 
-	const basicTabButton = document.getElementById("button-basic") as HTMLElement;
+	const quickTabButton = document.getElementById("button-quick") as HTMLElement;
 	const advancedTabButton = document.getElementById("button-advanced") as HTMLElement;
 
-	const basicTabContent = document.getElementById("basic") as HTMLElement;
+	const quickTabContent = document.getElementById("quick") as HTMLElement;
 	const advancedTabContent = document.getElementById("advanced") as HTMLElement;
 
+	let popupActiveTab: string;
+
 	function selectTab(tab: string) {
-		const basicTabButtonBorder = basicTabButton.lastChild as HTMLElement;
+		const quickTabButtonBorder = quickTabButton.lastChild as HTMLElement;
 		const advancedTabButtonBorder = advancedTabButton.lastChild as HTMLElement;
 
 		switch (tab) {
-			case "basic":
-				basicTabButtonBorder.style.borderBottomWidth = "5px";
+			case "quick":
+				quickTabButtonBorder.style.borderBottomWidth = "5px";
 				advancedTabButtonBorder.style.borderBottomWidth = "0";
 
-				basicTabContent.style.display = "block";
+				quickTabContent.style.display = "block";
 				advancedTabContent.style.display = "none";
 				break;
 
 			case "advanced":
-				basicTabButtonBorder.style.borderBottomWidth = "0";
+				quickTabButtonBorder.style.borderBottomWidth = "0";
 				advancedTabButtonBorder.style.borderBottomWidth = "5px";
 
-				basicTabContent.style.display = "none";
+				quickTabContent.style.display = "none";
 				advancedTabContent.style.display = "block";
 				break;
 
 			default:
-				throw new Error("invalid button value. must be one of: 'basic', 'advanced'.");
+				throw new Error("invalid tab value. must be one of: 'quick', 'advanced'.");
 		}
 
+		popupActiveTab = tab;
 		api.storage.local.set({
-			popupActiveTab: tab,
+			popupActiveTab,
 		}).then(() => {
-			console.debug(logstr, "set active tab:", tab);
+			console.debug(logstr, "set active tab:", popupActiveTab);
 		});
 	}
 
-	api.storage.local.get({ popupActiveTab: "basic" }).then(items => selectTab(items.popupActiveTab));
-	basicTabButton.addEventListener("click", () => selectTab("basic"));
+	popupPromise.then(items => selectTab(items.popupActiveTab));
+	quickTabButton.addEventListener("click", () => selectTab("quick"));
 	advancedTabButton.addEventListener("click", () => selectTab("advanced"));
 
+	// checkboxes
 	const blockedUsersCount = document.getElementById("blocked-users-count") as HTMLElement;
 	const blockedUserQueueLength = document.getElementById("blocked-user-queue-length") as HTMLElement;
 	const suspendBlockCollection = document.getElementById("suspend-block-collection") as HTMLInputElement;
@@ -59,45 +152,57 @@ document.addEventListener("DOMContentLoaded", () => {
 	const skipVerified = document.getElementById("skip-verified") as HTMLInputElement;
 	const skipAffiliated = document.getElementById("skip-affiliated") as HTMLInputElement;
 	const skip1Mplus = document.getElementById("skip-1mplus") as HTMLInputElement;
-
-	const skipFollowerCount = document.getElementById("skip-follower-count") as HTMLInputElement;
-	const skipFollowerCountOption = document.getElementById("skip-follower-count-option") as HTMLElement;
-	const skipFollowerCountValue = document.getElementById("skip-follower-count-value") as HTMLElement;
-
 	const blockNftAvatars = document.getElementById("block-nft-avatars") as HTMLInputElement;
-
-	const soupcanIntegrationOption = document.getElementById("soupcan-integration-option") as HTMLElement;
 	const soupcanIntegration = document.getElementById("soupcan-integration") as HTMLInputElement;
 
-	const blockInterval = document.getElementById("block-interval") as HTMLInputElement;
-	const blockIntervalValue = document.getElementById("block-interval-value") as HTMLInputElement;
-
-	const popupTimerOption = document.getElementById("popup-timer-slider") as HTMLElement;
-	const popupTimer = document.getElementById("popup-timer") as HTMLInputElement;
-	const popupTimerValue = document.getElementById("popup-timer-value") as HTMLElement;
+	const soupcanIntegrationOption = document.getElementById("soupcan-integration-option") as HTMLElement;
 
 	api.storage.sync.get(DefaultOptions).then(_config => {
 		const config = _config as Config;
-		suspendBlockCollection.checked = config.suspendedBlockCollection;
-		showBlockPopups.checked = config.showBlockPopups;
-		muteInsteadOfBlock.checked = config.mute;
-		blockFollowing.checked = config.blockFollowing;
-		blockFollowers.checked = config.blockFollowers;
-		skipVerified.checked = config.skipVerified;
-		skipAffiliated.checked = config.skipAffiliated;
-		skip1Mplus.checked = config.skip1Mplus;
-		skipFollowerCount.value = config.skipFollowerCount.toString();
-		skipFollowerCountOption.style.display = config.skip1Mplus ? "" : "none";
-		skipFollowerCountValue.textContent = abbreviate(config.skipFollowerCount);
-		blockNftAvatars.checked = config.blockNftAvatars;
-		soupcanIntegration.checked = config.soupcanIntegration;
+		checkHandler(suspendBlockCollection, config, "suspendedBlockCollection", {
+			callback(target) {
+				document.getElementsByName(target.id + "-status").forEach(status => {
+					status.textContent = target.checked ? "paused" : "resumed";
+					setTimeout(() => status.textContent = null, 1000);
+				});
+				api.action.setIcon({ path: target.checked ? "/icon/icon-128-greyscale.png" : "/icon/icon-128.png" });
+			},
+		});
+		checkHandler(showBlockPopups, config, "showBlockPopups", {
+			optionName: "popup-timer-slider",
+		});
+		checkHandler(muteInsteadOfBlock, config, "mute");
+		checkHandler(blockFollowing, config, "blockFollowing");
+		checkHandler(blockFollowers, config, "blockFollowers");
+		checkHandler(skipVerified, config, "skipVerified");
+		checkHandler(skipAffiliated, config, "skipAffiliated");
+		checkHandler(skip1Mplus, config, "skip1Mplus", {
+			optionName: "skip-follower-count-option",
+		});
+		checkHandler(blockNftAvatars, config, "blockNftAvatars");
+		checkHandler(soupcanIntegration, config, "soupcanIntegration", {
+			optionName: "",  // integration isn't controlled by the toggle, so unset
+		});
+	
+		inputMirror("skip-follower-count", config.skipFollowerCount, e => {
+			const target = e.target as HTMLInputElement;
+			const value = parseInt(target.value);
+			const textValue = abbreviate(value);
+			document.getElementsByName("skip-follower-count-value")
+			.forEach(e => e.innerText = textValue);
+			api.storage.sync.set({
+				skipFollowerCount: value,
+			}).then(() => {
+				// Update status to let user know options were saved.
+				document.getElementsByName(target.name + "-status").forEach(status => {
+					status.textContent = "saved";
+					setTimeout(() => status.textContent = null, 1000);
+				});
+			});
+		});
 
-		blockInterval.value = config.blockInterval.toString();
-		blockIntervalValue.textContent = config.blockInterval.toString() + "s";
-
-		popupTimerOption.style.display = config.showBlockPopups ? "" : "none";
-		popupTimer.value = config.popupTimer.toString();
-		popupTimerValue.textContent = config.popupTimer.toString() + "s";
+		sliderMirror("block-interval", config.blockInterval.toString());
+		sliderMirror("popup-timer", config.popupTimer.toString());
 	});
 
 	api.management.get(SoupcanExtensionId).then(e => {
@@ -122,176 +227,5 @@ document.addEventListener("DOMContentLoaded", () => {
 			blockedUserQueueLength.textContent = commafy(items.BlockQueue.newValue.length);
 		}
 		// if we want to add other values, add them here
-	});
-
-	suspendBlockCollection.addEventListener("input", e => {
-		const target = e.target as HTMLInputElement;
-		api.storage.sync.set({
-			suspendedBlockCollection: target.checked,
-		}).then(() => {
-			// Update status to let user know options were saved.
-			const status = document.getElementById("suspend-block-collection-status") as HTMLElement;
-			status.textContent = target.checked ? "paused" : "resumed";
-			api.action.setIcon({ path: target.checked ? "/icon/icon-128-greyscale.png" : "/icon/icon-128.png" });
-			setTimeout(() => status.textContent = null, 1000);
-		});
-	});
-
-	showBlockPopups.addEventListener("input", e => {
-		const target = e.target as HTMLInputElement;
-		api.storage.sync.set({
-			showBlockPopups: target.checked,
-		}).then(() => {
-			// Update status to let user know options were saved.
-			popupTimerOption.style.display = target.checked ? "" : "none";
-			const status = document.getElementById("show-block-popups-status") as HTMLElement;
-			status.textContent = "saved";
-			setTimeout(() => status.textContent = null, 1000);
-		});
-	});
-
-	muteInsteadOfBlock.addEventListener("input", e => {
-		const target = e.target as HTMLInputElement;
-		api.storage.sync.set({
-			mute: target.checked,
-		}).then(() => {
-			// Update status to let user know options were saved.
-			const status = document.getElementById("mute-instead-of-block-status") as HTMLElement;
-			status.textContent = "saved";
-			setTimeout(() => status.textContent = null, 1000);
-		});
-	});
-
-	blockFollowing.addEventListener("input", e => {
-		const target = e.target as HTMLInputElement;
-		api.storage.sync.set({
-			blockFollowing: target.checked,
-		}).then(() => {
-			// Update status to let user know options were saved.
-			const status = document.getElementById("block-following-status") as HTMLElement;
-			status.textContent = "saved";
-			setTimeout(() => status.textContent = null, 1000);
-		});
-	});
-
-	blockFollowers.addEventListener("input", e => {
-		const target = e.target as HTMLInputElement;
-		api.storage.sync.set({
-			blockFollowers: target.checked,
-		}).then(() => {
-			// Update status to let user know options were saved.
-			const status = document.getElementById("block-followers-status") as HTMLElement;
-			status.textContent = "saved";
-			setTimeout(() => status.textContent = null, 1000);
-		});
-	});
-
-	skipVerified.addEventListener("input", e => {
-		const target = e.target as HTMLInputElement;
-		api.storage.sync.set({
-			skipVerified: target.checked,
-		}).then(() => {
-			// Update status to let user know options were saved.
-			const status = document.getElementById("skip-verified-status") as HTMLElement;
-			status.textContent = "saved";
-			setTimeout(() => status.textContent = null, 1000);
-		});
-	});
-
-	skipAffiliated.addEventListener("input", e => {
-		const target = e.target as HTMLInputElement;
-		api.storage.sync.set({
-			skipAffiliated: target.checked,
-		}).then(() => {
-			// Update status to let user know options were saved.
-			const status = document.getElementById("skip-affiliated-status") as HTMLElement;
-			status.textContent = "saved";
-			setTimeout(() => status.textContent = null, 1000);
-		});
-	});
-
-	skip1Mplus.addEventListener("input", e => {
-		const target = e.target as HTMLInputElement;
-		api.storage.sync.set({
-			skip1Mplus: target.checked,
-		}).then(() => {
-			// Update status to let user know options were saved.
-			const status = document.getElementById("skip-1mplus-status") as HTMLElement;
-			status.textContent = "saved";
-			skipFollowerCountOption.style.display = target.checked ? "" : "none";
-			setTimeout(() => status.textContent = null, 1000);
-		});
-	});
-
-	skipFollowerCount.addEventListener("input", e => {
-		const target = e.target as HTMLInputElement;
-		const value = parseInt(target.value);
-		skipFollowerCountValue.textContent = abbreviate(value);
-		api.storage.sync.set({
-			skipFollowerCount: value,
-		}).then(() => {
-			// Update status to let user know options were saved.
-			const status = document.getElementById("skip-follower-count-status") as HTMLElement;
-			status.textContent = "saved";
-			setTimeout(() => status.textContent = null, 1000);
-		});
-	});
-
-	blockNftAvatars.addEventListener("input", e => {
-		const target = e.target as HTMLInputElement;
-		api.storage.sync.set({
-			blockNftAvatars: target.checked,
-		}).then(() => {
-			// Update status to let user know options were saved.
-			const status = document.getElementById("block-nft-avatars-status") as HTMLElement;
-			status.textContent = "saved";
-			setTimeout(() => status.textContent = null, 1000);
-		});
-	});
-
-	soupcanIntegration.addEventListener("input", e => {
-		const target = e.target as HTMLInputElement;
-		api.storage.sync.set({
-			soupcanIntegration: target.checked,
-		}).then(() => {
-			// Update status to let user know options were saved.
-			const status = document.getElementById("soupcan-integration-status") as HTMLElement;
-			status.textContent = "saved";
-			setTimeout(() => status.textContent = null, 1000);
-		});
-	});
-
-	blockInterval.addEventListener("input", e => {
-		const target = e.target as HTMLInputElement;
-		blockIntervalValue.textContent = target.value.toString() + "s";
-	});
-
-	blockInterval.addEventListener("change", e => {
-		const target = e.target as HTMLInputElement;
-		api.storage.sync.set({
-			blockInterval: parseInt(target.value),
-		}).then(() => {
-			// Update status to let user know options were saved.
-			const status = document.getElementById("block-interval-status") as HTMLElement;
-			status.textContent = "saved";
-			setTimeout(() => status.textContent = null, 1000);
-		});
-	});
-
-	popupTimer.addEventListener("input", e => {
-		const target = e.target as HTMLInputElement;
-		popupTimerValue.textContent = target.value.toString() + "s";
-	});
-
-	popupTimer.addEventListener("change", e => {
-		const target = e.target as HTMLInputElement;
-		api.storage.sync.set({
-			popupTimer: parseInt(target.value),
-		}).then(() => {
-			// Update status to let user know options were saved.
-			const status = document.getElementById("popup-timer-status") as HTMLElement;
-			status.textContent = "saved";
-			setTimeout(() => status.textContent = null, 1000);
-		});
 	});
 });
