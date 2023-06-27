@@ -26,6 +26,7 @@
 		<input type="checkbox" id="skip-verified">
 		<input type="checkbox" id="skip-affiliated">
 		<input type="checkbox" id="skip-1mplus">
+		<input type="checkbox" id="block-promoted-tweets">
 		<input type="checkbox" id="block-nft-avatars">
 		<input type="checkbox" id="soupcan-integration">
 		<div class="tab" id="quick">
@@ -156,6 +157,15 @@
 			<div class="skip-follower-count option" name="skip-follower-count-option">
 				<p>∟ threshold: <input type="number" name="skip-follower-count"> followers</p>
 				<span name="skip-follower-count-status"></span>
+			</div>
+			<div class="option">
+				<label for="block-promoted-tweets" name="block-promoted-tweets">
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>block users that promote tweets</p>
+				</label>
+				<span name="block-promoted-tweets-status"></span>
 			</div>
 			<div class="option">
 				<label for="block-nft-avatars" name="block-nft-avatars">

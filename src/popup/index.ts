@@ -152,6 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	const skipVerified = document.getElementById("skip-verified") as HTMLInputElement;
 	const skipAffiliated = document.getElementById("skip-affiliated") as HTMLInputElement;
 	const skip1Mplus = document.getElementById("skip-1mplus") as HTMLInputElement;
+	const blockPromoted = document.getElementById("block-promoted-tweets") as HTMLInputElement;
 	const blockNftAvatars = document.getElementById("block-nft-avatars") as HTMLInputElement;
 	const soupcanIntegration = document.getElementById("soupcan-integration") as HTMLInputElement;
 
@@ -177,6 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		checkHandler(skip1Mplus, config, "skip1Mplus", {
 			optionName: "skip-follower-count-option",
 		});
+		checkHandler(blockPromoted, config, "blockPromoted");
 		checkHandler(blockNftAvatars, config, "blockNftAvatars");
 		checkHandler(soupcanIntegration, config, "soupcanIntegration", {
 			optionName: "",  // integration isn't controlled by the toggle, so unset

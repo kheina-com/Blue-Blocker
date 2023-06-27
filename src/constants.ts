@@ -53,7 +53,7 @@ export const ReasonMap = {
 	[ReasonNftAvatar]: "NFT avatar",
 	[ReasonBusinessVerified]: "Twitter Business verified",
 	[ReasonTransphobia]: "transphobia",
-	[ReasonPromoted]: "user promoted tweet",
+	[ReasonPromoted]: "promoting tweets",
 };
 export const LegacyVerifiedUrl: string = "https://gist.githubusercontent.com/travisbrown/b50d6745298cccd6b1f4697e4ec22103/raw/012009351630dc351e3a763b49bf24fa50ca3eb7/legacy-verified.csv";
 export const Browser = chrome.runtime.getManifest()?.browser_specific_settings?.gecko === undefined ? "chrome" : "firefox";
