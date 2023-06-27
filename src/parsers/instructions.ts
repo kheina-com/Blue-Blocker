@@ -57,8 +57,13 @@ const UserObjectPath: string[] = [
 const IgnoreTweetTypes = new Set([
 	"TimelineTimelineCursor",
 ]);
+const PromotedStrings = new Set([
+	"suggest_promoted",
+	"Promoted",
+	"promoted",
+]);
 
-function handleTweetObject(obj: any, config: Config) {
+function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 	let ptr = obj;
 	for (const key of UserObjectPath) {
 		if (ptr.hasOwnProperty(key)) {
@@ -69,24 +74,39 @@ function handleTweetObject(obj: any, config: Config) {
 		console.error(logstr, 'could not parse tweet', obj);
 		return;
 	}
-	BlockBlueVerified(ptr, config);
+	ptr.promoted_tweet = promoted;
+	BlockBlueVerified(ptr as BlueBlockerUser, config);
 }
 
 export function ParseTimelineTweet(tweet: any, config: Config) {
-	if (tweet.itemType == 'TimelineTimelineCursor') {
+	if (IgnoreTweetTypes.has(tweet.itemContent.itemType)) {
 		return;
 	}
 
+	let promoted: boolean = false;
+	if (tweet?.itemContent.promotedMetadata !== undefined) {
+		promoted = true;
+	} else if (PromotedStrings.has(tweet?.clientEventInfo.component)) {
+		promoted = true;
+	} else if (PromotedStrings.has(tweet?.clientEventInfo?.details?.timelinesDetails.injectionType)) {
+		promoted = true;
+	}
+
 	// Handle retweets and quoted tweets (check the retweeted user, too)
-	if (tweet?.tweet_results?.result?.quoted_status_result) {
-		handleTweetObject(tweet.tweet_results.result.quoted_status_result.result, config);
-	} else if (tweet?.tweet_results?.result?.legacy?.retweeted_status_result) {
+	if (tweet?.itemContent?.tweet_results?.result?.quoted_status_result) {
 		handleTweetObject(
-			tweet.tweet_results.result.legacy.retweeted_status_result.result,
+			tweet.itemContent.tweet_results.result.quoted_status_result.result,
 			config,
+			promoted,
+		);
+	} else if (tweet?.itemContent?.tweet_results?.result?.legacy?.retweeted_status_result) {
+		handleTweetObject(
+			tweet.itemContent.tweet_results.result.legacy.retweeted_status_result.result,
+			config,
+			promoted,
 		);
 	}
-	handleTweetObject(tweet, config);
+	handleTweetObject(tweet.itemContent, config, promoted);
 }
 
 export function HandleInstructionsResponse(
@@ -145,13 +165,13 @@ export function HandleInstructionsResponse(
 
 			case 'TimelineTimelineItem':
 				if (tweet.content.itemContent?.itemType == 'TimelineTweet') {
-					ParseTimelineTweet(tweet.content.itemContent, config);
+					ParseTimelineTweet(tweet.content, config);
 				}
 				break;
 
 			case 'TimelineTimelineModule':
 				for (const innerTweet of tweet.content.items || []) {
-					ParseTimelineTweet(innerTweet.item.itemContent, config);
+					ParseTimelineTweet(innerTweet.item, config);
 				}
 				break;
 

@@ -15,6 +15,7 @@ import {
 	EventKey,
 	MessageEvent,
 	ReasonTransphobia,
+	ReasonPromoted,
 } from './constants';
 import { commafy, FormatLegacyName, IsUserLegacyVerified } from './utilities';
 
@@ -401,38 +402,33 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 		return;
 	}
 
-	// TODO: we should be able to move unified logic (just following and followed-by for now) above the groups
+	// some unified logic so it's not copied in a bunch of places. log everything as debug because it'll be noisy
+	if (
+		// group for if the user has unblocked them previously
+		// you cannot store sets in sync memory, so this will be a janky object
+		config.unblocked.hasOwnProperty(String(user.rest_id))
+	) {
+		console.debug(logstr, `skipped user ${formattedUserName} because you unblocked them previously.`);
+		return;
+	} else if (
+		// group for block-following option
+		!config.blockFollowing &&
+		(user.legacy?.following || user.super_following)
+	) {
+		console.debug(logstr, `skipped user ${formattedUserName} because you follow them.`);
+		return;
+	} else if (
+		// group for block-followers option
+		!config.blockFollowers &&
+		user.legacy?.followed_by
+	) {
+		console.debug(logstr, `skipped user ${formattedUserName} because they follow you.`);
+		return;
+	}
 
 	// step 1: is user verified
 	if (user.is_blue_verified || hasBlockableVerifiedTypes || hasBlockableAffiliateLabels) {
 		if (
-			// group for if the user has unblocked them previously
-			// you cannot store sets in sync memory, so this will be a janky object
-			config.unblocked.hasOwnProperty(String(user.rest_id))
-		) {
-			console.log(
-				logstr,
-				`did not block Twitter Blue verified user ${formattedUserName} because you unblocked them previously.`,
-			);
-		} else if (
-			// group for block-following option
-			!config.blockFollowing &&
-			(user.legacy?.following || user.super_following)
-		) {
-			console.log(
-				logstr,
-				`did not block Twitter Blue verified user ${formattedUserName} because you follow them.`,
-			);
-		} else if (
-			// group for block-followers option
-			!config.blockFollowers &&
-			user.legacy?.followed_by
-		) {
-			console.log(
-				logstr,
-				`did not block Twitter Blue verified user ${formattedUserName} because they follow you.`,
-			);
-		} else if (
 			// group for skip-verified option
 			config.skipVerified &&
 			await IsUserLegacyVerified(user.rest_id, user.legacy.screen_name)
@@ -468,40 +464,17 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 
 	// step 2: is user an nft bro
 	if (config.blockNftAvatars && (user.has_nft_avatar || user.profile_image_shape === "Hexagon")) {
-		if (
-			// group for if the user has unblocked them previously
-			// you cannot store sets in sync memory, so this will be a janky object
-			config.unblocked.hasOwnProperty(String(user.rest_id))
-		) {
-			console.log(
-				logstr,
-				`did not block user with NFT avatar ${formattedUserName} because you unblocked them previously.`,
-			);
-		} else if (
-			// group for block-following option
-			!config.blockFollowing &&
-			(user.legacy?.following || user.super_following)
-		) {
-			console.log(
-				logstr,
-				`did not block user with NFT avatar ${formattedUserName} because you follow them.`,
-			);
-		} else if (
-			// group for block-followers option
-			!config.blockFollowers &&
-			user.legacy?.followed_by
-		) {
-			console.log(
-				logstr,
-				`did not block user with NFT avatar ${formattedUserName} because they follow you.`,
-			);
-		} else {
-			queueBlockUser(user, String(user.rest_id), ReasonNftAvatar);
-			return;
-		}
+		queueBlockUser(user, String(user.rest_id), ReasonNftAvatar);
+		return;
 	}
 
-	// step 3: external addon integrations
+	// step 3: promoted tweets
+	if (config.blockPromoted && user.promoted_tweet) {
+		queueBlockUser(user, String(user.rest_id), ReasonPromoted);
+		return;
+	}
+
+	// external integrations always come last
 	if (config.soupcanIntegration) {
 		// fire an event here to soupcan and check for transphobia
 		try {
@@ -510,36 +483,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 				{ action: "check_twitter_user", screen_name: user.legacy.screen_name },
 			);
 			console.debug(logstr, `soupcan response for @${user.legacy.screen_name}:`, response);
-			if (response?.status !== "transphobic") {
-				// just exit, don't bother reporting since this will trigger for most users. remember, ALL users pass through this function.
-			} else if (
-				// group for if the user has unblocked them previously
-				// you cannot store sets in sync memory, so this will be a janky object
-				config.unblocked.hasOwnProperty(String(user.rest_id))
-			) {
-				console.log(
-					logstr,
-					`did not block transphobic user ${formattedUserName} because you unblocked them previously.`,
-				);
-			} else if (
-				// group for block-following option
-				!config.blockFollowing &&
-				(user.legacy?.following || user.super_following)
-			) {
-				console.log(
-					logstr,
-					`did not block transphobic user ${formattedUserName} because you follow them.`,
-				);
-			} else if (
-				// group for block-followers option
-				!config.blockFollowers &&
-				user.legacy?.followed_by
-			) {
-				console.log(
-					logstr,
-					`did not block transphobic user ${formattedUserName} because they follow you.`,
-				);
-			} else {
+			if (response?.status === "transphobic") {
 				queueBlockUser(user, String(user.rest_id), ReasonTransphobia);
 				return;
 			}
