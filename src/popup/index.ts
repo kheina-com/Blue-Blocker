@@ -186,7 +186,6 @@ document.addEventListener("DOMContentLoaded", () => {
 	
 		document.getElementsByName("skip-follower-count-value")
 		.forEach(e => e.innerText = abbreviate(config.skipFollowerCount));
-
 		inputMirror("skip-follower-count", config.skipFollowerCount, e => {
 			const target = e.target as HTMLInputElement;
 			const value = parseInt(target.value);
