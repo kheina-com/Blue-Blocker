@@ -336,7 +336,6 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 				method: "POST",
 				credentials: "include",
 			};
-			console.debug(logstr, "block request:", { url, ...options });
 
 			fetch(url, options).then(response => {
 				console.debug(logstr, "block response:", response);
