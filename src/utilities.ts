@@ -49,13 +49,13 @@ export async function PopulateVerifiedDb() {
 	}
 
 	const DBOpenRequest = indexedDB.open(dbName, dbVersion);
-	console.log(logstr, "opening legacy verified user database:", DBOpenRequest);
 
 	DBOpenRequest.onerror = DBOpenRequest.onblocked = () => {
-		console.log(logstr, "failed to open legacy verified user database:", DBOpenRequest);
+		console.error(logstr, "failed to open legacy verified user database:", DBOpenRequest);
 	};
 
 	DBOpenRequest.onupgradeneeded = () => {
+		console.debug(logstr, "DBOpenRequest.onupgradeneeded:", DBOpenRequest);
 		db = DBOpenRequest.result;
 		if (db.objectStoreNames.contains(dbStore)) {
 			return;
@@ -66,6 +66,7 @@ export async function PopulateVerifiedDb() {
 	};
 
 	DBOpenRequest.onsuccess = async () => {
+		console.debug(logstr, "DBOpenRequest.onsuccess:", DBOpenRequest);
 		db = DBOpenRequest.result;
 		console.log(logstr, "checking verified user database.");
 
@@ -167,6 +168,8 @@ export async function PopulateVerifiedDb() {
 			}
 		}
 	};
+
+	console.log(logstr, "opening legacy verified user database:", DBOpenRequest);
 }
 
 export function CheckDbIsUserLegacyVerified(user_id: string, handle: string): Promise<boolean> {

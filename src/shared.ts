@@ -371,8 +371,8 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 	});
 }
 
-const blockableAffiliateLabels = new Set(['AutomatedLabel']);
-const blockableVerifiedTypes = new Set(['Business']);
+const blockableAffiliateLabels: Set<string> = new Set([]);
+const blockableVerifiedTypes: Set<string> = new Set(["Business"]);
 export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 	// We're not currently adding anything to the queue so give up.
 	if (config.suspendedBlockCollection) {
