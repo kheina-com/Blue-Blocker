@@ -38,7 +38,7 @@ setInterval(blockCache.clear, 10 * 60e3);  // clear the cache every 10 minutes
 
 function unblockUser(user: { name: string, screen_name: string }, user_id: string, reason: number, attempt: number = 1) {
 	api.storage.sync.get({ unblocked: { } }).then(items => {
-		items.unblocked[String(user_id)] = null;
+		items.unblocked[String(user_id)] = user.screen_name;
 		api.storage.sync.set(items);
 	});
 

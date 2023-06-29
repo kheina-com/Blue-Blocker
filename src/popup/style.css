@@ -174,7 +174,8 @@ h2 img {
 	display: none;
 }
 
-input[type="checkbox"] {
+input[type="checkbox"],
+input[type="file"] {
 	position: absolute;
 	display: none;
 	top: -100vh;
@@ -340,4 +341,27 @@ input[type=number]:focus {
 	background: var(--interact);
 	cursor: pointer;
 	border-radius: 1em;
+}
+
+.button,
+.button:active,
+.button:focus {
+	margin-left: 1em;
+	font-size: 1em;
+	padding: 0.5em 1em;
+	color: var(--textcolor);
+	background: var(--bg2color);
+	box-shadow: 0 2px 3px 1px var(--shadowcolor);
+	border: var(--border-size) solid var(--bordercolor);
+	border-radius: var(--border-radius);
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
+	cursor: pointer;
+}
+.button:hover {
+	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
+	border-color: var(--interact);
+	color: var(--interact);
 }
