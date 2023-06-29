@@ -210,6 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 		switch (tab) {
 			case "quick":
+				document.body.style.overflowY = "hidden";
 				quickTabButtonBorder.style.borderBottomWidth = "5px";
 				advancedTabButtonBorder.style.borderBottomWidth = "0";
 
@@ -218,6 +219,7 @@ document.addEventListener("DOMContentLoaded", () => {
 				break;
 
 			case "advanced":
+				document.body.style.overflowY = "";
 				quickTabButtonBorder.style.borderBottomWidth = "0";
 				advancedTabButtonBorder.style.borderBottomWidth = "5px";
 

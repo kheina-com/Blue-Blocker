@@ -18,7 +18,6 @@ html {
 	--border-size: 1px;
 	--border-radius: 3px;
 
-	overflow-x: hidden;
 	border: var(--border-size) solid var(--bordercolor);
 }
 script {
@@ -30,6 +29,7 @@ html * {
 html, body {
 	background: var(--bg2color);
 	color: var(--textcolor);
+	overflow-x: hidden;
 }
 body {
 	margin: 0;
@@ -146,10 +146,10 @@ h2 img {
 	margin-bottom: 0;
 }
 .tab#quick {
-	min-width: 20em;
+	width: 20em;
 }
 .tab#advanced {
-	min-width: 27em;
+	width: 27em;
 }
 
 .emoji {
