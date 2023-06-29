@@ -31,16 +31,32 @@ export const DefaultOptions: Config = {
 	unblocked: {},
 };
 export const Headers = [
+	// set by function:
+	// "content-type",
+	// "content-length",
+	// "x-csrf-token",  // this is a special one with special logic
+	// set by fetch:
+	// "host",
+	// "origin",
+	// "referer",
+	// "connection",
+	// "keep-alive",
+	// loaded from requests:
+	"accept",
+	"accept-encoding",
+	"accept-language",
 	"authorization",
-	"x-twitter-active-user",
-	"x-twitter-auth-type",
-	"x-twitter-client-language",
 	"sec-ch-ua",
 	"sec-ch-ua-mobile",
 	"sec-ch-ua-platform",
 	"sec-fetch-dest",
 	"sec-fetch-mode",
 	"sec-fetch-site",
+	"user-agent",
+	"x-client-uuid",
+	"x-twitter-active-user",
+	"x-twitter-auth-type",
+	"x-twitter-client-language",
 ];
 export const ReasonExternal: number = -1;
 export const ReasonBlueVerified: number = 0;
