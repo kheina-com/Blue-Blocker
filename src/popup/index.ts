@@ -213,7 +213,6 @@ document.addEventListener("DOMContentLoaded", () => {
 		{ action: "check_twitter_user", screen_name: "elonmusk" },
 	).then((r: any) => {
 		// we could check if response is the expected shape here, if we really wanted
-		console.debug(logstr, "soupcan response for @elonmusk:", r);
 		if (!r) {
 			throw new Error("extension not enabled");
 		}
