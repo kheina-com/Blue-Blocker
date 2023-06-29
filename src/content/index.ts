@@ -36,6 +36,12 @@ document.addEventListener('blue-blocker-event', function (e: CustomEvent<BlueBlo
 		const body_str = e.detail.body;
 		try {
 			const parsed_body = JSON.parse(body_str);
+			if (parsed_body?.error || parsed_body?.errors) {
+				// another error response, this time returned as a 200!
+				console.debug(logstr, "skipped", e.detail.parsedUrl[1], "response because it contained an error key:", { event: e, body_str });
+				return;
+			}
+
 			switch (e.detail.parsedUrl[1]) {
 				case 'HomeLatestTimeline':
 				case 'HomeTimeline':

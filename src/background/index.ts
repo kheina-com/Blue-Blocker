@@ -2,12 +2,15 @@ import { api, logstr, ErrorStatus, IsVerifiedAction, ReasonExternal, SoupcanExte
 import { abbreviate, CheckDbIsUserLegacyVerified, PopulateVerifiedDb } from '../utilities';
 import { BlockQueue } from '../models/block_queue';
 
-api.action.setBadgeBackgroundColor({ color: '#666' });
-api.action.setBadgeTextColor({ color: '#fff' });
+api.action.setBadgeBackgroundColor({ color: "#666" });
+if (api.action.hasOwnProperty("setBadgeTextColor")) {
+	// setBadgeTextColor requires chrome 110+
+	api.action.setBadgeTextColor({ color: "#fff" });
+}
 
 // TODO: change to message listener ?
 api.storage.local.onChanged.addListener((items) => {
-	if (items.hasOwnProperty('BlockCounter')) {
+	if (items.hasOwnProperty("BlockCounter")) {
 		api.action.setBadgeText({
 			text: abbreviate(items.BlockCounter.newValue),
 		});
