@@ -18,6 +18,7 @@ html {
 	--border-size: 1px;
 	--border-radius: 3px;
 
+	overflow-x: hidden;
 	border: var(--border-size) solid var(--bordercolor);
 }
 script {
