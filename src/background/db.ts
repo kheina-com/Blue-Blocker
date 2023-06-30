@@ -2,26 +2,28 @@ import { api, logstr, EventKey, LegacyVerifiedUrl, MessageEvent, ErrorEvent } fr
 import { commafy } from "../utilities";
 
 const expectedVerifiedUsersCount = 407520;
-let db: IDBDatabase;
+let legacyDb: IDBDatabase;
+// used so we don't load the db twice
+let legacyDbLoaded: boolean = false;
 
 interface LegacyVerifiedUser {
 	user_id: string,
 	handle: string,
 }
 
-const dbName = "legacy-verified-users";
-const dbStore = "verified_users";
-const dbVersion = 1;
+const legacyDbName = "legacy-verified-users";
+const legacyDbStore = "verified_users";
+const legacyDbVersion = 1;
 
 // populates local storage with legacy verified users for the purpose of avoiding legacy verified
 export async function PopulateVerifiedDb() {
 	const opts = await api.storage.sync.get({ skipVerified: true });
 	if (!opts.skipVerified) {
-		console.log(logstr, "skip verified false, not populating db", opts);
+		console.log(logstr, "skip verified false, not populating legacyDb", opts);
 		return;
 	}
 
-	const DBOpenRequest = indexedDB.open(dbName, dbVersion);
+	const DBOpenRequest = indexedDB.open(legacyDbName, legacyDbVersion);
 
 	DBOpenRequest.onerror = DBOpenRequest.onblocked = () => {
 		console.error(logstr, "failed to open legacy verified user database:", DBOpenRequest);
@@ -29,24 +31,31 @@ export async function PopulateVerifiedDb() {
 
 	DBOpenRequest.onupgradeneeded = () => {
 		console.debug(logstr, "DBOpenRequest.onupgradeneeded:", DBOpenRequest);
-		db = DBOpenRequest.result;
-		if (db.objectStoreNames.contains(dbStore)) {
+		legacyDb = DBOpenRequest.result;
+		if (legacyDb.objectStoreNames.contains(legacyDbStore)) {
 			return;
 		}
 
-		db.createObjectStore(dbStore, { keyPath: "user_id" });
+		legacyDb.createObjectStore(legacyDbStore, { keyPath: "user_id" });
 		console.log(logstr, "created database.");
 	};
 
 	DBOpenRequest.onsuccess = async () => {
 		console.debug(logstr, "DBOpenRequest.onsuccess:", DBOpenRequest);
-		db = DBOpenRequest.result;
+		legacyDb = DBOpenRequest.result;
+
+		if (legacyDbLoaded) {
+			// this function only runs if skipVerified is true. this is here so that if there
+			// was a failure elsewhere that we're recovering from, we re-enable the option
+			api.storage.sync.set({ skipVerified: true });
+			return;
+		}
 		console.log(logstr, "checking verified user database.");
 
 		try {
 			await new Promise<void>((resolve, reject) => {
-				const transaction = db.transaction([dbStore], "readwrite");
-				const store = transaction.objectStore(dbStore);
+				const transaction = legacyDb.transaction([legacyDbStore], "readwrite");
+				const store = transaction.objectStore(legacyDbStore);
 				const req = store.count();
 
 				req.onerror = reject;
@@ -64,11 +73,11 @@ export async function PopulateVerifiedDb() {
 		catch (_e) {
 			const e = _e as Error;
 			(() => {
-				const transaction = db.transaction([dbStore], "readwrite");
-				const store = transaction.objectStore(dbStore);
+				const transaction = legacyDb.transaction([legacyDbStore], "readwrite");
+				const store = transaction.objectStore(legacyDbStore);
 
 				store.clear();
-				console.log(logstr, "cleared existing db store.");
+				console.log(logstr, "cleared existing legacyDb store.");
 			})();
 
 			(() => {
@@ -87,8 +96,8 @@ export async function PopulateVerifiedDb() {
 				.then(r => r.text());
 
 			let intact: boolean = false;
-			const transaction = db.transaction([dbStore], "readwrite");
-			const store = transaction.objectStore(dbStore);
+			const transaction = legacyDb.transaction([legacyDbStore], "readwrite");
+			const store = transaction.objectStore(legacyDbStore);
 
 			for (const line of body.split("\n")) {
 				if (line === "Twitter ID, Screen name, Followers") {
@@ -125,7 +134,7 @@ export async function PopulateVerifiedDb() {
 			}
 
 			transaction.commit();
-			console.log(logstr, "committed", count, "users to legacy verified db:", transaction);
+			console.log(logstr, "committed", count, "users to legacy verified legacyDb:", transaction);
 
 			const message = `loaded ${commafy(count)} legacy verified users!`;
 			console.log(logstr, message);
@@ -140,6 +149,7 @@ export async function PopulateVerifiedDb() {
 				throw new Error(`legacy verified users database (${commafy(count)}) did not contain the expected number of users (${commafy(expectedVerifiedUsersCount)})`);
 			}
 		}
+		legacyDbLoaded = true;
 	};
 
 	console.log(logstr, "opening legacy verified user database:", DBOpenRequest);
@@ -147,8 +157,8 @@ export async function PopulateVerifiedDb() {
 
 export function CheckDbIsUserLegacyVerified(user_id: string, handle: string): Promise<boolean> {
 	return new Promise<boolean>((resolve, reject) => {
-		const transaction = db.transaction([dbStore], "readwrite");
-		const store = transaction.objectStore(dbStore);
+		const transaction = legacyDb.transaction([legacyDbStore], "readwrite");
+		const store = transaction.objectStore(legacyDbStore);
 		const req = store.get(user_id);
 
 		req.onerror = reject;
@@ -156,5 +166,11 @@ export function CheckDbIsUserLegacyVerified(user_id: string, handle: string): Pr
 			const user = req.result as LegacyVerifiedUser;
 			resolve(user_id === user?.user_id && handle === user?.handle);
 		};
+	}).catch(e => {
+		// if the db has already been loaded, we can safely reconnect
+		if (legacyDbLoaded) {
+			PopulateVerifiedDb();
+		}
+		throw e;  // re-throw error
 	});
 }
