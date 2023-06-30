@@ -149,6 +149,7 @@ api.storage.local.onChanged.addListener((items) => {
 		return;
 	}
 	const e = items[EventKey].newValue;
+	console.debug(logstr, "received multi-tab event:", e);
 
 	api.storage.sync.get(DefaultOptions).then(options => {
 		const config = options as Config;

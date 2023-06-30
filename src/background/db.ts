@@ -30,7 +30,7 @@ export async function PopulateVerifiedDb() {
 	};
 
 	DBOpenRequest.onupgradeneeded = () => {
-		console.debug(logstr, "DBOpenRequest.onupgradeneeded:", DBOpenRequest);
+		console.debug(logstr, "legacy db onupgradeneeded:", DBOpenRequest);
 		legacyDb = DBOpenRequest.result;
 		if (legacyDb.objectStoreNames.contains(legacyDbStore)) {
 			return;
@@ -41,7 +41,7 @@ export async function PopulateVerifiedDb() {
 	};
 
 	DBOpenRequest.onsuccess = async () => {
-		console.debug(logstr, "DBOpenRequest.onsuccess:", DBOpenRequest);
+		console.debug(logstr, "successfully connected to legacy db");
 		legacyDb = DBOpenRequest.result;
 
 		if (legacyDbLoaded) {
@@ -50,7 +50,7 @@ export async function PopulateVerifiedDb() {
 			api.storage.sync.set({ skipVerified: true });
 			return;
 		}
-		console.log(logstr, "checking verified user database.");
+		console.debug(logstr, "checking verified user database.");
 
 		try {
 			await new Promise<void>((resolve, reject) => {
@@ -72,13 +72,17 @@ export async function PopulateVerifiedDb() {
 		}
 		catch (_e) {
 			const e = _e as Error;
-			(() => {
+			await new Promise<void>((resolve, reject) => {
 				const transaction = legacyDb.transaction([legacyDbStore], "readwrite");
 				const store = transaction.objectStore(legacyDbStore);
+				const req = store.clear();
 
-				store.clear();
-				console.log(logstr, "cleared existing legacyDb store.");
-			})();
+				req.onerror = reject;
+				req.onsuccess = () => {
+					console.debug(logstr, "cleared existing legacyDb store.");
+					resolve();
+				};
+			});
 
 			(() => {
 				const message = "downloading legacy verified users database, this may take a few minutes.";
@@ -101,7 +105,7 @@ export async function PopulateVerifiedDb() {
 
 			for (const line of body.split("\n")) {
 				if (line === "Twitter ID, Screen name, Followers") {
-					console.log(logstr, "response csv good!");
+					console.debug(logstr, "response csv good!");
 					intact = true;
 					continue;
 				}
@@ -134,7 +138,7 @@ export async function PopulateVerifiedDb() {
 			}
 
 			transaction.commit();
-			console.log(logstr, "committed", count, "users to legacy verified legacyDb:", transaction);
+			console.debug(logstr, "committed", count, "users to legacy verified legacyDb:", transaction);
 
 			const message = `loaded ${commafy(count)} legacy verified users!`;
 			console.log(logstr, message);
@@ -152,7 +156,7 @@ export async function PopulateVerifiedDb() {
 		legacyDbLoaded = true;
 	};
 
-	console.log(logstr, "opening legacy verified user database:", DBOpenRequest);
+	console.debug(logstr, "opening legacy verified user database:", DBOpenRequest);
 }
 
 export function CheckDbIsUserLegacyVerified(user_id: string, handle: string): Promise<boolean> {
@@ -178,7 +182,7 @@ export function CheckDbIsUserLegacyVerified(user_id: string, handle: string): Pr
 
 let historyDb: IDBDatabase;
 
-interface BlockedUser {
+export interface BlockedUser {
 	user_id: string,
 	user: { name: string, screen_name: string },
 	reason: number,
@@ -186,13 +190,13 @@ interface BlockedUser {
 	state: number,
 }
 
-const historyDbName = "blue-blocker-legacyDb";
-const historyDbStore = "blocked_users";
+const historyDbName = "blue-blocker-db";
+export const historyDbStore = "blocked_users";
 const historyDbVersion = 1;
 
-export function ConnectHistoryDb(): Promise<void> {
+export function ConnectHistoryDb(): Promise<IDBDatabase> {
 	// why use a promise instead of a normal async? so that we can resolve or reject on db connect
-	return new Promise<void>(async (resolve, reject) => {
+	return new Promise<IDBDatabase>(async (resolve, reject) => {
 		// this logic should also be much easier because we don't need to populate anything (thank god)
 		const DBOpenRequest = indexedDB.open(historyDbName, historyDbVersion);
 		DBOpenRequest.onerror = DBOpenRequest.onblocked = () => {
@@ -208,7 +212,7 @@ export function ConnectHistoryDb(): Promise<void> {
 				return;
 			}
 
-			const store = historyDb.createObjectStore(legacyDbStore, { keyPath: "user_id" });
+			const store = historyDb.createObjectStore(historyDbStore, { keyPath: "user_id" });
 			store.createIndex("user.name", "user.name", { unique: false });
 			store.createIndex("user.screen_name", "user.screen_name", { unique: false });
 			console.log(logstr, "created history database.");
@@ -216,8 +220,8 @@ export function ConnectHistoryDb(): Promise<void> {
 
 		DBOpenRequest.onsuccess = () => {
 			historyDb = DBOpenRequest.result;
-			console.log(logstr, "successfully connected to history db:", DBOpenRequest);
-			return resolve();
+			console.log(logstr, "successfully connected to history db");
+			return resolve(historyDb);
 		};
 	});
 }
@@ -228,7 +232,7 @@ export function AddUserToHistory(blockUser: BlockUser): Promise<void> {
 		state: HistoryStateBlocked,
 	};
 	return new Promise<void>(async (resolve, reject) => {
-		const transaction = legacyDb.transaction([historyDbStore], "readwrite");
+		const transaction = historyDb.transaction([historyDbStore], "readwrite");
 		transaction.onabort = transaction.onerror = reject;
 		transaction.oncomplete = () => resolve();
 
@@ -246,7 +250,7 @@ export function AddUserToHistory(blockUser: BlockUser): Promise<void> {
 export function RemoveUserFromHistory(user_id: string): Promise<void> {
 	return new Promise<void>(async (resolve, reject) => {
 		try {
-			const transaction = legacyDb.transaction([historyDbStore], "readwrite");
+			const transaction = historyDb.transaction([historyDbStore], "readwrite");
 			transaction.onabort = transaction.onerror = reject;
 			transaction.oncomplete = () => resolve();
 

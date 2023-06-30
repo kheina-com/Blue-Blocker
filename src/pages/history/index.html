@@ -11,9 +11,11 @@
 	<body>
 		<main>
 			<div class="inner">
-				<h1>Block Queue</h1>
-				<p class="subtitle">Users will not be added to the queue or blocked while this page is open</p>
-				<div id="block-queue">
+				<h1>Block History</h1>
+				<p class="subtitle">Users may be blocked while this page is open, refresh to update</p>
+				<p class="blocked-users-count">blocked <span id="blocked-users-count"></span> users so far!</p>
+				<p id="reset-counter">it looks like the block counter may have gotten desynced.<button>click here to reset the counter</button></p>
+				<div id="block-history">
 					loading...
 				</div>
 			</div>
