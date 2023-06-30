@@ -205,3 +205,41 @@ export function FormatLegacyName(user: { name: string, screen_name: string }) {
 	const screenName = user?.screen_name;
 	return `${legacyName} (@${screenName})`;
 }
+
+export function MakeToast(content: string, config: Config, options: { html?: boolean, error?: boolean, elements?: Array<HTMLElement> } = { }) {
+	const ele = document.getElementById("injected-blue-block-toasts");
+	if (!ele) {
+		throw new Error("blue blocker was unable to create or find toasts div.");
+	}
+
+	const t = document.createElement("div");
+	let popupTimer: number;
+	if (options?.error) {
+		t.className = "toast error";
+		popupTimer = 60e3;
+	} else {
+		t.className = "toast";
+		popupTimer = config.popupTimer * 1000;
+	}
+	if (options?.html) {
+		t.innerHTML = content;
+	} else {
+		t.innerText = content;
+	}
+
+	if (options?.elements) {
+		options.elements.forEach(e => t.appendChild(e));
+	}
+	const close = document.createElement("a");
+	close.innerText = "✕";
+	close.className = "close";
+
+	const timeout = setTimeout(() => ele.removeChild(t), popupTimer);
+	close.onclick = () => {
+		ele.removeChild(t);
+		clearTimeout(timeout);
+	};
+
+	t.appendChild(close);
+	ele.appendChild(t);
+}

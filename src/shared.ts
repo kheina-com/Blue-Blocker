@@ -17,12 +17,13 @@ import {
 	ReasonTransphobia,
 	ReasonPromoted,
 } from './constants';
-import { commafy, FormatLegacyName, IsUserLegacyVerified } from './utilities';
+import { commafy, FormatLegacyName, IsUserLegacyVerified, MakeToast } from './utilities';
 
 // Define constants that shouldn't be exported to the rest of the addon
 const queue = new BlockQueue(api.storage.local);
 const blockCounter = new BlockCounter(api.storage.local);
-const blockCache = new Set();
+const blockCache: Set<string> = new Set();
+export const UnblockCache: Set<string> = new Set();
 
 export function SetHeaders(headers: { [k: string]: string }) {
 	api.storage.local.get({ headers: { }}).then(items => {
@@ -35,8 +36,11 @@ export function SetHeaders(headers: { [k: string]: string }) {
 }
 
 setInterval(blockCache.clear, 10 * 60e3);  // clear the cache every 10 minutes
+// this is just here so we don't double add users unnecessarily (and also overwrite name)
+setInterval(UnblockCache.clear, 10 * 60e3);
 
 function unblockUser(user: { name: string, screen_name: string }, user_id: string, reason: number, attempt: number = 1) {
+	UnblockCache.add(user_id);
 	api.storage.sync.get({ unblocked: { } }).then(items => {
 		items.unblocked[String(user_id)] = user.screen_name;
 		api.storage.sync.set(items);
@@ -103,39 +107,26 @@ function unblockUser(user: { name: string, screen_name: string }, user_id: strin
 				method: "POST",
 				credentials: "include",
 			};
-			console.debug(logstr, "unblock request:", { url, ...options });
-
 			fetch(url, options).then(response => {
-				const t = document.createElement("div");
-				t.className = "toast";
-				t.innerText = `unblocked @${user.screen_name}, they won't be blocked again.`;
-				const ele = document.getElementById("injected-blue-block-toasts");
-				if (!ele) {
-					throw new Error("blue blocker was unable to create or find toasts div.");
-				}
-
 				if (response.status === 403) {
 					// user has been logged out, we need to stop queue and re-add
-					t.innerText = `could not unblock @${user.screen_name}, you may have been logged out.`;
+					MakeToast(`could not unblock @${user.screen_name}, you may have been logged out.`, config);
 					console.log(logstr, "user is logged out, failed to unblock user.");
 				}
 				else if (response.status === 404) {
 					// notice the wording here is different than the blocked 404. the difference is that if the user
 					// is unbanned, they will still be blocked and we want the user to know about that
-					t.innerText = `could not unblock @${user.screen_name}, user has been suspended or no longer exists.`;
+					MakeToast(`could not unblock @${user.screen_name}, user has been suspended or no longer exists.`, config);
 					console.log(logstr, `failed to unblock ${FormatLegacyName(user)}, user no longer exists`);
 				}
 				else if (response.status >= 300) {
-					t.innerText = `could not unblock @${user.screen_name}, twitter gave an unfamiliar response code.`;
+					MakeToast(`could not unblock @${user.screen_name}, twitter gave an unfamiliar response code.`, config);
 					console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, response);
 				}
 				else {
-					t.innerText = `unblocked @${user.screen_name}, they won't be blocked again.`;
+					MakeToast(`unblocked @${user.screen_name}, they won't be blocked again.`, config);
 					console.log(logstr, `unblocked ${FormatLegacyName(user)}`);
 				}
-
-				ele.appendChild(t);
-				setTimeout(() => ele.removeChild(t), config.popupTimer * 1000);
 			}).catch(error => {
 				if (attempt < 3) {
 					unblockUser(user, user_id, reason, attempt + 1);
@@ -158,43 +149,27 @@ api.storage.local.onChanged.addListener((items) => {
 	const e = items[EventKey].newValue;
 
 	api.storage.sync.get(DefaultOptions).then(options => {
+		const config = options as Config;
 		switch (e.type) {
 			case MessageEvent:
-				if (options.showBlockPopups) {
-					const t = document.createElement('div');
-					t.className = 'toast';
-					t.innerText = e.message;
-					const ele = document.getElementById('injected-blue-block-toasts');
-					if (ele) {
-						ele.appendChild(t);
-						setTimeout(() => ele.removeChild(t), options.popupTimer * 1000);
-					}
+				if (config.showBlockPopups) {
+					MakeToast(e.message, config);
 				}
 				break;
 
 			case UserBlockedEvent:
-				if (options.showBlockPopups) {
+				if (config.showBlockPopups) {
 					const event = e as BlockUser;
 					const { user, user_id, reason } = event;
-					const t = document.createElement('div');
-					t.className = 'toast';
-					const name =
-						user.name.length > 25
-							? user.name.substring(0, 23).trim() + '...'
-							: user.name;
-					t.innerHTML = `blocked ${name} (<a href="/${user.screen_name}">@${user.screen_name}</a>)`;
+					const name = user.name.length > 25 ? user.name.substring(0, 23).trim() + '...' : user.name;
 					const b = document.createElement('button');
+					b.innerText = 'undo';
 					b.onclick = () => {
 						unblockUser(user, user_id, reason);
-						t.removeChild(b);
+						const parent = b.parentNode as ParentNode;
+						parent.removeChild(b);
 					};
-					b.innerText = 'undo';
-					t.appendChild(b);
-					const ele = document.getElementById('injected-blue-block-toasts');
-					if (ele) {
-						ele.appendChild(t);
-						setTimeout(() => ele.removeChild(t), options.popupTimer * 1000);
-					}
+					MakeToast(`blocked ${name} (<a href="/${user.screen_name}">@${user.screen_name}</a>)`, config, { html: true, elements: [b]})
 				}
 				break;
 
@@ -203,15 +178,7 @@ api.storage.local.onChanged.addListener((items) => {
 				if (e.message) {
 					console.error(logstr, e.message, e);
 				}
-				const t = document.createElement('div');
-				t.className = 'toast error';
-				t.innerHTML = `<p>an error occurred! check the console and create an issue on <a href="https://github.com/kheina-com/Blue-Blocker/issues" target="_blank">GitHub</a></p>`;
-
-				const ele = document.getElementById('injected-blue-block-toasts');
-				if (ele) {
-					ele.appendChild(t);
-					setTimeout(() => ele.removeChild(t), 60e3);
-				}
+				MakeToast(`<p>an error occurred! check the console and create an issue on <a href="https://github.com/kheina-com/Blue-Blocker/issues" target="_blank">GitHub</a></p>`, config, { html: true, error: true })
 				break;
 
 			default:

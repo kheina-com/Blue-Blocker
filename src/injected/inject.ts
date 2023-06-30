@@ -1,7 +1,8 @@
 //@ts-ignore
 
 (function (xhr) {
-	const RequestRegex = /^https?:\/\/(?:\w+\.)?twitter.com\/[\w\/\.\-\_\=]+\/(HomeLatestTimeline|HomeTimeline|SearchTimeline|UserTweets|timeline\/home\.json|TweetDetail|search\/typeahead\.json|search\/adaptive\.json)(?:$|\?)/;
+	// TODO: find a way to make this cleaner
+	const RequestRegex = /^https?:\/\/(?:\w+\.)?twitter.com\/[\w\/\.\-\_\=]+\/(HomeLatestTimeline|HomeTimeline|SearchTimeline|UserTweets|timeline\/home\.json|TweetDetail|search\/typeahead\.json|search\/adaptive\.json|blocks\/destroy\.json|mutes\/users\/destroy\.json)(?:$|\?)/;
 
 	let XHR = <BlueBlockerXLMRequest>XMLHttpRequest.prototype;
 	let open = XHR.open;

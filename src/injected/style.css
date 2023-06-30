@@ -8,9 +8,11 @@
 	--transition: ease;
 	--fadetime: 0.15s;
 	--interact: #1da1f2;
+	--close: #d7242d;
 	--bg1color: #1e1f25;
 	--bg2color: #151416;
 	--textcolor: #ddd;
+	--subtle: #eeeeee80;
 	--bordercolor: #2d333a;
 	--borderhover: var(--interact);
 	--shadowcolor: #00000080;
@@ -64,7 +66,6 @@
 	transition: var(--transition) var(--fadetime);
 	cursor: pointer;
 }
-
 #injected-blue-block-toasts .toast a:hover {
 	text-shadow: 0 0 10px 3px var(--activeshadowcolor);
 	color: var(--interact);
@@ -87,9 +88,18 @@
 	transition: var(--transition) var(--fadetime);
 	cursor: pointer;
 }
-
 #injected-blue-block-toasts .toast button:hover {
 	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
 	border-color: var(--interact);
 	color: var(--interact);
+}
+
+#injected-blue-block-toasts .toast a.close {
+	color: var(--subtle);
+	font-size: 1.5em;
+	padding: 0.5em;
+	margin: -0.5em -0.5em -0.5em 0.25em;
+}
+#injected-blue-block-toasts .toast a.close:hover {
+	color: var(--close);
 }
