@@ -124,9 +124,10 @@ function unblockUser(user: { name: string, screen_name: string }, user_id: strin
 					console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, response);
 				}
 				else {
-					MakeToast(`unblocked @${user.screen_name}, they won't be blocked again.`, config);
-					RemoveUserBlockHistory(user_id);
+					// use catch to retry in case of db failure
+					RemoveUserBlockHistory(user_id).catch(() => RemoveUserBlockHistory(user_id));
 					console.log(logstr, `unblocked ${FormatLegacyName(user)}`);
+					MakeToast(`unblocked @${user.screen_name}, they won't be blocked again.`, config);
 				}
 			}).catch(error => {
 				if (attempt < 3) {
@@ -325,7 +326,8 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 				}
 				else {
 					blockCounter.increment();
-					AddUserBlockHistory({ user_id, user, reason });
+					// use catch to retry in case of db failure
+					AddUserBlockHistory({ user_id, user, reason }).catch(() => AddUserBlockHistory({ user_id, user, reason }));
 					console.log(logstr, `blocked ${FormatLegacyName(user)} due to ${ReasonMap[reason]}.`);
 					api.storage.local.set({ [EventKey]: { type: UserBlockedEvent, user, user_id, reason } })
 				}

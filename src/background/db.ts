@@ -1,4 +1,4 @@
-import { api, logstr, EventKey, LegacyVerifiedUrl, MessageEvent, ErrorEvent } from "../constants";
+import { api, logstr, EventKey, LegacyVerifiedUrl, MessageEvent, ErrorEvent, HistoryStateBlocked, HistoryStateUnblocked } from "../constants";
 import { commafy } from "../utilities";
 
 const expectedVerifiedUsersCount = 407520;
@@ -158,6 +158,7 @@ export async function PopulateVerifiedDb() {
 export function CheckDbIsUserLegacyVerified(user_id: string, handle: string): Promise<boolean> {
 	return new Promise<boolean>((resolve, reject) => {
 		const transaction = legacyDb.transaction([legacyDbStore], "readonly");
+		transaction.onabort = transaction.onerror = reject;
 		const store = transaction.objectStore(legacyDbStore);
 		const req = store.get(user_id);
 
@@ -175,13 +176,15 @@ export function CheckDbIsUserLegacyVerified(user_id: string, handle: string): Pr
 	});
 }
 
-let historyDb: IDBDatabase;  // will store the BlockUser type directly
-// interface BlockUser {
-// 	user_id: string,
-// 	user: { name: string, screen_name: string },
-// 	reason: number,
-// 	external_reason?: string,
-// }
+let historyDb: IDBDatabase;
+
+interface BlockedUser {
+	user_id: string,
+	user: { name: string, screen_name: string },
+	reason: number,
+	external_reason?: string,
+	state: number,
+}
 
 const historyDbName = "blue-blocker-legacyDb";
 const historyDbStore = "blocked_users";
@@ -205,13 +208,6 @@ export function ConnectHistoryDb(): Promise<void> {
 				return;
 			}
 
-			// remember that we are exclusively storing the BlockUser type:
-			// interface BlockUser {
-			// 	user_id: string,
-			// 	user: { name: string, screen_name: string },
-			// 	reason: number,
-			// 	external_reason?: string,
-			// }
 			const store = historyDb.createObjectStore(legacyDbStore, { keyPath: "user_id" });
 			store.createIndex("user.name", "user.name", { unique: false });
 			store.createIndex("user.screen_name", "user.screen_name", { unique: false });
@@ -227,27 +223,53 @@ export function ConnectHistoryDb(): Promise<void> {
 }
 
 export function AddUserToHistory(blockUser: BlockUser): Promise<void> {
+	const user: BlockedUser = {
+		...blockUser,
+		state: HistoryStateBlocked,
+	};
 	return new Promise<void>(async (resolve, reject) => {
 		const transaction = legacyDb.transaction([historyDbStore], "readwrite");
 		transaction.onabort = transaction.onerror = reject;
 		transaction.oncomplete = () => resolve();
 
 		const store = transaction.objectStore(historyDbStore);
-		store.add(blockUser);
+		store.add(user);
 
 		transaction.commit();
+	}).catch(async (e) => {
+		// attempt to reconnect to the db
+		await ConnectHistoryDb();
+		throw e;  // re-throw error to retry
 	});
 }
 
 export function RemoveUserFromHistory(user_id: string): Promise<void> {
 	return new Promise<void>(async (resolve, reject) => {
-		const transaction = legacyDb.transaction([historyDbStore], "readwrite");
-		transaction.onabort = transaction.onerror = reject;
-		transaction.oncomplete = () => resolve();
+		try {
+			const transaction = legacyDb.transaction([historyDbStore], "readwrite");
+			transaction.onabort = transaction.onerror = reject;
+			transaction.oncomplete = () => resolve();
 
-		const store = transaction.objectStore(historyDbStore);
-		store.delete(user_id);
+			const store = transaction.objectStore(historyDbStore);
+			const user = await new Promise<BlockedUser>((res, rej) => {
+				const req = store.get(user_id);
+				req.onerror = rej;
+				req.onsuccess = () => {
+					const user = req.result as BlockedUser;
+					res(user);
+				};
+			});
 
-		transaction.commit();
+			user.state = HistoryStateUnblocked;
+			store.put(user);
+
+			transaction.commit();
+		} catch (e) {
+			reject(e);
+		}
+	}).catch(async (e) => {
+		// attempt to reconnect to the db
+		await ConnectHistoryDb();
+		throw e;  // re-throw error to retry
 	});
 }

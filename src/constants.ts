@@ -42,6 +42,7 @@ export const Headers = [
 	"sec-fetch-mode",
 	"sec-fetch-site",
 ];
+export const [HistoryStateBlocked, HistoryStateUnblocked] = [0, 1];
 export const ReasonExternal: number = -1;
 export const ReasonBlueVerified: number = 0;
 export const ReasonNftAvatar: number = 1;
