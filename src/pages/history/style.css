@@ -98,12 +98,13 @@ main {
 	margin-bottom: 1em;
 }
 
-#reset-counter, .blocked-users-count {
+#reset-counter {
 	margin: 1em 0;
+	display: none;
 }
 
-#reset-counter {
-	display: none;
+#detailed-counts {
+	color: var(--subtle);
 }
 
 #block-history {

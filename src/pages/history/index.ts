@@ -1,5 +1,5 @@
 import { commafy, RefId } from "../../utilities.js";
-import { api, logstr, HistoryStateBlocked, ReasonMap } from "../../constants.js";
+import { api, logstr, HistoryStateBlocked, ReasonMap, ReasonExternal } from "../../constants.js";
 import { BlockedUser, ConnectHistoryDb, historyDbStore } from "../../background/db.js";
 import { BlockCounter } from "../../models/block_counter";
 import "./style.css";
@@ -69,7 +69,13 @@ blockCounter.getCriticalPoint(refid)
 			);
 		})();
 
+		const reasons: { [r: number]: number } = { }
 		users.forEach(item => {
+			if (!reasons.hasOwnProperty(item.reason)) {
+				reasons[item.reason] = 0;
+			}
+			reasons[item.reason]++;
+
 			const div = document.createElement("div");
 			const p = document.createElement("p");
 			p.innerHTML = `${item.user.name} (<a href="https://twitter.com/${item.user.screen_name}" target="_blank">@${item.user.screen_name}</a>)`;
@@ -87,5 +93,12 @@ blockCounter.getCriticalPoint(refid)
 
 			queueDiv.appendChild(div);
 		});
+
+		const detailedCounts = document.getElementById("detailed-counts") as HTMLElement;
+		const reasonMap = {
+			[ReasonExternal]: "external extension",
+			...ReasonMap,
+		};
+		detailedCounts.innerText = "(" + Object.entries(reasons).map(item => reasonMap[parseInt(item[0])] + ": " + commafy(item[1])).join(", ") + ")";
 	});
 });
