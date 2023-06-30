@@ -1,12 +1,16 @@
-import { commafy, FormatLegacyName, RefId } from "../../utilities.js";
-import { api, logstr, HistoryStateBlocked, HistoryStateUnblocked, ReasonMap } from "../../constants.js";
+import { commafy, RefId } from "../../utilities.js";
+import { api, logstr, HistoryStateBlocked, ReasonMap } from "../../constants.js";
 import { BlockedUser, ConnectHistoryDb, historyDbStore } from "../../background/db.js";
 import { BlockCounter } from "../../models/block_counter";
 import "./style.css";
 
 const blockCounter = new BlockCounter(api.storage.local);
+const refid = RefId();
 
-ConnectHistoryDb().then(db => {
+// grab block counter critical point to compare counters safely
+blockCounter.getCriticalPoint(refid)
+.then(ConnectHistoryDb)
+.then(db => {
 	new Promise<Array<BlockedUser>>((resolve, reject) => {
 		const transaction = db.transaction([historyDbStore], "readonly");
 		transaction.onabort = transaction.onerror = reject;
@@ -29,10 +33,10 @@ ConnectHistoryDb().then(db => {
 		queueDiv.innerHTML = "";
 
 		(() => {
-			const blockedUsersCount = document.getElementById("blocked-users-count") as HTMLElement;
-			blockedUsersCount.innerText = commafy(users.length);
+			document.getElementsByName("blocked-users-count").forEach(e =>
+				e.innerText = commafy(users.length)
+			);
 
-			const refid = RefId();
 			blockCounter.getCriticalPoint(refid)
 			.then(() => blockCounter.storage.get({ BlockCounter: 0 }))
 			.then(items => items.BlockCounter as number)
@@ -41,16 +45,20 @@ ConnectHistoryDb().then(db => {
 					return;
 				}
 
+				const blockCounterCurrentValue = document.getElementById("block-counter-current-value") as HTMLElement;
+				blockCounterCurrentValue.innerText = commafy(count);
+
 				const resetCounter = document.getElementById("reset-counter") as HTMLElement;
-				const a = resetCounter.lastElementChild as HTMLElement;
+				const a = resetCounter.firstElementChild as HTMLElement;
 				a.addEventListener("click", () => {
 					const refid = RefId();
 					blockCounter.getCriticalPoint(refid)
 					.then(() =>
 						blockCounter.storage.set({ BlockCounter: users.length })
-					).then(() =>
-						resetCounter.style.display = ""
-					).finally(() =>
+					).then(() => {
+						console.log(logstr, "reset block counter to", users.length);
+						resetCounter.style.display = "";
+					}).finally(() =>
 						blockCounter.releaseCriticalPoint(refid)
 					);
 				});
