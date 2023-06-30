@@ -60,7 +60,7 @@ export const Browser = chrome.runtime.getManifest()?.browser_specific_settings?.
 export const SoupcanExtensionId = Browser === "chrome" ? "hcneafegcikghlbibfmlgadahjfckonj" : "soupcan@beth.lgbt";
 
 // internal message actions
-export const [IsVerifiedAction] = ["is_verified"];
+export const [IsVerifiedAction, AddToHistoryAction, RemoveFromHistoryAction] = ["is_verified", "add_user_to_history", "remove_user_from_history"];
 export type MessageStatus = "SUCCESS" | "ERROR";
 export const SuccessStatus: MessageStatus = "SUCCESS";
 export const ErrorStatus: MessageStatus = "ERROR";

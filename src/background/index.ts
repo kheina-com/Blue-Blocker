@@ -1,6 +1,6 @@
-import { api, logstr, ErrorStatus, IsVerifiedAction, MessageStatus, ReasonExternal, SoupcanExtensionId, SuccessStatus, DefaultOptions } from '../constants';
+import { api, logstr, AddToHistoryAction, ErrorStatus, IsVerifiedAction, MessageStatus, ReasonExternal, RemoveFromHistoryAction, SoupcanExtensionId, SuccessStatus, DefaultOptions } from '../constants';
 import { abbreviate } from '../utilities';
-import { CheckDbIsUserLegacyVerified, PopulateVerifiedDb } from './db';
+import { AddUserToHistory, CheckDbIsUserLegacyVerified, ConnectHistoryDb, PopulateVerifiedDb, RemoveUserFromHistory } from './db';
 import { BlockQueue } from '../models/block_queue';
 
 api.action.setBadgeBackgroundColor({ color: "#666" });
@@ -33,6 +33,8 @@ api.storage.sync.onChanged.addListener(async items => {
 	}
 });
 
+ConnectHistoryDb();
+
 interface Response {
 	status: MessageStatus,
 }
@@ -56,10 +58,30 @@ api.runtime.onMessage.addListener((m, s, r) => { (async (_message, sender, respo
 	let response: Response;
 	switch (_message?.action) {
 		case IsVerifiedAction:
-			const message = _message as { action: string, user_id: string, handle: string };
+			const verifiedMessage = _message as { user_id: string, handle: string };
 			try {
-				const isVerified = await CheckDbIsUserLegacyVerified(message.user_id, message.handle);
+				const isVerified = await CheckDbIsUserLegacyVerified(verifiedMessage.user_id, verifiedMessage.handle);
 				response = { status: SuccessStatus, result: isVerified } as SuccessResponse;
+			} catch (e) {
+				response = { status: ErrorStatus, message: "unknown error", error: e } as ErrorResponse;
+			}
+			break;
+
+		case AddToHistoryAction:
+			const historyMessage = _message as BlockUser;
+			try {
+				await AddUserToHistory(historyMessage);
+				response = { status: SuccessStatus, result: null } as SuccessResponse;
+			} catch (e) {
+				response = { status: ErrorStatus, message: "unknown error", error: e } as ErrorResponse;
+			}
+			break;
+
+		case RemoveFromHistoryAction:
+			const removeMessage = _message as { user_id: string };
+			try {
+				await RemoveUserFromHistory(removeMessage.user_id);
+				response = { status: SuccessStatus, result: null } as SuccessResponse;
 			} catch (e) {
 				response = { status: ErrorStatus, message: "unknown error", error: e } as ErrorResponse;
 			}

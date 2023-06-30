@@ -37,7 +37,7 @@ export async function PopulateVerifiedDb() {
 		}
 
 		legacyDb.createObjectStore(legacyDbStore, { keyPath: "user_id" });
-		console.log(logstr, "created database.");
+		console.log(logstr, "created legacy database.");
 	};
 
 	DBOpenRequest.onsuccess = async () => {
@@ -157,7 +157,7 @@ export async function PopulateVerifiedDb() {
 
 export function CheckDbIsUserLegacyVerified(user_id: string, handle: string): Promise<boolean> {
 	return new Promise<boolean>((resolve, reject) => {
-		const transaction = legacyDb.transaction([legacyDbStore], "readwrite");
+		const transaction = legacyDb.transaction([legacyDbStore], "readonly");
 		const store = transaction.objectStore(legacyDbStore);
 		const req = store.get(user_id);
 
@@ -172,5 +172,82 @@ export function CheckDbIsUserLegacyVerified(user_id: string, handle: string): Pr
 			PopulateVerifiedDb();
 		}
 		throw e;  // re-throw error
+	});
+}
+
+let historyDb: IDBDatabase;  // will store the BlockUser type directly
+// interface BlockUser {
+// 	user_id: string,
+// 	user: { name: string, screen_name: string },
+// 	reason: number,
+// 	external_reason?: string,
+// }
+
+const historyDbName = "blue-blocker-legacyDb";
+const historyDbStore = "blocked_users";
+const historyDbVersion = 1;
+
+export function ConnectHistoryDb(): Promise<void> {
+	// why use a promise instead of a normal async? so that we can resolve or reject on db connect
+	return new Promise<void>(async (resolve, reject) => {
+		// this logic should also be much easier because we don't need to populate anything (thank god)
+		const DBOpenRequest = indexedDB.open(historyDbName, historyDbVersion);
+		DBOpenRequest.onerror = DBOpenRequest.onblocked = () => {
+			console.error(logstr, "failed to connect history database:", DBOpenRequest);
+			return reject();
+		};
+
+		DBOpenRequest.onupgradeneeded = () => {
+			console.debug(logstr, "upgrading history db:", DBOpenRequest);
+			historyDb = DBOpenRequest.result;
+
+			if (historyDb.objectStoreNames.contains(historyDbStore)) {
+				return;
+			}
+
+			// remember that we are exclusively storing the BlockUser type:
+			// interface BlockUser {
+			// 	user_id: string,
+			// 	user: { name: string, screen_name: string },
+			// 	reason: number,
+			// 	external_reason?: string,
+			// }
+			const store = historyDb.createObjectStore(legacyDbStore, { keyPath: "user_id" });
+			store.createIndex("user.name", "user.name", { unique: false });
+			store.createIndex("user.screen_name", "user.screen_name", { unique: false });
+			console.log(logstr, "created history database.");
+		};
+
+		DBOpenRequest.onsuccess = () => {
+			historyDb = DBOpenRequest.result;
+			console.log(logstr, "successfully connected to history db:", DBOpenRequest);
+			return resolve();
+		};
+	});
+}
+
+export function AddUserToHistory(blockUser: BlockUser): Promise<void> {
+	return new Promise<void>(async (resolve, reject) => {
+		const transaction = legacyDb.transaction([historyDbStore], "readwrite");
+		transaction.onabort = transaction.onerror = reject;
+		transaction.oncomplete = () => resolve();
+
+		const store = transaction.objectStore(historyDbStore);
+		store.add(blockUser);
+
+		transaction.commit();
+	});
+}
+
+export function RemoveUserFromHistory(user_id: string): Promise<void> {
+	return new Promise<void>(async (resolve, reject) => {
+		const transaction = legacyDb.transaction([historyDbStore], "readwrite");
+		transaction.onabort = transaction.onerror = reject;
+		transaction.oncomplete = () => resolve();
+
+		const store = transaction.objectStore(historyDbStore);
+		store.delete(user_id);
+
+		transaction.commit();
 	});
 }

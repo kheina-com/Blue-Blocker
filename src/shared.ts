@@ -17,7 +17,7 @@ import {
 	ReasonTransphobia,
 	ReasonPromoted,
 } from './constants';
-import { commafy, EscapeHtml, FormatLegacyName, IsUserLegacyVerified, MakeToast } from './utilities';
+import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory } from './utilities';
 
 // Define constants that shouldn't be exported to the rest of the addon
 const queue = new BlockQueue(api.storage.local);
@@ -125,6 +125,7 @@ function unblockUser(user: { name: string, screen_name: string }, user_id: strin
 				}
 				else {
 					MakeToast(`unblocked @${user.screen_name}, they won't be blocked again.`, config);
+					RemoveUserBlockHistory(user_id);
 					console.log(logstr, `unblocked ${FormatLegacyName(user)}`);
 				}
 			}).catch(error => {
@@ -324,6 +325,7 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 				}
 				else {
 					blockCounter.increment();
+					AddUserBlockHistory({ user_id, user, reason });
 					console.log(logstr, `blocked ${FormatLegacyName(user)} due to ${ReasonMap[reason]}.`);
 					api.storage.local.set({ [EventKey]: { type: UserBlockedEvent, user, user_id, reason } })
 				}

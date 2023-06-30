@@ -1,4 +1,4 @@
-import { logstr, IsVerifiedAction, SuccessStatus } from "./constants";
+import { logstr, AddToHistoryAction, IsVerifiedAction, RemoveFromHistoryAction, SuccessStatus } from "./constants";
 
 export function abbreviate(value: number): string {
 	if (value >= 1e10)
@@ -40,6 +40,28 @@ export async function IsUserLegacyVerified(user_id: string, handle: string): Pro
 	}
 
 	return response.result;
+}
+
+export async function AddUserBlockHistory(user: BlockUser): Promise<void> {
+	// @ts-ignore
+	user.action = AddToHistoryAction;
+	const response = await chrome.runtime.sendMessage(user) as { status: string, result: null };
+
+	if (response?.status !== SuccessStatus) {
+		const message = "unable to add user to block history";
+		console.error(logstr, message, response);
+		throw new Error(message);
+	}
+}
+
+export async function RemoveUserBlockHistory(user_id: string): Promise<void> {
+	const response = await chrome.runtime.sendMessage({ action: RemoveFromHistoryAction, user_id }) as { status: string, result: null };
+
+	if (response?.status !== SuccessStatus) {
+		const message = "unable to remove user from block history";
+		console.error(logstr, message, response);
+		throw new Error(message);
+	}
 }
 
 export function FormatLegacyName(user: { name: string, screen_name: string }) {
