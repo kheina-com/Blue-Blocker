@@ -28,7 +28,11 @@ api.storage.sync.get(DefaultOptions).then(async items => {
 
 // populate verified db
 api.storage.sync.onChanged.addListener(async items => {
-	if (items.hasOwnProperty('skipVerified') && items.skipVerified.newValue) {
+	if (
+		items.hasOwnProperty('skipVerified') &&
+		items.skipVerified.oldValue === false &&
+		items.skipVerified.newValue === true
+	) {
 		await PopulateVerifiedDb();
 	}
 });

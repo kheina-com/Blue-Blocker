@@ -153,6 +153,7 @@ export async function PopulateVerifiedDb() {
 				throw new Error(`legacy verified users database (${commafy(count)}) did not contain the expected number of users (${commafy(expectedVerifiedUsersCount)})`);
 			}
 		}
+		api.storage.sync.set({ skipVerified: true });
 		legacyDbLoaded = true;
 	};
 
@@ -188,6 +189,7 @@ export interface BlockedUser {
 	reason: number,
 	external_reason?: string,
 	state: number,
+	time: Date,
 }
 
 const historyDbName = "blue-blocker-db";
@@ -215,6 +217,7 @@ export function ConnectHistoryDb(): Promise<IDBDatabase> {
 			const store = historyDb.createObjectStore(historyDbStore, { keyPath: "user_id" });
 			store.createIndex("user.name", "user.name", { unique: false });
 			store.createIndex("user.screen_name", "user.screen_name", { unique: false });
+			store.createIndex("time", "time", { unique: false });
 			console.log(logstr, "created history database.");
 		};
 
@@ -230,6 +233,7 @@ export function AddUserToHistory(blockUser: BlockUser): Promise<void> {
 	const user: BlockedUser = {
 		...blockUser,
 		state: HistoryStateBlocked,
+		time: new Date(),
 	};
 	return new Promise<void>(async (resolve, reject) => {
 		const transaction = historyDb.transaction([historyDbStore], "readwrite");
@@ -265,6 +269,7 @@ export function RemoveUserFromHistory(user_id: string): Promise<void> {
 			});
 
 			user.state = HistoryStateUnblocked;
+			user.time = new Date();
 			store.put(user);
 
 			transaction.commit();

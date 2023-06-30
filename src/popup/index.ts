@@ -148,8 +148,6 @@ document.addEventListener("DOMContentLoaded", () => {
 		popupActiveTab = tab;
 		api.storage.local.set({
 			popupActiveTab,
-		}).then(() => {
-			console.debug(logstr, "set active tab:", popupActiveTab);
 		});
 	}
 

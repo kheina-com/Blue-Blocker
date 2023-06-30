@@ -15,7 +15,8 @@ blockCounter.getCriticalPoint(refid)
 		const transaction = db.transaction([historyDbStore], "readonly");
 		transaction.onabort = transaction.onerror = reject;
 		const store = transaction.objectStore(historyDbStore);
-		const req = store.getAll();
+		const index = store.index("time");
+		const req = index.getAll();
 
 		req.onerror = reject;
 		req.onsuccess = () => {
@@ -25,18 +26,18 @@ blockCounter.getCriticalPoint(refid)
 	}).then(users => {
 		const queueDiv = document.getElementById("block-history") as HTMLElement;
 
+		document.getElementsByName("blocked-users-count").forEach(e =>
+			e.innerText = commafy(users.length)
+		);
+
 		if (users.length === 0) {
-			queueDiv.textContent = "your block queue is empty";
+			queueDiv.textContent = "your block history is empty";
 			return;
 		}
 
 		queueDiv.innerHTML = "";
 
 		(() => {
-			document.getElementsByName("blocked-users-count").forEach(e =>
-				e.innerText = commafy(users.length)
-			);
-
 			blockCounter.getCriticalPoint(refid)
 			.then(() => blockCounter.storage.get({ BlockCounter: 0 }))
 			.then(items => items.BlockCounter as number)
@@ -70,7 +71,7 @@ blockCounter.getCriticalPoint(refid)
 		})();
 
 		const reasons: { [r: number]: number } = { }
-		users.forEach(item => {
+		users.reverse().forEach(item => {
 			if (!reasons.hasOwnProperty(item.reason)) {
 				reasons[item.reason] = 0;
 			}
@@ -90,6 +91,15 @@ blockCounter.getCriticalPoint(refid)
 			const state = item.state === HistoryStateBlocked ? "blocked" : "unblocked";
 			p3.innerText = "current state: " + state;
 			div.appendChild(p3);
+
+			const p4 = document.createElement("p");
+			const datetime = item.time.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' })
+				.replace(`, ${new Date().getFullYear()}`, '')
+				+ ', '
+				+ item.time.toLocaleTimeString()
+				.toLowerCase();
+			p4.innerText = state + " on " + datetime;
+			div.appendChild(p4);
 
 			queueDiv.appendChild(div);
 		});
