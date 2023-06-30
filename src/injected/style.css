@@ -39,7 +39,7 @@
 	background-position-x: 1em;
 	background-position-y: center;
 	pointer-events: all;
-	padding: 1em 1.5em 1em 4.25em;
+	padding: 0.75em 1.5em 0.75em 4.25em;
 	margin: 0 0 25px 25px;
 	border: var(--border-size) solid var(--bordercolor);
 	border-radius: var(--border-radius);
@@ -97,8 +97,8 @@
 #injected-blue-block-toasts .toast a.close {
 	color: var(--subtle);
 	font-size: 1.5em;
-	padding: 0.5em;
-	margin: -0.5em -0.5em -0.5em 0.25em;
+	padding: 0.5em 0.7em;
+	margin: -0.5em -0.8em -0.5em 0.15em;
 }
 #injected-blue-block-toasts .toast a.close:hover {
 	color: var(--close);
