@@ -29,7 +29,6 @@
 		<input type="checkbox" id="block-promoted-tweets">
 		<input type="checkbox" id="block-nft-avatars">
 		<input type="checkbox" id="soupcan-integration">
-		<input id="import-safelist" type="file" accept="text/plain,text/csv,application/json" autocomplete="off">
 		<div class="tab" id="quick">
 			<div class="option">
 				<label for="suspend-block-collection" name="suspend-block-collection">
@@ -210,10 +209,10 @@
 				</div>
 			</div>
 			<div class="safelist">
-				<p name="safelist-status">safelist importing supports json and csv. csv must use comma separators and no quotes</p>
+				<p name="safelist-status">safelist importing must be done on a separate page. click import to be redirected</p>
 				<div class="option">
 					<p>safelist</p>
-					<label name="import-safelist" for="import-safelist" class="button">import</label>
+					<a href="/src/pages/safelist/index.html" target="_blank" class="button">import</a>
 					<a name="export-safelist" class="button">export</a>
 					<a name="clear-safelist" class="button">clear</a>
 				</div>

@@ -1,6 +1,6 @@
-import { api, logstr, DefaultOptions, SoupcanExtensionId } from '../constants.js';
-import { abbreviate, commafy } from '../utilities.js';
-import './style.css';
+import { api, logstr, DefaultOptions, ErrorEvent, EventKey, MessageEvent, SoupcanExtensionId } from "../constants.js";
+import { abbreviate, commafy } from "../utilities.js";
+import "./style.css";
 
 function checkHandler(target: HTMLInputElement, config: Config, key: string, options: { optionName?: string, callback?: (t: HTMLInputElement) => void, statusText?: string } = { }) {
 	// @ts-ignore
@@ -89,98 +89,12 @@ function sliderMirror(name: string, key: "popupTimer" | "blockInterval", config:
 	});
 }
 
-function importSafelist(target: HTMLInputElement) {
-	if (!target.files?.length) {
-		return;
-	}
-	const reader = new FileReader();
-	let loaded: number = 0;
-	let success: boolean;
-	reader.addEventListener("load", l => {
-		// @ts-ignore
-		const payload = l.target.result as string;
-		api.storage.sync.get({ unblocked: { }}).then(items => {
-			// so we have plain text files as an accepted type, so lets try both json and csv formats
-			try {
-				// json
-				const userList = JSON.parse(payload) as [{ user_id?: string, id?: string, screen_name?: string, name?: string }];
-				userList.forEach(user => {
-					const user_id = user?.user_id ?? user.id;
-					if (!user_id) {
-						throw new Error("failed to read user, expected at least one of: {user_id, id}.");
-					}
-					success = true;
-					items.unblocked[user_id] = user?.screen_name ?? user?.name;
-					loaded++;
-				});
-			} catch (e) {
-				console.debug(logstr, "json failed", e, "trying csv...");
-			}
-			try {
-				// csv
-				console.debug(logstr, "attempting to read file using csv scheme");
-				let headers: Array<string>;
-				payload.split("\n").map(i => i.trim()).forEach(line => {
-					if (line.match(/"'/)) {
-						throw new Error("failed to read file, csv must not include quotes.");
-					}
-					if (headers === undefined) {
-						headers = line.split(",").map(i => i.trim());
-						if (!headers.includes("user_id") && !headers.includes("id")) {
-							throw new Error("failed to read file, expected at least one of: {user_id, id}.");
-						}
-						console.debug(logstr, "headers:", headers);
-						return;
-					}
-					const user: { user_id?: string, id?: string, screen_name?: string, name?: string } = { };
-					// @ts-ignore just ignore this monstrosity, it makes it easier afterwards
-					line.split(",").map(i => i.trim()).forEach((value, index) => user[headers[index]] = value);
-					const user_id = user?.user_id ?? user.id as string;
-					success = true;
-					const name = user?.screen_name ?? user?.name;
-					switch (name) {
-						default:
-							// theoretically we'd want to search for any character that can't
-							// be in a handle, but just whitespace will do
-							if (!name.match(/\s/)) {
-								items.unblocked[user_id] = name;
-								break;
-							}
-						case null:
-						case undefined:
-						case "":
-						case "null":
-						case "undefined":
-							items.unblocked[user_id] = null;
-					}
-					loaded++;
-				});
-			} catch (e) {
-				console.debug(logstr, "csv failed.", e);
-			}
-			if (!success) {
-				throw new Error("failed to read file. make sure file is csv or json and contains at least user_id or id for each user.");
-			}
-			return api.storage.sync.set(items);
-		}).then(() => {
-			const msg = `loaded ${commafy(loaded)} users into safelist`;
-			console.log(logstr, msg);
-			document.getElementsByName("safelist-status").forEach(s => {
-				s.innerText = msg;
-			});
-		}).catch(e => document.getElementsByName("safelist-status").forEach(s => s.innerText = e.message));
-	});
-	for (const i of target.files) {
-		reader.readAsText(i);
-	}
-}
-
 function exportSafelist() {
 	api.storage.sync.get({ unblocked: { }}).then(items => {
 		// the unblocked list needs to be put into a different format for export
 		const safelist = items.unblocked as { [k: string]: string | undefined };
 		const content = "user_id,screen_name\n" + Object.entries(safelist).map(i => i[0] + "," + (i[1] ?? "this user's @ is not stored")).join("\n");
-		const e = document.createElement('a');
+		const e = document.createElement("a");
 		e.href = "data:text/csv;charset=utf-8," + encodeURIComponent(content);
 		e.target = "_blank";
 		e.download = "BlueBlockerSafelist.csv";
@@ -257,7 +171,6 @@ document.addEventListener("DOMContentLoaded", () => {
 	const blockPromoted = document.getElementById("block-promoted-tweets") as HTMLInputElement;
 	const blockNftAvatars = document.getElementById("block-nft-avatars") as HTMLInputElement;
 	const soupcanIntegration = document.getElementById("soupcan-integration") as HTMLInputElement;
-	const safelistInput = document.getElementById("import-safelist") as HTMLInputElement;
 
 	api.storage.sync.get(DefaultOptions).then(_config => {
 		const config = _config as Config;
@@ -310,7 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		sliderMirror("popup-timer", "popupTimer", config);
 
 		// safelist logic
-		safelistInput.addEventListener("input", e => importSafelist(e.target as HTMLInputElement));
+		// import cannot be done here, only on a standalone page
 		document.getElementsByName("export-safelist").forEach(e => e.addEventListener("click", exportSafelist));
 		document.getElementsByName("clear-safelist").forEach(e => {
 			e.addEventListener("click", () =>

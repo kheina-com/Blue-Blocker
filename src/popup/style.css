@@ -197,20 +197,6 @@ label:focus {
 	color: var(--interact);
 }
 
-label.border {
-	display: inline-flex;
-	padding: 0.5em 1em;
-	border: var(--border-size) solid var(--bordercolor);
-	background: var(--bg2color);
-	box-shadow: 0 2px 3px 1px var(--shadowcolor);
-	border-radius: var(--border-radius);
-}
-label.border:hover,
-label.border:active,
-label.border:focus {
-	border-color: var(--borderhover);
-	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
-}
 label div.checkmark {
 	position: relative;
 	display: block;

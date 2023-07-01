@@ -307,7 +307,7 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 			fetch(url, options).then(response => {
 				console.debug(logstr, "block response:", response);
 
-				if (response.status === 403) {
+				if (response.status === 403 || response.status === 401) {
 					// user has been logged out, we need to stop queue and re-add
 					consumer.stop();
 					queue.push({user, user_id, reason});
@@ -317,8 +317,9 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 					console.log(logstr, `did not block ${FormatLegacyName(user)}, user no longer exists`);
 				}
 				else if (response.status >= 300) {
+					consumer.stop();
 					queue.push({user, user_id, reason});
-					console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, response);
+					console.error(logstr, `failed to block ${FormatLegacyName(user)}, consumer stopped just in case.`, response);
 				}
 				else {
 					blockCounter.increment();
