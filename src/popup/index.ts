@@ -1,6 +1,6 @@
-import { api, logstr, DefaultOptions, SoupcanExtensionId } from '../constants.js';
-import { abbreviate, commafy } from '../utilities.js';
-import './style.css';
+import { api, logstr, DefaultOptions, ErrorEvent, EventKey, MessageEvent, SoupcanExtensionId } from "../constants.js";
+import { abbreviate, commafy } from "../utilities.js";
+import "./style.css";
 
 function checkHandler(target: HTMLInputElement, config: Config, key: string, options: { optionName?: string, callback?: (t: HTMLInputElement) => void, statusText?: string } = { }) {
 	// @ts-ignore
@@ -89,6 +89,20 @@ function sliderMirror(name: string, key: "popupTimer" | "blockInterval", config:
 	});
 }
 
+function exportSafelist() {
+	api.storage.sync.get({ unblocked: { }}).then(items => {
+		// the unblocked list needs to be put into a different format for export
+		const safelist = items.unblocked as { [k: string]: string | undefined };
+		const content = "user_id,screen_name\n" + Object.entries(safelist).map(i => i[0] + "," + (i[1] ?? "this user's @ is not stored")).join("\n");
+		const e = document.createElement("a");
+		e.href = "data:text/csv;charset=utf-8," + encodeURIComponent(content);
+		e.target = "_blank";
+		e.download = "BlueBlockerSafelist.csv";
+		e.click();
+	});
+}
+
+// start this immediately so that it's ready when the document loads
 const popupPromise = api.storage.local.get({ popupActiveTab: "quick" });
 
 // restore state from storage
@@ -110,6 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 		switch (tab) {
 			case "quick":
+				document.body.style.overflowY = "hidden";
 				quickTabButtonBorder.style.borderBottomWidth = "5px";
 				advancedTabButtonBorder.style.borderBottomWidth = "0";
 
@@ -118,6 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
 				break;
 
 			case "advanced":
+				document.body.style.overflowY = "";
 				quickTabButtonBorder.style.borderBottomWidth = "0";
 				advancedTabButtonBorder.style.borderBottomWidth = "5px";
 
@@ -205,6 +221,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
 		sliderMirror("block-interval", "blockInterval", config);
 		sliderMirror("popup-timer", "popupTimer", config);
+
+		// safelist logic
+		// import cannot be done here, only on a standalone page
+		document.getElementsByName("export-safelist").forEach(e => e.addEventListener("click", exportSafelist));
+		document.getElementsByName("clear-safelist").forEach(e => {
+			e.addEventListener("click", () =>
+				api.storage.sync.set({ unblocked: { }}).then(() =>
+					document.getElementsByName("safelist-status").forEach(s => s.innerText = "cleared safelist.")
+				)
+			);
+		});
 	});
 
 	// @ts-ignore

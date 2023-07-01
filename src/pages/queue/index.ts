@@ -1,5 +1,5 @@
 import { BlockQueue } from "../../models/block_queue.js";
-import { FormatLegacyName, RefId } from "../../utilities.js";
+import { EscapeHtml, FormatLegacyName, RefId } from "../../utilities.js";
 import { api, logstr } from "../../constants.js";
 import "./style.css";
 
@@ -64,7 +64,8 @@ queue.getCriticalPoint(refId)
 		}
 
 		const p = document.createElement("p");
-		p.innerHTML = `${user.name} (<a href="https://twitter.com/${user.screen_name}" target="_blank">@${user.screen_name}</a>)`;
+		const screen_name = EscapeHtml(user.screen_name);  // this shouldn't really do anything, but can't be too careful
+		p.innerHTML = `${EscapeHtml(user.name)} (<a href="https://twitter.com/${screen_name}" target="_blank">@${screen_name}</a>)`;
 		div.appendChild(p);
 
 		const remove = document.createElement("button");
