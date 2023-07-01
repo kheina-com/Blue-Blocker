@@ -17,7 +17,7 @@ import {
 	ReasonTransphobia,
 	ReasonPromoted,
 } from './constants';
-import { commafy, FormatLegacyName, IsUserLegacyVerified, MakeToast } from './utilities';
+import { commafy, EscapeHtml, FormatLegacyName, IsUserLegacyVerified, MakeToast } from './utilities';
 
 // Define constants that shouldn't be exported to the rest of the addon
 const queue = new BlockQueue(api.storage.local);
@@ -169,7 +169,8 @@ api.storage.local.onChanged.addListener((items) => {
 						const parent = b.parentNode as ParentNode;
 						parent.removeChild(b);
 					};
-					MakeToast(`blocked ${name} (<a href="/${user.screen_name}">@${user.screen_name}</a>)`, config, { html: true, elements: [b]})
+					const screen_name = EscapeHtml(user.screen_name);  // this shouldn't really do anything, but can't be too careful
+					MakeToast(`blocked ${EscapeHtml(name)} (<a href="/${screen_name}">@${screen_name}</a>)`, config, { html: true, elements: [b]})
 				}
 				break;
 

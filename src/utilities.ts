@@ -243,3 +243,7 @@ export function MakeToast(content: string, config: Config, options: { html?: boo
 	t.appendChild(close);
 	ele.appendChild(t);
 }
+
+export function EscapeHtml(text: string): string {
+	return new Option(text).innerHTML;
+}
