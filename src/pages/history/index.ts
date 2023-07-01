@@ -30,45 +30,43 @@ blockCounter.getCriticalPoint(refid)
 			e.innerText = commafy(users.length)
 		);
 
+		blockCounter.getCriticalPoint(refid)
+		.then(() => blockCounter.storage.get({ BlockCounter: 0 }))
+		.then(items => items.BlockCounter as number)
+		.then(count => {
+			if (users.length === count) {
+				return;
+			}
+
+			const blockCounterCurrentValue = document.getElementById("block-counter-current-value") as HTMLElement;
+			blockCounterCurrentValue.innerText = commafy(count);
+
+			const resetCounter = document.getElementById("reset-counter") as HTMLElement;
+			const a = resetCounter.firstElementChild as HTMLElement;
+			a.addEventListener("click", () => {
+				const refid = RefId();
+				blockCounter.getCriticalPoint(refid)
+				.then(() =>
+					blockCounter.storage.set({ BlockCounter: users.length })
+				).then(() => {
+					console.log(logstr, "reset block counter to", users.length);
+					resetCounter.style.display = "";
+				}).finally(() =>
+					blockCounter.releaseCriticalPoint(refid)
+				);
+			});
+
+			resetCounter.style.display = "block";
+		}).finally(() =>
+			blockCounter.releaseCriticalPoint(refid)
+		);
+
 		if (users.length === 0) {
 			queueDiv.textContent = "your block history is empty";
 			return;
 		}
 
 		queueDiv.innerHTML = "";
-
-		(() => {
-			blockCounter.getCriticalPoint(refid)
-			.then(() => blockCounter.storage.get({ BlockCounter: 0 }))
-			.then(items => items.BlockCounter as number)
-			.then((count) => {
-				if (users.length === count) {
-					return;
-				}
-
-				const blockCounterCurrentValue = document.getElementById("block-counter-current-value") as HTMLElement;
-				blockCounterCurrentValue.innerText = commafy(count);
-
-				const resetCounter = document.getElementById("reset-counter") as HTMLElement;
-				const a = resetCounter.firstElementChild as HTMLElement;
-				a.addEventListener("click", () => {
-					const refid = RefId();
-					blockCounter.getCriticalPoint(refid)
-					.then(() =>
-						blockCounter.storage.set({ BlockCounter: users.length })
-					).then(() => {
-						console.log(logstr, "reset block counter to", users.length);
-						resetCounter.style.display = "";
-					}).finally(() =>
-						blockCounter.releaseCriticalPoint(refid)
-					);
-				});
-
-				resetCounter.style.display = "block";
-			}).finally(() =>
-				blockCounter.releaseCriticalPoint(refid)
-			);
-		})();
 
 		const reasons: { [r: number]: number } = { };
 		users.reverse().forEach(item => {
