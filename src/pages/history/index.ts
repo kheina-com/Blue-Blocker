@@ -1,4 +1,4 @@
-import { commafy, RefId } from "../../utilities.js";
+import { commafy, EscapeHtml, RefId } from "../../utilities.js";
 import { api, logstr, HistoryStateBlocked, ReasonMap, ReasonExternal } from "../../constants.js";
 import { BlockedUser, ConnectHistoryDb, historyDbStore } from "../../background/db.js";
 import { BlockCounter } from "../../models/block_counter";
@@ -79,7 +79,8 @@ blockCounter.getCriticalPoint(refid)
 
 			const div = document.createElement("div");
 			const p = document.createElement("p");
-			p.innerHTML = `${item.user.name} (<a href="https://twitter.com/${item.user.screen_name}" target="_blank">@${item.user.screen_name}</a>)`;
+			const screen_name = EscapeHtml(item.user.screen_name);
+			p.innerHTML = `${EscapeHtml(item.user.name)} (<a href="https://twitter.com/${screen_name}" target="_blank">@${screen_name}</a>)`;
 			div.appendChild(p);
 
 			const p2 = document.createElement("p");
