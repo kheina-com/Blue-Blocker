@@ -24,7 +24,7 @@ function importSafelist(target: HTMLInputElement) {
 						throw new Error("failed to read user, expected at least one of: {user_id, id}.");
 					}
 					success = true;
-					items.unblocked[user_id] = user?.screen_name ?? user?.name;
+					items.unblocked[user_id] = user?.screen_name ?? user?.name ?? items.unblocked[user_id] ?? null;
 					loaded++;
 				});
 			} catch (e) {
@@ -56,7 +56,7 @@ function importSafelist(target: HTMLInputElement) {
 						default:
 							// theoretically we'd want to search for any character that can't
 							// be in a handle, but just whitespace will do
-							if (!name.match(/\s/)) {
+							if (!name.match(/\s"'/)) {
 								items.unblocked[user_id] = name;
 								break;
 							}
@@ -65,7 +65,7 @@ function importSafelist(target: HTMLInputElement) {
 						case "":
 						case "null":
 						case "undefined":
-							items.unblocked[user_id] = null;
+							items.unblocked[user_id] = items.unblocked[user_id] ?? null;
 					}
 					loaded++;
 				});
