@@ -37,10 +37,7 @@ body {
 	font-size: 1.1rem;
 }
 
-a,
-input,
-label,
-textarea {
+a, input, label, textarea {
 	cursor: pointer;
 	pointer-events: all;
 	text-decoration: none;
@@ -235,7 +232,8 @@ label.checked div.checkmark div {
 }
 
 .skip-follower-count.option,
-.block-promoted-tweets.option {
+.block-promoted-tweets.option,
+.toasts-location.option {
 	margin-left: 0.5em;
 	margin-top: -0.5em;
 }
@@ -251,8 +249,10 @@ input[type=number] {
 	text-align: right;
 	width: 7em;
 	height: 1em;
-	position: relative;
+}
+input[type=number], select {
 	top: -0.1em;
+	position: relative;
 	display: inline-block;
 	padding: 0.5em 1em;
 	background: var(--bg0color);
@@ -265,12 +265,12 @@ input[type=number] {
 	-o-transition: var(--transition) var(--fadetime);
 	transition: var(--transition) var(--fadetime);
 }
-input[type=number]:hover {
+input[type=number]:hover, select:hover {
 	color: var(--interact);
 	border-color: var(--borderhover);
 	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
 }
-input[type=number]:focus {
+input[type=number]:focus, select:focus {
 	color: var(--textcolor);
 }
 

@@ -3,6 +3,7 @@
 interface Config {
 	suspendedBlockCollection: boolean,
 	showBlockPopups: boolean,
+	toastsLocation: "top-left" | "top-right" | "bottom-left" | "bottom-right",
 	mute: boolean,
 	blockFollowing: boolean,
 	blockFollowers: boolean,
