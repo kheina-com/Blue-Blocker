@@ -43,9 +43,7 @@ export async function IsUserLegacyVerified(user_id: string, handle: string): Pro
 }
 
 export async function AddUserBlockHistory(user: BlockUser): Promise<void> {
-	// @ts-ignore
-	user.action = AddToHistoryAction;
-	const response = await chrome.runtime.sendMessage(user) as { status: string, result: null };
+	const response = await chrome.runtime.sendMessage({ action: AddToHistoryAction, data: user }) as { status: string, result: null };
 
 	if (response?.status !== SuccessStatus) {
 		const message = "unable to add user to block history";
@@ -55,7 +53,7 @@ export async function AddUserBlockHistory(user: BlockUser): Promise<void> {
 }
 
 export async function RemoveUserBlockHistory(user_id: string): Promise<void> {
-	const response = await chrome.runtime.sendMessage({ action: RemoveFromHistoryAction, user_id }) as { status: string, result: null };
+	const response = await chrome.runtime.sendMessage({ action: RemoveFromHistoryAction, data: { user_id } }) as { status: string, result: null };
 
 	if (response?.status !== SuccessStatus) {
 		const message = "unable to remove user from block history";

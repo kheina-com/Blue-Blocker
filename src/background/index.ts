@@ -72,7 +72,7 @@ api.runtime.onMessage.addListener((m, s, r) => { (async (_message, sender, respo
 			break;
 
 		case AddToHistoryAction:
-			const historyMessage = _message as BlockUser;
+			const historyMessage = _message.data as BlockUser;
 			try {
 				await AddUserToHistory(historyMessage);
 				response = { status: SuccessStatus, result: null } as SuccessResponse;
@@ -82,7 +82,7 @@ api.runtime.onMessage.addListener((m, s, r) => { (async (_message, sender, respo
 			break;
 
 		case RemoveFromHistoryAction:
-			const removeMessage = _message as { user_id: string };
+			const removeMessage = _message.data as { user_id: string };
 			try {
 				await RemoveUserFromHistory(removeMessage.user_id);
 				response = { status: SuccessStatus, result: null } as SuccessResponse;
