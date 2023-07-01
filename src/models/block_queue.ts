@@ -1,12 +1,5 @@
 import { RefId } from '../utilities';
 
-interface BlockUser {
-	user_id: string,
-	user: { name: string, screen_name: string },
-	reason: number,
-	external_reason?: string,
-}
-
 const criticalPointKey = 'BlockQueueCriticalPoint';
 export class BlockQueue {
 	storage: typeof chrome.storage.local | typeof browser.storage.local;

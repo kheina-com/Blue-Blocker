@@ -1,5 +1,5 @@
 import { BlockQueue } from "../../models/block_queue.js";
-import { EscapeHtml, FormatLegacyName, RefId } from "../../utilities.js";
+import { commafy, EscapeHtml, FormatLegacyName, RefId } from "../../utilities.js";
 import { api, logstr } from "../../constants.js";
 import "./style.css";
 
@@ -36,60 +36,160 @@ async function unqueueUser(user_id: string, safelist: boolean) {
 	await api.storage.local.set(items);
 }
 
-// interval doesn't run immediately, so do that here
-queue.getCriticalPoint(refId)
-.then(() => api.storage.local.get({ BlockQueue: [] }))
-.then(items => {
-	const cue = items.BlockQueue as BlockUser[];
-	const queueDiv = document.getElementById("block-queue") as HTMLElement;
+function loadQueue() {
+	// interval doesn't run immediately, so do that here
+	queue.getCriticalPoint(refId)
+	.then(() => api.storage.local.get({ BlockQueue: [] }))
+	.then(items => {
+		const cue = items.BlockQueue as BlockUser[];
+		const queueDiv = document.getElementById("block-queue") as HTMLElement;
 
-	if (cue.length === 0) {
-		queueDiv.textContent = "your block queue is empty";
-		return;
-	}
-
-	queueDiv.innerHTML = "";
-
-	cue.forEach(item => {
-		const { user, user_id } = item;
-		const div = document.createElement("div");
-
-		// required for users enqueued before 0.3.0
-		if (user.hasOwnProperty("legacy")) {
-			// @ts-ignore
-			for (const [key, value] of Object.entries(user.legacy)) {
-				// @ts-ignore
-				user[key] = value;
-			}
+		if (cue.length === 0) {
+			queueDiv.textContent = "your block queue is empty";
+			return;
 		}
 
-		const p = document.createElement("p");
-		const screen_name = EscapeHtml(user.screen_name);  // this shouldn't really do anything, but can't be too careful
-		p.innerHTML = `${EscapeHtml(user.name)} (<a href="https://twitter.com/${screen_name}" target="_blank">@${screen_name}</a>)`;
-		div.appendChild(p);
+		queueDiv.innerHTML = "";
 
-		const remove = document.createElement("button");
-		remove.onclick = () => {
-			div.removeChild(remove);
-			unqueueUser(user_id, false).then(() => {
-				queueDiv.removeChild(div);
+		cue.forEach(item => {
+			const { user, user_id } = item;
+			const div = document.createElement("div");
+
+			// required for users enqueued before 0.3.0
+			if (user.hasOwnProperty("legacy")) {
+				// @ts-ignore
+				for (const [key, value] of Object.entries(user.legacy)) {
+					// @ts-ignore
+					user[key] = value;
+				}
+			}
+
+			const p = document.createElement("p");
+			const screen_name = EscapeHtml(user.screen_name);  // this shouldn't really do anything, but can't be too careful
+			p.innerHTML = `${EscapeHtml(user.name)} (<a href="https://twitter.com/${screen_name}" target="_blank">@${screen_name}</a>)`;
+			div.appendChild(p);
+
+			const remove = document.createElement("button");
+			remove.onclick = () => {
+				div.removeChild(remove);
+				unqueueUser(user_id, false).then(() => {
+					queueDiv.removeChild(div);
+				});
+				console.log(logstr, `removed ${FormatLegacyName(user)} from queue`);
+			};
+			remove.textContent = "remove";
+			div.appendChild(remove);
+
+			const never = document.createElement("button");
+			never.onclick = () => {
+				div.removeChild(never);
+				unqueueUser(user_id, true).then(() => {
+					queueDiv.removeChild(div);
+				});
+				console.log(logstr, `removed and safelisted ${FormatLegacyName(user)} from queue`);
+			};
+			never.textContent = "never block";
+			div.appendChild(never);
+
+			queueDiv.appendChild(div);
+		});
+	});
+}
+loadQueue();
+
+document.addEventListener("DOMContentLoaded", () => {
+	const importButton = document.getElementById("import-button") as HTMLElement;
+	const importArrow = document.getElementById("import-arrow") as HTMLElement;
+	const importBlock = document.getElementById("importer") as HTMLElement;
+
+	importButton.addEventListener("click", e => {
+		switch (importArrow.innerText) {
+			case "▾":
+				importBlock.style.display = "block";
+				importArrow.innerText = "▴";
+				break;
+			case "▴":
+				importBlock.style.display = "";
+				importArrow.innerText = "▾";
+				break;
+			default:
+				// what?
+		}
+	});
+
+	const input = document.getElementById("block-import") as HTMLInputElement;
+	const importLabel = document.getElementById("block-import-label") as HTMLElement;
+	const inputStatus = importLabel.firstElementChild as HTMLElement;
+	let timeout: number | null = null;
+
+	function onInput(files: FileList | null | undefined) {
+		if (timeout) {
+			clearTimeout(timeout);
+		}
+
+		if (!files?.length) {
+			return;
+		}
+
+		const reader = new FileReader();
+		let loaded: number = 0;
+		let failures: number = 0;
+		reader.addEventListener("load", l => {
+			inputStatus.innerText = "importing...";
+			// @ts-ignore
+			const payload = l.target.result as string;
+			api.storage.local.get({ BlockQueue: [] }).then(items => {
+				const queue: { [u: string]: BlockUser } = { };
+				for (const user of items.BlockQueue as BlockUser[]) {
+					queue[user.user_id] = user;
+				}
+
+				const userList = JSON.parse(payload) as BlockUser[];
+				userList.forEach(user => {
+					// explicitly check to make sure all fields are populated
+					if (
+						user?.user_id === undefined ||
+						user?.user?.name === undefined ||
+						user?.user?.screen_name === undefined ||
+						user?.reason === undefined
+					) {
+						console.error(logstr, "user object could not be processed:", user);
+						failures++;
+						return;
+					}
+
+					queue[user.user_id] = user;
+					loaded++;
+				});
+
+				return api.storage.local.set({ BlockQueue: Array.from(Object.values(queue)) });
+			}).then(() => {
+				console.log(logstr, "successfully loaded", loaded, "users into queue. failures:", failures);
+				inputStatus.innerText = `loaded ${commafy(loaded)} users into queue (${commafy(failures)} failures)`;
+				loadQueue();
+			}).catch(e => {
+				console.error(logstr, e);
+				inputStatus.innerText = e.message;
+			}).finally(() => {
+				timeout = setTimeout(() => {
+					inputStatus.innerText = "Click or Drag to Import File";
+					timeout = null;
+				}, 10e3);
 			});
-			console.log(logstr, `removed ${FormatLegacyName(user)} from queue`);
-		};
-		remove.textContent = "remove";
-		div.appendChild(remove);
+		});
+		for (const i of files) {
+			reader.readAsText(i);
+		}
+	}
 
-		const never = document.createElement("button");
-		never.onclick = () => {
-			div.removeChild(never);
-			unqueueUser(user_id, true).then(() => {
-				queueDiv.removeChild(div);
-			});
-			console.log(logstr, `removed and safelisted ${FormatLegacyName(user)} from queue`);
-		};
-		never.textContent = "never block";
-		div.appendChild(never);
-
-		queueDiv.appendChild(div);
+	input.addEventListener("input", e => {
+		const target = e.target as HTMLInputElement;
+		onInput(target.files)
+	});
+	importLabel.addEventListener("dragenter", e => e.preventDefault());
+	importLabel.addEventListener("dragover", e => e.preventDefault());
+	importLabel.addEventListener("drop", e => {
+		e.preventDefault();
+		onInput(e?.dataTransfer?.files);
 	});
 });
