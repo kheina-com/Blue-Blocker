@@ -42,6 +42,7 @@ export const Headers = [
 	"sec-fetch-mode",
 	"sec-fetch-site",
 ];
+export const [HistoryStateBlocked, HistoryStateUnblocked] = [0, 1];
 export const ReasonExternal: number = -1;
 export const ReasonBlueVerified: number = 0;
 export const ReasonNftAvatar: number = 1;
@@ -60,8 +61,10 @@ export const Browser = chrome.runtime.getManifest()?.browser_specific_settings?.
 export const SoupcanExtensionId = Browser === "chrome" ? "hcneafegcikghlbibfmlgadahjfckonj" : "soupcan@beth.lgbt";
 
 // internal message actions
-export const [IsVerifiedAction] = ["is_verified"];
-export const [ErrorStatus, SuccessStatus] = ["ERROR", "SUCCESS"];
+export const [IsVerifiedAction, AddToHistoryAction, RemoveFromHistoryAction] = ["is_verified", "add_user_to_history", "remove_user_from_history"];
+export type MessageStatus = "SUCCESS" | "ERROR";
+export const SuccessStatus: MessageStatus = "SUCCESS";
+export const ErrorStatus: MessageStatus = "ERROR";
 
 // multi-tab event keys
 export const EventKey = "MultiTabEvent";

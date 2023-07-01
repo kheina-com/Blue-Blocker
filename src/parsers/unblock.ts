@@ -1,5 +1,5 @@
 import { api, logstr } from '../constants';
-import { MakeToast } from '../utilities';
+import { MakeToast, RemoveUserBlockHistory } from '../utilities';
 import { UnblockCache } from '../shared';
 
 export function HandleUnblock(
@@ -18,6 +18,7 @@ export function HandleUnblock(
 		return;
 	}
 
+	RemoveUserBlockHistory(user_id).catch(console.error);  // just log the error in case the user doesn't exist
 	UnblockCache.add(user_id);
 	const unblocked = config.unblocked;
 	unblocked[user_id] = body.screen_name;

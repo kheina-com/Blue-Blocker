@@ -17,7 +17,7 @@ import {
 	ReasonTransphobia,
 	ReasonPromoted,
 } from './constants';
-import { commafy, EscapeHtml, FormatLegacyName, IsUserLegacyVerified, MakeToast } from './utilities';
+import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory } from './utilities';
 
 // Define constants that shouldn't be exported to the rest of the addon
 const queue = new BlockQueue(api.storage.local);
@@ -124,8 +124,10 @@ function unblockUser(user: { name: string, screen_name: string }, user_id: strin
 					console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, response);
 				}
 				else {
-					MakeToast(`unblocked @${user.screen_name}, they won't be blocked again.`, config);
+					// use catch to retry in case of db failure
+					RemoveUserBlockHistory(user_id).catch(() => RemoveUserBlockHistory(user_id));
 					console.log(logstr, `unblocked ${FormatLegacyName(user)}`);
+					MakeToast(`unblocked @${user.screen_name}, they won't be blocked again.`, config);
 				}
 			}).catch(error => {
 				if (attempt < 3) {
@@ -147,6 +149,7 @@ api.storage.local.onChanged.addListener((items) => {
 		return;
 	}
 	const e = items[EventKey].newValue;
+	console.debug(logstr, "received multi-tab event:", e);
 
 	api.storage.sync.get(DefaultOptions).then(options => {
 		const config = options as Config;
@@ -324,6 +327,8 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 				}
 				else {
 					blockCounter.increment();
+					// use catch to retry in case of db failure
+					AddUserBlockHistory({ user_id, user, reason }).catch(() => AddUserBlockHistory({ user_id, user, reason }));
 					console.log(logstr, `blocked ${FormatLegacyName(user)} due to ${ReasonMap[reason]}.`);
 					api.storage.local.set({ [EventKey]: { type: UserBlockedEvent, user, user_id, reason } })
 				}
