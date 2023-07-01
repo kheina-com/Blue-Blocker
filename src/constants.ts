@@ -12,6 +12,7 @@ export const DefaultOptions: Config = {
 	// by default, spare as many people as possible
 	// let the user decide if they want to be stricter
 	suspendedBlockCollection: false,
+	toastsLocation: "bottom-left",
 	showBlockPopups: true,
 	mute: false,
 	blockFollowing: false,
@@ -31,17 +32,34 @@ export const DefaultOptions: Config = {
 	unblocked: {},
 };
 export const Headers = [
+	// set by function:
+	// "content-type",
+	// "content-length",
+	// "x-csrf-token",  // this is a special one with special logic
+	// set by fetch:
+	// "host",
+	// "origin",
+	// "referer",
+	// "connection",
+	// "keep-alive",
+	// loaded from requests:
+	"accept",
+	"accept-encoding",
+	"accept-language",
 	"authorization",
-	"x-twitter-active-user",
-	"x-twitter-auth-type",
-	"x-twitter-client-language",
 	"sec-ch-ua",
 	"sec-ch-ua-mobile",
 	"sec-ch-ua-platform",
 	"sec-fetch-dest",
 	"sec-fetch-mode",
 	"sec-fetch-site",
+	"user-agent",
+	"x-client-uuid",
+	"x-twitter-active-user",
+	"x-twitter-auth-type",
+	"x-twitter-client-language",
 ];
+export const [HistoryStateBlocked, HistoryStateUnblocked] = [0, 1];
 export const ReasonExternal: number = -1;
 export const ReasonBlueVerified: number = 0;
 export const ReasonNftAvatar: number = 1;
@@ -60,8 +78,10 @@ export const Browser = chrome.runtime.getManifest()?.browser_specific_settings?.
 export const SoupcanExtensionId = Browser === "chrome" ? "hcneafegcikghlbibfmlgadahjfckonj" : "soupcan@beth.lgbt";
 
 // internal message actions
-export const [IsVerifiedAction] = ["is_verified"];
-export const [ErrorStatus, SuccessStatus] = ["ERROR", "SUCCESS"];
+export const [IsVerifiedAction, AddToHistoryAction, RemoveFromHistoryAction] = ["is_verified", "add_user_to_history", "remove_user_from_history"];
+export type MessageStatus = "SUCCESS" | "ERROR";
+export const SuccessStatus: MessageStatus = "SUCCESS";
+export const ErrorStatus: MessageStatus = "ERROR";
 
 // multi-tab event keys
 export const EventKey = "MultiTabEvent";

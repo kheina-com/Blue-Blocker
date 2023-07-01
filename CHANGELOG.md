@@ -8,6 +8,25 @@ Summary
 	5. version timestamp follow the yyyy.MM.dd format
 ```
 
+# v0.3.3 [2023.07.01]
+- feat: track block history, click blocked number in context menu to access (#63)
+- feat: added safelist control buttons: import, export, clear
+- feat: import block lists into queue via json files (#145)
+- feat: added close button to all popups (#68)
+- feat: auto-safelist unblocked users (#136)
+- update: popups can now be placed in any corner of the screen (#68)
+- fix: skip legacy verified error recovery
+- chore: make toasts slightly slimmer
+- chore: more and better header assignment
+- chore: add entropy to block interval
+
+# v0.3.2 [2023.06.28]
+- fix: chrome prior to version 109
+- fix: stop parsing twitter error responses when sent using status 200
+- fix: stop blocking automated accounts (those clearly labelled as such by twitter)
+- fix: better error handling in blocking logic, wrap legacy verified logic to prevent deadlocks when db doesn't start
+- chore: remove some unneeded debug logs
+
 # v0.3.1 [2023.06.27]
 - feat: overhaul popup menu to have new quickmenu for quick changes and an advanced tab for full options list (#141)
 - remove: management permissions requirement in manifest (#155)

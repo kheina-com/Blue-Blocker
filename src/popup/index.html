@@ -12,7 +12,7 @@
 	<body>
 		<span id="version"></span>
 		<h2><img src="/icon/icon.png" alt="🅱️" style="height: 1.2em">lue Blocker</h2>
-		<p class="blocked-users-count">blocked <span id="blocked-users-count"></span> users so far! (<span id="blocked-user-queue-length"></span> queued: <a href="/src/pages/queue/index.html" target="_blank">view</a>)</p>
+		<p class="blocked-users-count">blocked <a id="blocked-users-count" href="/src/pages/history/index.html" target="_blank"></a> users so far! (<span id="blocked-user-queue-length"></span> queued: <a href="/src/pages/queue/index.html" target="_blank">view</a>)</p>
 		<div class="tabs">
 			<a id="button-quick">Quick<div class="border"></div></a>
 			<div class="separator"></div>
@@ -99,6 +99,15 @@
 					<p>show a popup for each blocked user</p>
 				</label>
 				<span name="show-block-popups-status"></span>
+			</div>
+			<div class="toasts-location option" name="show-block-popups-option">
+				<p>∟ popup location: <select name="toasts-location">
+					<option value="top-right">top right</option>
+					<option value="top-left">top left</option>
+					<option value="bottom-left">bottom left</option>
+					<option value="bottom-right">bottom right</option>
+				</select></p>
+				<span name="toasts-location-status"></span>
 			</div>
 			<div class="option">
 				<label for="mute-instead-of-block" name="mute-instead-of-block">
@@ -198,7 +207,7 @@
 					<span name="block-interval-value"></span>
 				</div>
 			</div>
-			<div name="popup-timer-slider">
+			<div name="show-block-popups-option">
 				<div class="option">
 					<p>popup timer</p>
 					<span name="popup-timer-status"></span>
@@ -206,6 +215,15 @@
 				<div class="slider">
 					<input type="range" min="5" max="60" value="15" name="popup-timer">
 					<span name="popup-timer-value"></span>
+				</div>
+			</div>
+			<div class="safelist">
+				<p name="safelist-status">safelist importing must be done on a separate page. click import to be redirected</p>
+				<div class="option">
+					<p>safelist</p>
+					<a href="/src/pages/safelist/index.html" target="_blank" class="button">import</a>
+					<a name="export-safelist" class="button">export</a>
+					<a name="clear-safelist" class="button">clear</a>
 				</div>
 			</div>
 		</div>

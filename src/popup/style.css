@@ -18,7 +18,6 @@ html {
 	--border-size: 1px;
 	--border-radius: 3px;
 
-	overflow-x: hidden;
 	border: var(--border-size) solid var(--bordercolor);
 }
 script {
@@ -30,6 +29,7 @@ html * {
 html, body {
 	background: var(--bg2color);
 	color: var(--textcolor);
+	overflow-x: hidden;
 }
 body {
 	margin: 0;
@@ -37,10 +37,7 @@ body {
 	font-size: 1.1rem;
 }
 
-a,
-input,
-label,
-textarea {
+a, input, label, textarea {
 	cursor: pointer;
 	pointer-events: all;
 	text-decoration: none;
@@ -146,10 +143,10 @@ h2 img {
 	margin-bottom: 0;
 }
 .tab#quick {
-	min-width: 20em;
+	width: 20em;
 }
 .tab#advanced {
-	min-width: 27em;
+	width: 27em;
 }
 
 .emoji {
@@ -174,7 +171,8 @@ h2 img {
 	display: none;
 }
 
-input[type="checkbox"] {
+input[type="checkbox"],
+input[type="file"] {
 	position: absolute;
 	display: none;
 	top: -100vh;
@@ -196,20 +194,6 @@ label:focus {
 	color: var(--interact);
 }
 
-label.border {
-	display: inline-flex;
-	padding: 0.5em 1em;
-	border: var(--border-size) solid var(--bordercolor);
-	background: var(--bg2color);
-	box-shadow: 0 2px 3px 1px var(--shadowcolor);
-	border-radius: var(--border-radius);
-}
-label.border:hover,
-label.border:active,
-label.border:focus {
-	border-color: var(--borderhover);
-	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
-}
 label div.checkmark {
 	position: relative;
 	display: block;
@@ -248,7 +232,8 @@ label.checked div.checkmark div {
 }
 
 .skip-follower-count.option,
-.block-promoted-tweets.option {
+.block-promoted-tweets.option,
+.toasts-location.option {
 	margin-left: 0.5em;
 	margin-top: -0.5em;
 }
@@ -264,8 +249,10 @@ input[type=number] {
 	text-align: right;
 	width: 7em;
 	height: 1em;
-	position: relative;
+}
+input[type=number], select {
 	top: -0.1em;
+	position: relative;
 	display: inline-block;
 	padding: 0.5em 1em;
 	background: var(--bg0color);
@@ -278,12 +265,12 @@ input[type=number] {
 	-o-transition: var(--transition) var(--fadetime);
 	transition: var(--transition) var(--fadetime);
 }
-input[type=number]:hover {
+input[type=number]:hover, select:hover {
 	color: var(--interact);
 	border-color: var(--borderhover);
 	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
 }
-input[type=number]:focus {
+input[type=number]:focus, select:focus {
 	color: var(--textcolor);
 }
 
@@ -340,4 +327,27 @@ input[type=number]:focus {
 	background: var(--interact);
 	cursor: pointer;
 	border-radius: 1em;
+}
+
+.button,
+.button:active,
+.button:focus {
+	margin-left: 1em;
+	font-size: 1em;
+	padding: 0.5em 1em;
+	color: var(--textcolor);
+	background: var(--bg2color);
+	box-shadow: 0 2px 3px 1px var(--shadowcolor);
+	border: var(--border-size) solid var(--bordercolor);
+	border-radius: var(--border-radius);
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
+	cursor: pointer;
+}
+.button:hover {
+	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
+	border-color: var(--interact);
+	color: var(--interact);
 }

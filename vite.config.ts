@@ -13,6 +13,8 @@ export default defineConfig(() => {
 				input: {
 					// all non-popup pages need to be added here
 					queue: './src/pages/queue/index.html',
+					safelist: './src/pages/safelist/index.html',
+					history: './src/pages/history/index.html',
 				},
 				output: {
 					chunkFileNames: 'assets/chunk-[hash].js',

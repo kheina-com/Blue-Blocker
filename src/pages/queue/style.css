@@ -30,6 +30,18 @@ body {
 html, body, main, h1, p {
 	margin: 0;
 }
+pre, code {
+	font-family: Hack, DejaVu Sans Mono, Inconsolata, monospace !important;
+	background: var(--bg2color);
+	border-radius: var(--border-radius);
+	padding: 0.1em 0.25em;
+}
+pre {
+	padding: 0.5em;
+	white-space: pre-wrap;
+	word-break: break-word;
+	text-align: left;
+}
 
 ::-webkit-scrollbar {
 	width: 12px;
@@ -54,15 +66,61 @@ main {
 	color: var(--textcolor);
 	text-align: center;
 	width: 100%;
-	background: #1E1F25;
+	background: var(--bg1color);
 }
 .inner {
 	padding: 25px;
 }
 .subtitle {
-	margin-bottom: 25px;
+	color: var(--subtle);
+	margin-bottom: 1em;
 }
 
+#import-button {
+	color: var(--textcolor);
+	cursor: pointer;
+}
+
+#importer {
+	display: none;
+}
+#importer p {
+	margin-bottom: 1em;
+}
+#importer pre {
+	max-width: 50em;
+	margin: 0 auto 1em;
+}
+
+input {
+	position: absolute;
+	display: none;
+	top: -100vh;
+	opacity: 0;
+	height: 0;
+	width: 0;
+}
+.file-field {
+	max-width: 50em;
+	margin: 1em auto;
+	display: block;
+	padding: 25px;
+	border-radius: var(--border-radius);
+	border: 2px dashed var(--bordercolor);
+	background: var(--bg2color);
+	cursor: pointer;
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
+}
+.file-field:hover {
+	color: var(--interact);
+	border-color: var(--interact);
+}
+.file-field span {
+	font-size: 1.25em;
+}
 
 #block-queue {
 	bottom: 0;
@@ -82,7 +140,7 @@ main {
 	background-position-x: 1em;
 	background-position-y: center;
 	pointer-events: all;
-	padding: 1em 1.5em 1em 4.25em;
+	padding: 0.75em 1.5em 0.75em 4.25em;
 	margin: 0 0 25px;
 	border: var(--border-size) solid var(--bordercolor);
 	border-radius: var(--border-radius);

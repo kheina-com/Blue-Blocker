@@ -68,6 +68,10 @@ export class QueueConsumer {
 			await this.storage.set({ [criticalPointKey]: null });
 		}
 	}
+	entropy(): number {
+		const variance = this._interval * 0.1;  // 0.1 = 10% entropy
+		return Math.random() * variance * 2 - variance;
+	}
 	async sync() {
 		// console.debug(logstr, this._refId, "syncing. _interval:", this._interval, "_timeout:", this._timeout, "_func_timeout:", this._func_timeout);
 		if (await this.getCriticalPoint()) {
@@ -75,7 +79,7 @@ export class QueueConsumer {
 			// if we just got it, func will be null and we can schedule it
 			// if we already had it, it already finished or its waiting on queue
 			if (this._func_timeout === null) {
-				this._func_timeout = setTimeout(() => this.func().finally(() => { this._func_timeout = null; this.sync(); }), this._interval);
+				this._func_timeout = setTimeout(() => this.func().finally(() => { this._func_timeout = null; this.sync(); }), this._interval + this.entropy());
 			}
 			this._timeout = null;  // set timeout to null, just for the running check in start
 		} else {

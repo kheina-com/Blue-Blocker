@@ -17,12 +17,16 @@ import {
 	ReasonTransphobia,
 	ReasonPromoted,
 } from './constants';
-import { commafy, FormatLegacyName, IsUserLegacyVerified } from './utilities';
+import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory } from './utilities';
+
+// TODO: tbh this file shouldn't even exist anymore and should be
+// split between content/startup.ts and utilities.ts
 
 // Define constants that shouldn't be exported to the rest of the addon
 const queue = new BlockQueue(api.storage.local);
 const blockCounter = new BlockCounter(api.storage.local);
-const blockCache = new Set();
+const blockCache: Set<string> = new Set();
+export const UnblockCache: Set<string> = new Set();
 
 export function SetHeaders(headers: { [k: string]: string }) {
 	api.storage.local.get({ headers: { }}).then(items => {
@@ -35,10 +39,13 @@ export function SetHeaders(headers: { [k: string]: string }) {
 }
 
 setInterval(blockCache.clear, 10 * 60e3);  // clear the cache every 10 minutes
+// this is just here so we don't double add users unnecessarily (and also overwrite name)
+setInterval(UnblockCache.clear, 10 * 60e3);
 
 function unblockUser(user: { name: string, screen_name: string }, user_id: string, reason: number, attempt: number = 1) {
+	UnblockCache.add(user_id);
 	api.storage.sync.get({ unblocked: { } }).then(items => {
-		items.unblocked[String(user_id)] = null;
+		items.unblocked[String(user_id)] = user.screen_name;
 		api.storage.sync.set(items);
 	});
 
@@ -72,9 +79,6 @@ function unblockUser(user: { name: string, screen_name: string }, user_id: strin
 			const headers: { [k: string]: string } = {
 				"content-length": body.length.toString(),
 				"content-type": "application/x-www-form-urlencoded",
-				"accept-encoding": "gzip, deflate, br",
-				"accept-language": "en-US,en;q=0.9",
-				accept: "*/*",
 			};
 
 			for (const header of Headers) {
@@ -103,39 +107,28 @@ function unblockUser(user: { name: string, screen_name: string }, user_id: strin
 				method: "POST",
 				credentials: "include",
 			};
-			console.debug(logstr, "unblock request:", { url, ...options });
-
 			fetch(url, options).then(response => {
-				const t = document.createElement("div");
-				t.className = "toast";
-				t.innerText = `unblocked @${user.screen_name}, they won't be blocked again.`;
-				const ele = document.getElementById("injected-blue-block-toasts");
-				if (!ele) {
-					throw new Error("blue blocker was unable to create or find toasts div.");
-				}
-
 				if (response.status === 403) {
 					// user has been logged out, we need to stop queue and re-add
-					t.innerText = `could not unblock @${user.screen_name}, you may have been logged out.`;
+					MakeToast(`could not unblock @${user.screen_name}, you may have been logged out.`, config);
 					console.log(logstr, "user is logged out, failed to unblock user.");
 				}
 				else if (response.status === 404) {
 					// notice the wording here is different than the blocked 404. the difference is that if the user
 					// is unbanned, they will still be blocked and we want the user to know about that
-					t.innerText = `could not unblock @${user.screen_name}, user has been suspended or no longer exists.`;
+					MakeToast(`could not unblock @${user.screen_name}, user has been suspended or no longer exists.`, config);
 					console.log(logstr, `failed to unblock ${FormatLegacyName(user)}, user no longer exists`);
 				}
 				else if (response.status >= 300) {
-					t.innerText = `could not unblock @${user.screen_name}, twitter gave an unfamiliar response code.`;
+					MakeToast(`could not unblock @${user.screen_name}, twitter gave an unfamiliar response code.`, config);
 					console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, response);
 				}
 				else {
-					t.innerText = `unblocked @${user.screen_name}, they won't be blocked again.`;
+					// use catch to retry in case of db failure
+					RemoveUserBlockHistory(user_id).catch(() => RemoveUserBlockHistory(user_id));
 					console.log(logstr, `unblocked ${FormatLegacyName(user)}`);
+					MakeToast(`unblocked @${user.screen_name}, they won't be blocked again.`, config);
 				}
-
-				ele.appendChild(t);
-				setTimeout(() => ele.removeChild(t), config.popupTimer * 1000);
 			}).catch(error => {
 				if (attempt < 3) {
 					unblockUser(user, user_id, reason, attempt + 1);
@@ -156,45 +149,31 @@ api.storage.local.onChanged.addListener((items) => {
 		return;
 	}
 	const e = items[EventKey].newValue;
+	console.debug(logstr, "received multi-tab event:", e);
 
 	api.storage.sync.get(DefaultOptions).then(options => {
+		const config = options as Config;
 		switch (e.type) {
 			case MessageEvent:
-				if (options.showBlockPopups) {
-					const t = document.createElement('div');
-					t.className = 'toast';
-					t.innerText = e.message;
-					const ele = document.getElementById('injected-blue-block-toasts');
-					if (ele) {
-						ele.appendChild(t);
-						setTimeout(() => ele.removeChild(t), options.popupTimer * 1000);
-					}
+				if (config.showBlockPopups) {
+					MakeToast(e.message, config);
 				}
 				break;
 
 			case UserBlockedEvent:
-				if (options.showBlockPopups) {
+				if (config.showBlockPopups) {
 					const event = e as BlockUser;
 					const { user, user_id, reason } = event;
-					const t = document.createElement('div');
-					t.className = 'toast';
-					const name =
-						user.name.length > 25
-							? user.name.substring(0, 23).trim() + '...'
-							: user.name;
-					t.innerHTML = `blocked ${name} (<a href="/${user.screen_name}">@${user.screen_name}</a>)`;
+					const name = user.name.length > 25 ? user.name.substring(0, 23).trim() + '...' : user.name;
 					const b = document.createElement('button');
+					b.innerText = 'undo';
 					b.onclick = () => {
 						unblockUser(user, user_id, reason);
-						t.removeChild(b);
+						const parent = b.parentNode as ParentNode;
+						parent.removeChild(b);
 					};
-					b.innerText = 'undo';
-					t.appendChild(b);
-					const ele = document.getElementById('injected-blue-block-toasts');
-					if (ele) {
-						ele.appendChild(t);
-						setTimeout(() => ele.removeChild(t), options.popupTimer * 1000);
-					}
+					const screen_name = EscapeHtml(user.screen_name);  // this shouldn't really do anything, but can't be too careful
+					MakeToast(`blocked ${EscapeHtml(name)} (<a href="/${screen_name}">@${screen_name}</a>)`, config, { html: true, elements: [b]})
 				}
 				break;
 
@@ -203,15 +182,7 @@ api.storage.local.onChanged.addListener((items) => {
 				if (e.message) {
 					console.error(logstr, e.message, e);
 				}
-				const t = document.createElement('div');
-				t.className = 'toast error';
-				t.innerHTML = `<p>an error occurred! check the console and create an issue on <a href="https://github.com/kheina-com/Blue-Blocker/issues" target="_blank">GitHub</a></p>`;
-
-				const ele = document.getElementById('injected-blue-block-toasts');
-				if (ele) {
-					ele.appendChild(t);
-					setTimeout(() => ele.removeChild(t), 60e3);
-				}
+				MakeToast(`<p>an error occurred! check the console and create an issue on <a href="https://github.com/kheina-com/Blue-Blocker/issues" target="_blank">GitHub</a></p>`, config, { html: true, error: true })
 				break;
 
 			default:
@@ -305,9 +276,6 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 			const headers: { [k: string]: string } = {
 				"content-length": body.length.toString(),
 				"content-type": "application/x-www-form-urlencoded",
-				"accept-encoding": "gzip, deflate, br",
-				"accept-language": "en-US,en;q=0.9",
-				accept: "*/*",
 			};
 
 			for (const header of Headers) {
@@ -340,7 +308,7 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 			fetch(url, options).then(response => {
 				console.debug(logstr, "block response:", response);
 
-				if (response.status === 403) {
+				if (response.status === 403 || response.status === 401) {
 					// user has been logged out, we need to stop queue and re-add
 					consumer.stop();
 					queue.push({user, user_id, reason});
@@ -350,11 +318,14 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 					console.log(logstr, `did not block ${FormatLegacyName(user)}, user no longer exists`);
 				}
 				else if (response.status >= 300) {
+					consumer.stop();
 					queue.push({user, user_id, reason});
-					console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, response);
+					console.error(logstr, `failed to block ${FormatLegacyName(user)}, consumer stopped just in case.`, response);
 				}
 				else {
 					blockCounter.increment();
+					// use catch to retry in case of db failure
+					AddUserBlockHistory({ user_id, user, reason }).catch(() => AddUserBlockHistory({ user_id, user, reason }));
 					console.log(logstr, `blocked ${FormatLegacyName(user)} due to ${ReasonMap[reason]}.`);
 					api.storage.local.set({ [EventKey]: { type: UserBlockedEvent, user, user_id, reason } })
 				}

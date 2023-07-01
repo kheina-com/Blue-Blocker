@@ -3,6 +3,7 @@
 interface Config {
 	suspendedBlockCollection: boolean,
 	showBlockPopups: boolean,
+	toastsLocation: "top-left" | "top-right" | "bottom-left" | "bottom-right",
 	mute: boolean,
 	blockFollowing: boolean,
 	blockFollowers: boolean,
@@ -11,7 +12,7 @@ interface Config {
 	skip1Mplus: boolean,
 	blockNftAvatars: boolean,
 	blockInterval: number,
-	unblocked: { [k: string]: null },
+	unblocked: { [k: string]: string? },
 	popupTimer: number,
 	skipFollowerCount: number,
 	soupcanIntegration: boolean,
