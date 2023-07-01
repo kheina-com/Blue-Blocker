@@ -181,9 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
 				api.action.setIcon({ path: target.checked ? "/icon/icon-128-greyscale.png" : "/icon/icon-128.png" });
 			},
 		});
-		checkHandler(showBlockPopups, config, "showBlockPopups", {
-			optionName: "popup-timer-slider",
-		});
+		checkHandler(showBlockPopups, config, "showBlockPopups");
 		checkHandler(muteInsteadOfBlock, config, "mute");
 		checkHandler(blockFollowing, config, "blockFollowing");
 		checkHandler(blockFollowers, config, "blockFollowers");
@@ -197,7 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		checkHandler(soupcanIntegration, config, "soupcanIntegration", {
 			optionName: "",  // integration isn't controlled by the toggle, so unset
 		});
-	
+
 		document.getElementsByName("skip-follower-count-value")
 		.forEach(e => e.innerText = abbreviate(config.skipFollowerCount));
 		inputMirror("skip-follower-count", config.skipFollowerCount, e => {
@@ -208,6 +206,19 @@ document.addEventListener("DOMContentLoaded", () => {
 			.forEach(e => e.innerText = textValue);
 			api.storage.sync.set({
 				skipFollowerCount: value,
+			}).then(() => {
+				// Update status to let user know options were saved.
+				document.getElementsByName(target.name + "-status").forEach(status => {
+					status.textContent = "saved";
+					setTimeout(() => status.textContent = null, 1000);
+				});
+			});
+		});
+
+		inputMirror("toasts-location", config.toastsLocation, e => {
+			const target = e.target as HTMLInputElement;
+			api.storage.sync.set({
+				toastsLocation: target.value,
 			}).then(() => {
 				// Update status to let user know options were saved.
 				document.getElementsByName(target.name + "-status").forEach(status => {

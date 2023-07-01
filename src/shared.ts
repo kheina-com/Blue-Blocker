@@ -19,6 +19,9 @@ import {
 } from './constants';
 import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory } from './utilities';
 
+// TODO: tbh this file shouldn't even exist anymore and should be
+// split between content/startup.ts and utilities.ts
+
 // Define constants that shouldn't be exported to the rest of the addon
 const queue = new BlockQueue(api.storage.local);
 const blockCounter = new BlockCounter(api.storage.local);
