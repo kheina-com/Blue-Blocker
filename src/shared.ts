@@ -76,9 +76,6 @@ function unblockUser(user: { name: string, screen_name: string }, user_id: strin
 			const headers: { [k: string]: string } = {
 				"content-length": body.length.toString(),
 				"content-type": "application/x-www-form-urlencoded",
-				"accept-encoding": "gzip, deflate, br",
-				"accept-language": "en-US,en;q=0.9",
-				accept: "*/*",
 			};
 
 			for (const header of Headers) {
@@ -276,9 +273,6 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 			const headers: { [k: string]: string } = {
 				"content-length": body.length.toString(),
 				"content-type": "application/x-www-form-urlencoded",
-				"accept-encoding": "gzip, deflate, br",
-				"accept-language": "en-US,en;q=0.9",
-				accept: "*/*",
 			};
 
 			for (const header of Headers) {
