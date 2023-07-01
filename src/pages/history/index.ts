@@ -70,7 +70,7 @@ blockCounter.getCriticalPoint(refid)
 			);
 		})();
 
-		const reasons: { [r: number]: number } = { }
+		const reasons: { [r: number]: number } = { };
 		users.reverse().forEach(item => {
 			if (!reasons.hasOwnProperty(item.reason)) {
 				reasons[item.reason] = 0;
