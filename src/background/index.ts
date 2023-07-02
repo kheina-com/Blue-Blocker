@@ -1,7 +1,8 @@
-import { api, logstr, AddToHistoryAction, ErrorStatus, IsVerifiedAction, ReasonExternal, RemoveFromHistoryAction, SoupcanExtensionId, SuccessStatus, DefaultOptions } from '../constants';
+import { api, logstr, AddToHistoryAction, ErrorStatus, IsVerifiedAction, ReasonExternal, RemoveFromHistoryAction, SoupcanExtensionId, SuccessStatus, DefaultOptions, OldTwitterExtensionId } from '../constants';
 import { abbreviate, RefId } from '../utilities';
 import { AddUserToHistory, CheckDbIsUserLegacyVerified, ConnectDb, PopulateVerifiedDb, RemoveUserFromHistory } from './db';
 import { BlockQueue } from '../models/block_queue';
+import { HandleTwitterApiResponse } from "../parsers/request.js";
 
 api.action.setBadgeBackgroundColor({ color: "#666" });
 if (api.action.hasOwnProperty("setBadgeTextColor")) {
@@ -81,8 +82,8 @@ api.runtime.onMessage.addListener((m, s, r) => { let response: MessageResponse; 
 ////////////////////////////////////////////////// EXTERNAL MESSAGE HANDLING //////////////////////////////////////////////////
 
 const queue = new BlockQueue(api.storage.local);
-const [blockAction] = ["BLOCK"];
-const allowedExtensionIds = new Set([SoupcanExtensionId]);
+const [blockAction, twitterApiResponseAction] = ["BLOCK", "twitter_api_response"];
+const allowedExtensionIds = new Set([SoupcanExtensionId, OldTwitterExtensionId]);
 
 api.runtime.onMessageExternal.addListener((m, s, r) => { let response: MessageResponse; (async (message, sender) => {
 	const refid = RefId();
@@ -102,6 +103,13 @@ api.runtime.onMessageExternal.addListener((m, s, r) => { let response: MessageRe
 				const user: BlockUser = { user_id: blockMessage.user_id, user: { name: blockMessage.name, screen_name: blockMessage.screen_name }, reason: ReasonExternal, external_reason: blockMessage.reason };
 				await queue.push(user);
 				response = { status: SuccessStatus, result: "user queued for blocking" } as SuccessResponse;
+				break;
+
+			case twitterApiResponseAction:
+				const twitterApiResponse = message.data as TwitterApiResponse;
+				response = { status: SuccessStatus, result: "ack" } as SuccessResponse;
+				// run this async so that we don't wait to ack since we never want to error
+				(async () => HandleTwitterApiResponse(message))().catch(e => console.error(logstr, e));
 				break;
 
 			default:

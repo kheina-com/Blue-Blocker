@@ -85,8 +85,9 @@ export const ReasonMap = {
 	[ReasonPromoted]: "promoting tweets",
 };
 export const LegacyVerifiedUrl: string = "https://gist.githubusercontent.com/travisbrown/b50d6745298cccd6b1f4697e4ec22103/raw/012009351630dc351e3a763b49bf24fa50ca3eb7/legacy-verified.csv";
-export const Browser = api.runtime.getManifest()?.browser_specific_settings?.gecko === undefined ? "chrome" : "firefox";
+export const Browser = chrome.runtime.getManifest()?.browser_specific_settings?.gecko !== undefined ? "firefox" : "chrome";
 export const SoupcanExtensionId = Browser === "chrome" ? "hcneafegcikghlbibfmlgadahjfckonj" : "soupcan@beth.lgbt";
+export const OldTwitterExtensionId = Browser === "chrome" ? "jgejdcdoeeabklepnkdbglgccjpdgpmf" : "{447e4900-4a6b-4b91-9759-6a477548717d}";  // detect edge?
 
 // internal message actions
 export const [IsVerifiedAction, AddToHistoryAction, RemoveFromHistoryAction] = ["is_verified", "add_user_to_history", "remove_user_from_history"];

@@ -68,22 +68,55 @@ interface ErrorResponse {
 	message: string,
 }
 
+interface TwitterApiResponse {
+	request: {
+		url: URL | string,
+		body?: string,
+		headers: { [k: string]: string },
+		method: string,
+	},
+	url: URL | string,
+	parsedUrl?: RegExpExecArray,
+	ok: boolean,
+	status: number,
+	arrayBuffer?: ArrayBuffer,
+	blob?: Blob,
+	formData?: FormData,
+	json?: any,
+	text?: string,
+}
+
 interface BlueBlockerEvent {
+	request: {
+		url: URL | string,
+		body?: string,
+		headers: { [k: string]: string },
+		method: string,
+	},
 	url: URL | string,
 	parsedUrl: RegExpExecArray,
-	body: XMLHttpRequestResponseType,
-	request: { headers: { [k: string]: string } },
+	ok: boolean,
 	status: number,
+	json: any,
+}
+
+interface BlueBlockerBound {
+	success: boolean,
 }
 
 interface CustomEventMap {
-	'blue-blocker-event': CustomEvent<BlueBlockerEvent>,
+	"blue-blocker-event": CustomEvent<TwitterApiResponse>,
+	"blue-blocker-bound": CustomEvent<BlueBlockerBound>,
 }
 
 // https://stackoverflow.com/a/68783088/5808621
 // https://github.com/microsoft/TypeScript/issues/28357#issuecomment-1493069662
 interface Document {
 	addEventListener<K extends keyof CustomEventMap>(
+		type: K,
+		listener: (this: Document, ev: CustomEventMap[K]) => void,
+	): void,
+	removeEventListener<K extends keyof CustomEventMap>(
 		type: K,
 		listener: (this: Document, ev: CustomEventMap[K]) => void,
 	): void,

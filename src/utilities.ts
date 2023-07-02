@@ -23,6 +23,12 @@ export function commafy(x: number): string {
 	return parts.join('.');
 }
 
+export function edit(regex: RegExp, replacements: { [k: string]: string }): RegExp {
+	const regexp: string = regex.source;
+	const repl = new RegExp(Object.keys(replacements).map(x => "{" + x + "}").join("|"), "g");
+	return new RegExp(regexp.replaceAll(repl, m => replacements[m.substring(1, m.length - 1)]), regex.flags);
+}
+
 // 64bit random number generator. I believe it's not truly 64 bit
 // due to floating point bullshit, but it's good enough
 const MaxId: number = Number.MAX_SAFE_INTEGER;

@@ -119,13 +119,12 @@ export function ParseTimelineTweet(tweet: any, config: Config) {
 }
 
 export function HandleInstructionsResponse(
-	e: CustomEvent<BlueBlockerEvent>,
-	body: Body,
+	e: BlueBlockerEvent,
 	config: Config,
 ) {
 	// pull the "instructions" object from the tweet
-	let _instructions = body;
-	for (const key of InstructionsPaths[e.detail.parsedUrl[1]]) {
+	let _instructions = e.json;
+	for (const key of InstructionsPaths[e.parsedUrl[1]]) {
 		// @ts-ignore
 		_instructions = _instructions[key];
 	}
@@ -147,7 +146,7 @@ export function HandleInstructionsResponse(
 		}
 	}
 	if (tweets === undefined) {
-		console.error(logstr, 'response object does not contain an instruction to add entries', body);
+		console.error(logstr, 'response object does not contain an instruction to add entries', e);
 		return;
 	}
 
