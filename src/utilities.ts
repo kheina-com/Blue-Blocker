@@ -29,9 +29,20 @@ const MaxId: number = 0xffffffffffffffff;
 export const RefId = (): number => Math.round(Math.random() * MaxId);
 
 export async function IsUserLegacyVerified(user_id: string, handle: string): Promise<boolean> {
-	const response = await chrome.runtime.sendMessage(
-		{ action: IsVerifiedAction, user_id, handle },
-	) as { status: string, result: boolean };
+	interface LegacyVerifiedResponse {
+		status: "SUCCESS",
+		result: boolean,
+	}
+
+	let response: LegacyVerifiedResponse | MessageResponse | null = null;
+	for (let i = 0; i < 3; i++) {
+		response = await chrome.runtime.sendMessage(
+			{ action: IsVerifiedAction, user_id, handle },
+		) as LegacyVerifiedResponse;
+		if (response.status === SuccessStatus) {
+			return (response as LegacyVerifiedResponse).result;
+		}
+	}
 
 	if (response?.status !== SuccessStatus) {
 		const message = "legacy verified db returned non-success status";
@@ -39,7 +50,7 @@ export async function IsUserLegacyVerified(user_id: string, handle: string): Pro
 		throw new Error(message);
 	}
 
-	return response.result;
+	return (response as LegacyVerifiedResponse).result;
 }
 
 export async function AddUserBlockHistory(user: BlockUser): Promise<void> {
@@ -57,7 +68,13 @@ export async function AddUserBlockHistory(user: BlockUser): Promise<void> {
 		data.external_reason = user.external_reason;
 	}
 
-	const response = await chrome.runtime.sendMessage({ action: AddToHistoryAction, data }) as { status: string, result: null };
+	let response: MessageResponse | null = null;
+	for (let i = 0; i < 3; i++) {
+		response = await chrome.runtime.sendMessage({ action: AddToHistoryAction, data }) as MessageResponse;
+		if (response.status === SuccessStatus) {
+			return;
+		}
+	}
 
 	if (response?.status !== SuccessStatus) {
 		const message = "unable to add user to block history";
@@ -67,7 +84,13 @@ export async function AddUserBlockHistory(user: BlockUser): Promise<void> {
 }
 
 export async function RemoveUserBlockHistory(user_id: string): Promise<void> {
-	const response = await chrome.runtime.sendMessage({ action: RemoveFromHistoryAction, data: { user_id } }) as { status: string, result: null };
+	let response: MessageResponse | null = null;
+	for (let i = 0; i < 3; i++) {
+		response = await chrome.runtime.sendMessage({ action: RemoveFromHistoryAction, data: { user_id } }) as MessageResponse;
+		if (response.status === SuccessStatus) {
+			return;
+		}
+	}
 
 	if (response?.status !== SuccessStatus) {
 		const message = "unable to remove user from block history";

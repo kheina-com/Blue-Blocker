@@ -1,4 +1,4 @@
-import { api, logstr, AddToHistoryAction, ErrorStatus, IsVerifiedAction, MessageStatus, ReasonExternal, RemoveFromHistoryAction, SoupcanExtensionId, SuccessStatus, DefaultOptions } from '../constants';
+import { api, logstr, AddToHistoryAction, ErrorStatus, IsVerifiedAction, ReasonExternal, RemoveFromHistoryAction, SoupcanExtensionId, SuccessStatus, DefaultOptions } from '../constants';
 import { abbreviate } from '../utilities';
 import { AddUserToHistory, CheckDbIsUserLegacyVerified, ConnectHistoryDb, PopulateVerifiedDb, RemoveUserFromHistory } from './db';
 import { BlockQueue } from '../models/block_queue';
@@ -39,27 +39,12 @@ api.storage.sync.onChanged.addListener(async items => {
 
 ConnectHistoryDb();
 
-interface Response {
-	status: MessageStatus,
-}
-
-interface SuccessResponse {
-	status: "SUCCESS",
-	result: any,
-}
-
-interface ErrorResponse {
-	status: "ERROR",
-	message: string,
-	error?: Error,
-}
-
 api.runtime.onMessage.addListener((m, s, r) => { (async (_message, sender, respond) => {
 	// messages are ALWAYS expected to be:
 	// 	1. objects
 	// 	2. contain a string value stored under message.action. should be one defined above
 	// other message contents change based on the defined action
-	let response: Response;
+	let response: MessageResponse;
 	switch (_message?.action) {
 		case IsVerifiedAction:
 			const verifiedMessage = _message as { user_id: string, handle: string };
@@ -113,7 +98,7 @@ api.runtime.onMessageExternal.addListener((m, s, r) => { (async (_message, sende
 	// 	1. objects
 	// 	2. contain a string value stored under message.action. should be one defined above
 	// other message contents change based on the defined action
-	let response: Response;
+	let response: MessageResponse;
 	switch (_message?.action) {
 		case blockAction:
 			const message = _message as { action: string, user_id: string, name: string, screen_name: string, reason: string };

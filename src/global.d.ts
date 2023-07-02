@@ -44,6 +44,26 @@ interface BlueBlockerUser {
 	promoted_tweet?: boolean,
 }
 
+// extension message types
+type SuccessStatus = "SUCCESS";
+type ErrorStatus = "ERROR";
+type MessageStatus = SuccessStatus | ErrorStatus;
+
+interface MessageResponse {
+	status: MessageStatus,
+}
+
+interface SuccessResponse {
+	status: "SUCCESS",
+	result: any,
+}
+
+interface ErrorResponse {
+	status: "ERROR",
+	message: string,
+	error?: Error,
+}
+
 interface BlueBlockerEvent {
 	url: URL | string,
 	parsedUrl: RegExpExecArray,
