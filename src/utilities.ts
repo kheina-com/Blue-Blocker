@@ -1,15 +1,15 @@
 import { logstr, AddToHistoryAction, IsVerifiedAction, RemoveFromHistoryAction, SuccessStatus } from "./constants";
 
 export function abbreviate(value: number): string {
-	if (value >= 1e10)
+	if (value >= 995e7)
 	{ return `${Math.round(value / 1e9)}B`; }
 	if (value >= 9995e5)
 	{ return `${(value / 1e9).toFixed(1)}B`; }
-	if (value >= 1e7)
+	if (value >= 995e4)
 	{ return `${Math.round(value / 1e6)}M`; }
 	if (value >= 9995e2)
 	{ return `${(value / 1e6).toFixed(1)}M`; }
-	if (value >= 1e4)
+	if (value >= 9950)
 	{ return `${Math.round(value / 1e3)}K`; }
 	if (value >= 1e3)
 	{ return `${(value / 1e3).toFixed(1)}K`; }

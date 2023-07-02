@@ -161,6 +161,7 @@ export async function PopulateVerifiedDb() {
 }
 
 export function CheckDbIsUserLegacyVerified(user_id: string, handle: string): Promise<boolean> {
+	// @ts-ignore  // typescript is wrong here, this cannot return idb due to final throws
 	return new Promise<boolean>((resolve, reject) => {
 		const transaction = legacyDb.transaction([legacyDbStore], "readonly");
 		transaction.onabort = transaction.onerror = reject;
@@ -175,7 +176,10 @@ export function CheckDbIsUserLegacyVerified(user_id: string, handle: string): Pr
 	}).catch(e => {
 		// if the db has already been loaded, we can safely reconnect
 		if (legacyDbLoaded) {
-			PopulateVerifiedDb();
+			return PopulateVerifiedDb()
+			.finally(() => {
+				throw e;  // re-throw error
+			});
 		}
 		throw e;  // re-throw error
 	});
@@ -235,6 +239,7 @@ export function AddUserToHistory(blockUser: BlockUser): Promise<void> {
 		state: HistoryStateBlocked,
 		time: new Date(),
 	};
+	// @ts-ignore  // typescript is wrong here, this cannot return idb due to final throw
 	return new Promise<void>(async (resolve, reject) => {
 		const transaction = historyDb.transaction([historyDbStore], "readwrite");
 		transaction.onabort = transaction.onerror = reject;
@@ -244,14 +249,17 @@ export function AddUserToHistory(blockUser: BlockUser): Promise<void> {
 		store.add(user);
 
 		transaction.commit();
-	}).catch(async (e) => {
+	}).catch((e) =>
 		// attempt to reconnect to the db
-		await ConnectHistoryDb();
-		throw e;  // re-throw error to retry
-	});
+		ConnectHistoryDb()
+		.finally(() => {
+			throw e;  // re-throw error to retry
+		})
+	);
 }
 
 export function RemoveUserFromHistory(user_id: string): Promise<void> {
+	// @ts-ignore  // typescript is wrong here, this cannot return idb due to final throw
 	return new Promise<void>(async (resolve, reject) => {
 		try {
 			const transaction = historyDb.transaction([historyDbStore], "readwrite");
@@ -276,9 +284,11 @@ export function RemoveUserFromHistory(user_id: string): Promise<void> {
 		} catch (e) {
 			reject(e);
 		}
-	}).catch(async (e) => {
+	}).catch((e) =>
 		// attempt to reconnect to the db
-		await ConnectHistoryDb();
-		throw e;  // re-throw error to retry
-	});
+		ConnectHistoryDb()
+		.finally(() => {
+			throw e;  // re-throw error to retry
+		})
+	);
 }
