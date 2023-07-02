@@ -12,7 +12,7 @@ interface Config {
 	skip1Mplus: boolean,
 	blockNftAvatars: boolean,
 	blockInterval: number,
-	unblocked: { [k: string]: string? },
+	unblocked: { [k: string]: string | null },
 	popupTimer: number,
 	skipFollowerCount: number,
 	soupcanIntegration: boolean,

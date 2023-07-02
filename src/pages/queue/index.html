@@ -12,7 +12,8 @@
 		<main>
 			<div class="inner">
 				<h1>Block Queue</h1>
-				<p class="subtitle">Users will not be added to the queue or blocked while this page is open.&nbsp;&nbsp;&nbsp;<a id="import-button">import <span id="import-arrow">▾</span></a></p>
+				<p class="subtitle">Users may be blocked while this page is open, refresh to update.&nbsp;&nbsp;&nbsp;<a id="import-button">import <span id="import-arrow">▾</span></a></p>
+				<p id="db-limit-reached" class="subtitle">holy shit your queue is huge, results have been limited to the first 10,000</p>
 				<div id="importer">
 					<p>Blocklist import currently only support json files. files must be arrays containing the following type:</p>
 <pre>interface BlockUser {

@@ -1,7 +1,6 @@
-import { api, logstr, AddToHistoryAction, ErrorStatus, IsVerifiedAction, ReasonExternal, RemoveFromHistoryAction, SoupcanExtensionId, SuccessStatus, DefaultOptions } from '../constants';
+import { api, logstr, AddToHistoryAction, ErrorStatus, IsVerifiedAction, ReasonExternal, RemoveFromHistoryAction, SoupcanExtensionId, SuccessStatus, DefaultOptions, AddToQueueAction, PopFromQueueAction } from '../constants';
 import { abbreviate, RefId } from '../utilities';
-import { AddUserToHistory, CheckDbIsUserLegacyVerified, ConnectDb, PopulateVerifiedDb, RemoveUserFromHistory } from './db';
-import { BlockQueue } from '../models/block_queue';
+import { AddUserToHistory, AddUserToQueue, CheckDbIsUserLegacyVerified, ConnectDb, PopUserFromQueue, PopulateVerifiedDb, RemoveUserFromHistory } from './db';
 
 api.action.setBadgeBackgroundColor({ color: "#666" });
 if (api.action.hasOwnProperty("setBadgeTextColor")) {
@@ -66,6 +65,18 @@ api.runtime.onMessage.addListener((m, s, r) => { let response: MessageResponse; 
 				response = { status: SuccessStatus, result: null } as SuccessResponse;
 				break;
 
+			case AddToQueueAction:
+				const addToQueueMessage = message.data as BlockUser;
+				await AddUserToQueue(addToQueueMessage);
+				response = { status: SuccessStatus, result: null } as SuccessResponse;
+				break;
+
+			case PopFromQueueAction:
+				// no payload with this request
+				const user = await PopUserFromQueue();
+				response = { status: SuccessStatus, result: user } as SuccessResponse;
+				break;
+
 			default:
 				console.error(logstr, refid, "got a message that couldn't be handled from sender:", sender, message);
 				response = { status: ErrorStatus, message: "unknown action" } as ErrorResponse;
@@ -80,7 +91,6 @@ api.runtime.onMessage.addListener((m, s, r) => { let response: MessageResponse; 
 
 ////////////////////////////////////////////////// EXTERNAL MESSAGE HANDLING //////////////////////////////////////////////////
 
-const queue = new BlockQueue(api.storage.local);
 const [blockAction] = ["BLOCK"];
 const allowedExtensionIds = new Set([SoupcanExtensionId]);
 
@@ -100,7 +110,7 @@ api.runtime.onMessageExternal.addListener((m, s, r) => { let response: MessageRe
 			case blockAction:
 				const blockMessage = message as { user_id: string, name: string, screen_name: string, reason: string };
 				const user: BlockUser = { user_id: blockMessage.user_id, user: { name: blockMessage.name, screen_name: blockMessage.screen_name }, reason: ReasonExternal, external_reason: blockMessage.reason };
-				await queue.push(user);
+				await AddUserToQueue(user).catch(() => AddUserToQueue(user));
 				response = { status: SuccessStatus, result: "user queued for blocking" } as SuccessResponse;
 				break;
 

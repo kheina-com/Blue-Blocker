@@ -1,52 +1,42 @@
-import { BlockQueue } from "../../models/block_queue.js";
-import { commafy, EscapeHtml, FormatLegacyName, RefId } from "../../utilities.js";
+import { commafy, EscapeHtml, FormatLegacyName } from "../../utilities.js";
 import { api, logstr } from "../../constants.js";
+import { AddUserToQueue, ConnectDb, queueDbStore, WholeQueue } from "../../background/db.js";
 import "./style.css";
 
-// Define constants that shouldn't be exported to the rest of the addon
-const queue = new BlockQueue(api.storage.local);
-
-// we need to obtain and hold on to the critical point as long as this tab is
-// open so that any twitter tabs that are open are unable to block users
-const refId = RefId();
-const interval = 5000;
-setInterval(async () => {
-	await queue.getCriticalPoint(refId, interval);
-}, 500);
-
-async function unqueueUser(user_id: string, safelist: boolean) {
+async function unqueueUser(user_id: string, screen_name: string, safelist: boolean) {
 	// because this page holds onto the critical point, we can modify the queue
 	// without worrying about if it'll affect another tab
 	if (safelist) {
 		api.storage.sync.get({ unblocked: { } }).then(items => {
-			items.unblocked[String(user_id)] = null;
+			items.unblocked[String(user_id)] = screen_name;
 			api.storage.sync.set(items);
 		});
 	}
 
-	const items = await api.storage.local.get({ BlockQueue: [] });
-
-	for (let i = 0; i < items.BlockQueue.length; i++) {
-		if (items.BlockQueue[i].user_id === user_id) {
-			items.BlockQueue.splice(i, 1);
-			break;
-		}
-	}
-
-	await api.storage.local.set(items);
+	ConnectDb().then(db => {
+		return new Promise<void>((resolve, reject) => {
+			const transaction = db.transaction([queueDbStore], "readwrite");
+			transaction.onabort = transaction.onerror = reject;
+			const store = transaction.objectStore(queueDbStore);
+			store.delete(user_id);
+			transaction.commit();
+			transaction.oncomplete = () => resolve();
+		});
+	}).catch(e => {
+		console.error(logstr, "could not remove user from queue:", e);
+	});
 }
 
 function loadQueue() {
-	// interval doesn't run immediately, so do that here
-	queue.getCriticalPoint(refId)
-	.then(() => api.storage.local.get({ BlockQueue: [] }))
-	.then(items => {
-		const cue = items.BlockQueue as BlockUser[];
+	WholeQueue().then(cue => {
 		const queueDiv = document.getElementById("block-queue") as HTMLElement;
 
 		if (cue.length === 0) {
 			queueDiv.textContent = "your block queue is empty";
 			return;
+		} else if (cue.length >= 10e3) {
+			const dbLimitReached = document.getElementById("db-limit-reached") as HTMLElement;
+			dbLimitReached.style.display = "block";
 		}
 
 		queueDiv.innerHTML = "";
@@ -54,15 +44,6 @@ function loadQueue() {
 		cue.forEach(item => {
 			const { user, user_id } = item;
 			const div = document.createElement("div");
-
-			// required for users enqueued before 0.3.0
-			if (user.hasOwnProperty("legacy")) {
-				// @ts-ignore
-				for (const [key, value] of Object.entries(user.legacy)) {
-					// @ts-ignore
-					user[key] = value;
-				}
-			}
 
 			const p = document.createElement("p");
 			const screen_name = EscapeHtml(user.screen_name);  // this shouldn't really do anything, but can't be too careful
@@ -72,10 +53,10 @@ function loadQueue() {
 			const remove = document.createElement("button");
 			remove.onclick = () => {
 				div.removeChild(remove);
-				unqueueUser(user_id, false).then(() => {
+				unqueueUser(user_id, user.screen_name, false).then(() => {
+					console.log(logstr, `removed ${FormatLegacyName(user)} from queue`);
 					queueDiv.removeChild(div);
 				});
-				console.log(logstr, `removed ${FormatLegacyName(user)} from queue`);
 			};
 			remove.textContent = "remove";
 			div.appendChild(remove);
@@ -83,10 +64,10 @@ function loadQueue() {
 			const never = document.createElement("button");
 			never.onclick = () => {
 				div.removeChild(never);
-				unqueueUser(user_id, true).then(() => {
+				unqueueUser(user_id, user.screen_name, true).then(() => {
+					console.log(logstr, `removed and safelisted ${FormatLegacyName(user)} from queue`);
 					queueDiv.removeChild(div);
 				});
-				console.log(logstr, `removed and safelisted ${FormatLegacyName(user)} from queue`);
 			};
 			never.textContent = "never block";
 			div.appendChild(never);
@@ -144,46 +125,45 @@ document.addEventListener("DOMContentLoaded", () => {
 			api.storage.sync.get({ unblocked: { }})
 			.then(items => items.unblocked as { [k: string]: string | null })
 			.then(safelist => {
-				api.storage.local.get({ BlockQueue: [] }).then(items => {
-					const queue: { [u: string]: BlockUser } = { };
-					for (const user of items.BlockQueue as BlockUser[]) {
-						queue[user.user_id] = user;
-					}
-
+				return new Promise<void>(async (resolve) => {
 					const userList = JSON.parse(payload) as BlockUser[];
-					userList.forEach(user => {
-						// explicitly check to make sure all fields are populated
-						if (
-							user?.user_id === undefined ||
-							user?.user?.name === undefined ||
-							user?.user?.screen_name === undefined ||
-							user?.reason === undefined
-						) {
-							console.error(logstr, "user object could not be processed:", user);
+					for (const user of userList) {
+						try {
+							// explicitly check to make sure all fields are populated
+							if (
+								user?.user_id === undefined ||
+								user?.user?.name === undefined ||
+								user?.user?.screen_name === undefined ||
+								user?.reason === undefined
+							) {
+								throw new Error("user object could not be processed:");
+							}
+
+							if (safelist.hasOwnProperty(user.user_id)) {
+								safelisted++;
+								continue;
+							}
+
+							await AddUserToQueue(user);
+							loaded++;
+						} catch (_e) {
+							const e = _e as Error;
+							console.error(logstr, e.message, user, e);
 							failures++;
 							return;
 						}
-
-						if (safelist.hasOwnProperty(user.user_id)) {
-							safelisted++;
-							return;
-						}
-
-						queue[user.user_id] = user;
-						loaded++;
-					});
-
-					return api.storage.local.set({ BlockQueue: Array.from(Object.values(queue)) });
+					}
+					resolve();
 				}).then(() => {
-					console.log(logstr, "successfully loaded", loaded, "users into queue. failures:", failures, "safelisted:", safelisted);
-					inputStatus.innerText = `loaded ${commafy(loaded)} users into queue (${commafy(failures)} failures, ${commafy(safelisted)} safelisted)`;
+					console.log(logstr, "successfully loaded", loaded, "users into queue. failures:", failures);
+					inputStatus.innerText = `loaded ${commafy(loaded)} users into queue (${commafy(failures)} failures)`;
 					loadQueue();
 				}).catch(e => {
 					console.error(logstr, e);
 					inputStatus.innerText = e.message;
 				}).finally(() => {
 					timeout = setTimeout(() => {
-						inputStatus.innerText = defaultInputText;
+						inputStatus.innerText = "Click or Drag to Import File";
 						timeout = null;
 					}, 10e3);
 				});

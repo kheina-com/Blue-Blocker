@@ -1,4 +1,4 @@
-import { api, logstr, AddToHistoryAction, IsVerifiedAction, RemoveFromHistoryAction, SuccessStatus, HistoryStateBlocked } from "./constants";
+import { api, logstr, AddToHistoryAction, IsVerifiedAction, RemoveFromHistoryAction, SuccessStatus, PopFromQueueAction, AddToQueueAction, HistoryStateBlocked, HistoryStateGone } from "./constants";
 
 export function abbreviate(value: number): string {
 	if (value >= 995e7)
@@ -38,7 +38,7 @@ export async function IsUserLegacyVerified(user_id: string, handle: string): Pro
 
 	let response: LegacyVerifiedResponse | MessageResponse | null = null;
 	for (let i = 0; i < 5; i++) {
-		response = await api.runtime.sendMessage(
+		response = await api.runtime.sendMessage<RuntimeMessage, MessageResponse>(
 			{ action: IsVerifiedAction, data: { user_id, handle } },
 		) as LegacyVerifiedResponse;
 		if (response.status === SuccessStatus) {
@@ -151,4 +151,43 @@ export function MakeToast(content: string, config: Config, options: { html?: boo
 
 export function EscapeHtml(text: string): string {
 	return new Option(text).innerHTML;
+}
+
+export async function QueuePop(): Promise<BlockUser | undefined> {
+	interface PopFromQueueResponse {
+		status: "SUCCESS",
+		result: BlockUser,
+	}
+
+	let response: PopFromQueueResponse | MessageResponse | null = null;
+	for (let i = 0; i < 5; i++) {
+		response = await api.runtime.sendMessage({ action: PopFromQueueAction }) as PopFromQueueResponse;
+		if (response.status === SuccessStatus) {
+			return (response as PopFromQueueResponse).result;
+		}
+	}
+
+	if (response?.status !== SuccessStatus) {
+		const message = "unable to pop user from queue";
+		console.error(logstr, message, response);
+		throw new Error(message);
+	}
+
+	return (response as PopFromQueueResponse).result;
+}
+
+export async function QueuePush(user: BlockUser): Promise<void> {
+	let response: MessageResponse | null = null;
+	for (let i = 0; i < 5; i++) {
+		response = await api.runtime.sendMessage({ action: AddToQueueAction, data: user }) as MessageResponse;
+		if (response.status === SuccessStatus) {
+			return;
+		}
+	}
+
+	if (response?.status !== SuccessStatus) {
+		const message = "unable to pust user to queue";
+		console.error(logstr, message, response);
+		throw new Error(message);
+	}
 }

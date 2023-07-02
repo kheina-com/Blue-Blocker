@@ -89,7 +89,7 @@ export const Browser = api.runtime.getManifest()?.browser_specific_settings?.gec
 export const SoupcanExtensionId = Browser === "chrome" ? "hcneafegcikghlbibfmlgadahjfckonj" : "soupcan@beth.lgbt";
 
 // internal message actions
-export const [IsVerifiedAction, AddToHistoryAction, RemoveFromHistoryAction] = ["is_verified", "add_user_to_history", "remove_user_from_history"];
+export const [IsVerifiedAction, AddToHistoryAction, RemoveFromHistoryAction, AddToQueueAction, PopFromQueueAction] = ["is_verified", "add_user_to_history", "remove_user_from_history", "add_user_to_queue", "pop_user_from_queue"];
 export const SuccessStatus: SuccessStatus = "SUCCESS";
 export const ErrorStatus: ErrorStatus = "ERROR";
 

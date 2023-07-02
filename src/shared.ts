@@ -1,5 +1,4 @@
 import { BlockCounter } from './models/block_counter';
-import { BlockQueue } from './models/block_queue';
 import { QueueConsumer } from './models/queue_consumer';
 import {
 	api,
@@ -18,13 +17,12 @@ import {
 	ReasonPromoted,
 	HistoryStateGone,
 } from './constants';
-import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory } from './utilities';
+import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory, QueuePop, QueuePush } from './utilities';
 
 // TODO: tbh this file shouldn't even exist anymore and should be
 // split between content/startup.ts and utilities.ts
 
 // Define constants that shouldn't be exported to the rest of the addon
-const queue = new BlockQueue(api.storage.local);
 const blockCounter = new BlockCounter(api.storage.local);
 const blockCache: Set<string> = new Set();
 export const UnblockCache: Set<string> = new Set();
@@ -203,31 +201,20 @@ function queueBlockUser(user: BlueBlockerUser, user_id: string, reason: number) 
 		return;
 	}
 	blockCache.add(user_id);
-	queue.push({ user_id, reason, user: { name: user.legacy.name, screen_name: user.legacy.screen_name } });
+	QueuePush({ user_id, reason, user: { name: user.legacy.name, screen_name: user.legacy.screen_name } });
 	console.log(logstr, `queued ${FormatLegacyName(user.legacy)} for a block due to ${ReasonMap[reason]}.`);
 	consumer.start();
 }
 
 function checkBlockQueue(): Promise<void> {
 	return new Promise<void>(resolve => {
-		queue.shift()
-		.then(_item => {
-			const item = _item as BlockUser;
+		QueuePop()
+		.then(item => {
 			if (item === undefined) {
 				consumer.stop();
 				return;
 			}
 			const { user, user_id, reason } = item;
-
-			// required for users enqueued before 0.3.0
-			if (user.hasOwnProperty("legacy")) {
-				// @ts-ignore
-				for (const [key, value] of Object.entries(user.legacy)) {
-					// @ts-ignore
-					user[key] = value;
-				}
-			}
-
 			blockUser(user, user_id, reason);
 			resolve();
 		})
@@ -278,7 +265,7 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 
 		api.storage.local.get({ headers: null })
 		.then(items => items.headers as { [k: string]: string })
-		.then((req_headers: { [k: string]: string }) => {
+		.then((req_headers) => {
 			const body = `user_id=${user_id}`;
 			const headers: { [k: string]: string } = {
 				"content-length": body.length.toString(),
@@ -318,7 +305,7 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 				if (response.status === 403 || response.status === 401) {
 					// user has been logged out, we need to stop queue and re-add
 					consumer.stop();
-					queue.push({user, user_id, reason});
+					QueuePush({user, user_id, reason});
 					api.storage.local.set({ [EventKey]: { type: UserLogoutEvent } });
 					console.log(logstr, "user is logged out, queue consumer has been halted.");
 				}
@@ -328,7 +315,7 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 				}
 				else if (response.status >= 300) {
 					consumer.stop();
-					queue.push({user, user_id, reason});
+					QueuePush({user, user_id, reason});
 					console.error(logstr, `failed to block ${FormatLegacyName(user)}, consumer stopped just in case.`, response);
 				}
 				else {
@@ -341,7 +328,7 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 				if (attempt < 3) {
 					blockUser(user, user_id, reason, attempt + 1);
 				} else {
-					queue.push({user, user_id, reason});
+					QueuePush({user, user_id, reason});
 					console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, error);
 				}
 			});

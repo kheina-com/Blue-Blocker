@@ -81,6 +81,10 @@ main {
 	cursor: pointer;
 }
 
+#db-limit-reached {
+	display: none;
+}
+
 #importer {
 	display: none;
 }
