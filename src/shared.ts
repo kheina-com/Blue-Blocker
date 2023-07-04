@@ -472,7 +472,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 	if (config.soupcanIntegration) {
 		// fire an event here to soupcan and check for transphobia
 		try {
-			const response = await chrome.runtime.sendMessage(
+			const response = await api.runtime.sendMessage(
 				SoupcanExtensionId,
 				{ action: "check_twitter_user", screen_name: user.legacy.screen_name },
 			);

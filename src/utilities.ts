@@ -117,14 +117,14 @@ export function MakeToast(content: string, config: Config, options: { html?: boo
 	}
 
 	const t = document.createElement("div");
-	let popupTimer: number = config.popupTimer * 1000;
+	let popupTimer: number = 60e3;
 	if (options?.error) {
 		t.className = "toast error";
-		popupTimer = 60e3;
 	} else if (options?.warn) {
 		t.className = "toast warn";
 	} else {
 		t.className = "toast";
+		popupTimer = config.popupTimer * 1000;
 	}
 	if (options?.html) {
 		t.innerHTML = content;
