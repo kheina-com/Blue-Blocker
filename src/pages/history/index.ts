@@ -72,10 +72,11 @@ blockCounter.getCriticalPoint(refid)
 			div.appendChild(p3);
 
 			const p4 = document.createElement("p");
-			const datetime = item.time.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' })
+			const time = new Date(item.time);
+			const datetime = time.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' })
 				.replace(`, ${new Date().getFullYear()}`, '')
 				+ ', '
-				+ item.time.toLocaleTimeString()
+				+ time.toLocaleTimeString()
 				.toLowerCase();
 			p4.innerText = state + " on " + datetime;
 			div.appendChild(p4);
