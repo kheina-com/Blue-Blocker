@@ -29,8 +29,8 @@ export async function PopulateVerifiedDb() {
 		console.error(logstr, "failed to open legacy verified user database:", DBOpenRequest);
 	};
 
-	DBOpenRequest.onupgradeneeded = () => {
-		console.debug(logstr, "legacy db onupgradeneeded:", DBOpenRequest);
+	DBOpenRequest.onupgradeneeded = e => {
+		console.debug(logstr, "legacy db onupgradeneeded:", e);
 		legacyDb = DBOpenRequest.result;
 		if (legacyDb.objectStoreNames.contains(legacyDbStore)) {
 			return;
@@ -204,8 +204,8 @@ export function ConnectDb(): Promise<IDBDatabase> {
 			return reject();
 		};
 
-		DBOpenRequest.onupgradeneeded = () => {
-			console.debug(logstr, "upgrading db:", DBOpenRequest);
+		DBOpenRequest.onupgradeneeded = e => {
+			console.debug(logstr, "upgrading db:", e);
 			db = DBOpenRequest.result;
 
 			if (!db.objectStoreNames.contains(historyDbStore)) {
@@ -232,7 +232,7 @@ export function ConnectDb(): Promise<IDBDatabase> {
 			dbLoaded = true;
 
 			const items = await api.storage.local.get({ BlockQueue: [] });
-			if (items?.BlockQueue?.length !== undefined) {
+			if (items?.BlockQueue?.length !== undefined && items?.BlockQueue?.length > 0) {
 				const transaction = db.transaction([queueDbStore], "readwrite");
 				transaction.onabort = transaction.onerror = reject;	
 				const store = transaction.objectStore(queueDbStore);
@@ -257,11 +257,13 @@ export function ConnectDb(): Promise<IDBDatabase> {
 						reason: item.reason,
 						queue: QueueId(),
 					};
+					// TODO: add error handling here
 					store.add(user);
 				});
 
 				api.storage.local.set({ BlockQueue: null });
 				transaction.commit();
+				console.debug(logstr, "imported", items.BlockQueue.length, "users from local storage queue");
 			}
 
 			console.log(logstr, "successfully connected to db");

@@ -1,4 +1,4 @@
-import { api, logstr, AddToHistoryAction, IsVerifiedAction, RemoveFromHistoryAction, SuccessStatus, PopFromQueueAction, AddToQueueAction, HistoryStateBlocked, HistoryStateGone } from "./constants";
+import { api, logstr, AddToHistoryAction, IsVerifiedAction, RemoveFromHistoryAction, SuccessStatus, PopFromQueueAction, AddToQueueAction, HistoryStateBlocked } from "./constants";
 
 export function abbreviate(value: number): string {
 	if (value >= 995e7)

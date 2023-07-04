@@ -16,8 +16,10 @@ import {
 	ReasonTransphobia,
 	ReasonPromoted,
 	HistoryStateGone,
+	SuccessStatus,
+	ReasonExternal,
 } from './constants';
-import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory, QueuePop, QueuePush } from './utilities';
+import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory, QueuePop, QueuePush, RefId } from './utilities';
 
 // TODO: tbh this file shouldn't even exist anymore and should be
 // split between content/startup.ts and utilities.ts
@@ -196,13 +198,27 @@ api.storage.local.onChanged.addListener((items) => {
 	});
 });
 
-function queueBlockUser(user: BlueBlockerUser, user_id: string, reason: number) {
+function queueBlockUser(user: BlueBlockerUser, user_id: string, reason: number, external_reason: string | null = null) {
 	if (blockCache.has(user_id)) {
 		return;
 	}
 	blockCache.add(user_id);
-	QueuePush({ user_id, reason, user: { name: user.legacy.name, screen_name: user.legacy.screen_name } });
-	console.log(logstr, `queued ${FormatLegacyName(user.legacy)} for a block due to ${ReasonMap[reason]}.`);
+
+	const blockUser: BlockUser = {
+		user_id,
+		reason,
+		user: {
+			name: user.legacy.name,
+			screen_name: user.legacy.screen_name
+		},
+	};
+
+	if (external_reason) {
+		blockUser.external_reason = external_reason;
+	}
+
+	QueuePush(blockUser);
+	console.log(logstr, `queued ${FormatLegacyName(user.legacy)} for a block due to ${ReasonMap?.[reason] ?? external_reason}.`);
 	consumer.start();
 }
 
@@ -212,10 +228,9 @@ function checkBlockQueue(): Promise<void> {
 		.then(item => {
 			if (item === undefined) {
 				consumer.stop();
-				return;
+				return resolve();
 			}
-			const { user, user_id, reason } = item;
-			blockUser(user, user_id, reason);
+			blockUser(item);
 			resolve();
 		})
 		.catch(error => {
@@ -239,7 +254,7 @@ const consumer = new QueueConsumer(api.storage.local, checkBlockQueue, async () 
 consumer.start();
 
 const CsrfTokenRegex = /ct0=\s*(\w+);/;
-function blockUser(user: { name: string, screen_name: string }, user_id: string, reason: number, attempt = 1) {
+function blockUser(user: BlockUser, attempt = 1) {
 	const match = window.location.href.match(/^https?:\/\/(?:\w+\.)?twitter.com(?=$|\/)/);
 
 	if (!match) {
@@ -266,7 +281,7 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 		api.storage.local.get({ headers: null })
 		.then(items => items.headers as { [k: string]: string })
 		.then((req_headers) => {
-			const body = `user_id=${user_id}`;
+			const body = `user_id=${user.user_id}`;
 			const headers: { [k: string]: string } = {
 				"content-length": body.length.toString(),
 				"content-type": "application/x-www-form-urlencoded",
@@ -305,31 +320,31 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 				if (response.status === 403 || response.status === 401) {
 					// user has been logged out, we need to stop queue and re-add
 					consumer.stop();
-					QueuePush({user, user_id, reason});
+					QueuePush(user);
 					api.storage.local.set({ [EventKey]: { type: UserLogoutEvent } });
 					console.log(logstr, "user is logged out, queue consumer has been halted.");
 				}
 				else if (response.status === 404) {
-					AddUserBlockHistory({ user_id, user, reason }, HistoryStateGone).catch(e => console.error(logstr, e));
-					console.log(logstr, `could not block ${FormatLegacyName(user)}, user no longer exists`);
+					AddUserBlockHistory(user, HistoryStateGone).catch(e => console.error(logstr, e));
+					console.log(logstr, `could not block ${FormatLegacyName(user.user)}, user no longer exists`);
 				}
 				else if (response.status >= 300) {
 					consumer.stop();
-					QueuePush({user, user_id, reason});
-					console.error(logstr, `failed to block ${FormatLegacyName(user)}, consumer stopped just in case.`, response);
+					QueuePush(user);
+					console.error(logstr, `failed to block ${FormatLegacyName(user.user)}, consumer stopped just in case.`, response);
 				}
 				else {
 					blockCounter.increment();
-					AddUserBlockHistory({ user_id, user, reason }).catch(e => console.error(logstr, e));
-					console.log(logstr, `blocked ${FormatLegacyName(user)} due to ${ReasonMap[reason]}.`);
-					api.storage.local.set({ [EventKey]: { type: UserBlockedEvent, user, user_id, reason } })
+					AddUserBlockHistory(user).catch(e => console.error(logstr, e));
+					console.log(logstr, `blocked ${FormatLegacyName(user.user)} due to ${ReasonMap?.[user.reason] ?? user?.external_reason}.`);
+					api.storage.local.set({ [EventKey]: { type: UserBlockedEvent, ...user } })
 				}
 			}).catch(error => {
 				if (attempt < 3) {
-					blockUser(user, user_id, reason, attempt + 1);
+					blockUser(user, attempt + 1);
 				} else {
-					QueuePush({user, user_id, reason});
-					console.error(logstr, `failed to block ${FormatLegacyName(user)}:`, user, error);
+					QueuePush(user);
+					console.error(logstr, `failed to block ${FormatLegacyName(user.user)}:`, user, error);
 				}
 			});
 		});
@@ -479,4 +494,52 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 			}
 		}
 	}
+
+	let updateIntegrations = false;
+	api.storage.local.get({ integrations: [] })
+	.then(items => items.integrations as Integration[])
+	.then(async (integrations) => {
+		for (const integration of integrations) {
+			if (!integration.enabled) {
+				continue;
+			}
+
+			const refid = RefId();
+			try {
+				const message = { action: "check_twitter_user", data: user, refid };
+				console.debug(logstr, refid, "send:", message, integration);
+				const response = await api.runtime.sendMessage(integration.extensionId, ) as MessageResponse;
+				console.debug(logstr, refid, "recv:", response);
+
+				if (response?.status !== SuccessStatus) {
+					console.error(logstr, refid, "received a non-success status from", integration.name, response);
+					return;
+				}
+
+				const successResponse = response as SuccessResponse;
+				const result = successResponse.result as ExternalBlockResponse;
+				if (result.block) {
+					queueBlockUser(user, String(user.rest_id), ReasonExternal, result.reason);
+					return;
+				}
+			} catch (_e) {
+				const e = _e as Error;
+				console.debug(logstr, refid, "unexpected error caught during integration", integration, e);
+				if (e.message === "Could not establish connection. Receiving end does not exist.") {
+					updateIntegrations = true;
+					integration.enabled = false;
+					console.log(logstr, refid, "looks like", integration.name, "was uninstalled, disabling integration.");
+				} else {
+					console.error(logstr, refid, `an unknown error occurred while messaging ${integration.name}:`, e);
+				}
+			}
+		}
+
+		if (updateIntegrations) {
+			api.storage.sync.set({ integrations });
+		}
+	}).catch(e =>
+		// this error should basically be unreachable
+		console.error(logstr, "an unexpected error occurred while processing integrations:", e)
+	);
 }

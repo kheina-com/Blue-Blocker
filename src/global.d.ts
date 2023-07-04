@@ -68,6 +68,11 @@ interface ErrorResponse {
 	message: string,
 }
 
+interface ExternalBlockResponse {
+	block: boolean,
+	reason?: string,
+}
+
 interface BlueBlockerEvent {
 	url: URL | string,
 	parsedUrl: RegExpExecArray,
@@ -111,4 +116,10 @@ interface BlockedUser {
 	external_reason?: string,
 	state: number,
 	time: Date,
+}
+
+interface Integration {
+	name: string,
+	extensionId: string,
+	enabled: boolean,
 }

@@ -98,6 +98,7 @@ api.runtime.onMessageExternal.addListener((m, s, r) => { let response: MessageRe
 	const refid = RefId();
 	console.debug(logstr, refid, "ext recv:", message, sender);
 	if (!allowedExtensionIds.has(sender?.id ?? "")) {
+		response = { status: ErrorStatus, message: "extension not allowed" } as ErrorResponse;
 		return;
 	}
 
@@ -123,5 +124,5 @@ api.runtime.onMessageExternal.addListener((m, s, r) => { let response: MessageRe
 		console.error(logstr, refid, "unexpected error caught during", message?.action, "action", e);
 		response = { status: ErrorStatus, message: e.message ?? "unknown error" } as ErrorResponse;
 	}
-	console.debug(logstr, refid, "respond:", response);
+	console.debug(logstr, refid, "ext respond:", response);
 })(m, s).finally(() => r(response)); return true });

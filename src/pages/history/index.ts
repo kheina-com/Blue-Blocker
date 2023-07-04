@@ -2,6 +2,7 @@ import { commafy, EscapeHtml, RefId } from "../../utilities.js";
 import { api, logstr, HistoryStateBlocked, ReasonMap, ReasonExternal, HistoryStateUnblocked, HistoryStateGone } from "../../constants.js";
 import { ConnectDb, historyDbStore } from "../../background/db.js";
 import { BlockCounter } from "../../models/block_counter";
+import "../style.css";
 import "./style.css";
 
 const blockCounter = new BlockCounter(api.storage.local);
