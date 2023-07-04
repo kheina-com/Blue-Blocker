@@ -8,6 +8,14 @@ Summary
 	5. version timestamp follow the yyyy.MM.dd format
 ```
 
+# v0.3.4 [2023.07.04]
+- feat: show alert when user is logged out
+- patch: write to history when block fails due to account deletion
+- fix: retry after db failure
+- fix: errors not surfacing during db transactions
+- chore: add typedefs to all messages
+- chore: display variance in popup
+
 # v0.3.3 [2023.07.01]
 - feat: track block history, click blocked number in context menu to access (#63)
 - feat: added safelist control buttons: import, export, clear

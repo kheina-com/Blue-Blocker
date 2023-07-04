@@ -5,7 +5,7 @@ import { api, DefaultOptions } from "../constants";
 // @ts-ignore
 import inject from "/src/injected/inject?script&module";
 const script = document.createElement("script");
-script.src = chrome.runtime.getURL(inject);
+script.src = api.runtime.getURL(inject);
 script.id = "injected-blue-block-xhr";
 script.type = "text/javascript";
 document.head.prepend(script);

@@ -85,6 +85,13 @@
 	background-position-x: 1em;
 	background-position-y: center;
 }
+#injected-blue-block-toasts .toast.warn {
+	background: url('/icon/warn.png') var(--bg1color);
+	background-repeat: no-repeat;
+	background-size: 2.5em;
+	background-position-x: 1em;
+	background-position-y: center;
+}
 
 #injected-blue-block-toasts .toast a,
 #injected-blue-block-toasts .toast a:active,

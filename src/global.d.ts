@@ -44,6 +44,30 @@ interface BlueBlockerUser {
 	promoted_tweet?: boolean,
 }
 
+// extension message types
+type SuccessStatus = "SUCCESS";
+type ErrorStatus = "ERROR";
+type MessageStatus = SuccessStatus | ErrorStatus;
+
+interface RuntimeMessage {
+	action: string,
+	data: any,
+}
+
+interface MessageResponse {
+	status: MessageStatus,
+}
+
+interface SuccessResponse {
+	status: SuccessStatus,
+	result: any,
+}
+
+interface ErrorResponse {
+	status: ErrorStatus,
+	message: string,
+}
+
 interface BlueBlockerEvent {
 	url: URL | string,
 	parsedUrl: RegExpExecArray,
@@ -78,4 +102,13 @@ interface BlockUser {
 	user: { name: string, screen_name: string },
 	reason: number,
 	external_reason?: string,
+}
+
+interface BlockedUser {
+	user_id: string,
+	user: { name: string, screen_name: string },
+	reason: number,
+	external_reason?: string,
+	state: number,
+	time: Date,
 }

@@ -1,4 +1,4 @@
-import { api, logstr, EventKey, LegacyVerifiedUrl, MessageEvent, ErrorEvent, HistoryStateBlocked, HistoryStateUnblocked } from "../constants";
+import { api, logstr, EventKey, LegacyVerifiedUrl, MessageEvent, ErrorEvent, HistoryStateUnblocked } from "../constants";
 import { commafy } from "../utilities";
 
 const expectedVerifiedUsersCount = 407520;
@@ -71,7 +71,7 @@ export async function PopulateVerifiedDb() {
 			});
 		}
 		catch (_e) {
-			const e = _e as Error;
+			// const e = _e as Error;
 			await new Promise<void>((resolve, reject) => {
 				const transaction = legacyDb.transaction([legacyDbStore], "readwrite");
 				const store = transaction.objectStore(legacyDbStore);
@@ -161,6 +161,7 @@ export async function PopulateVerifiedDb() {
 }
 
 export function CheckDbIsUserLegacyVerified(user_id: string, handle: string): Promise<boolean> {
+	// @ts-ignore  // typescript is wrong here, this cannot return idb due to final throws
 	return new Promise<boolean>((resolve, reject) => {
 		const transaction = legacyDb.transaction([legacyDbStore], "readonly");
 		transaction.onabort = transaction.onerror = reject;
@@ -175,68 +176,63 @@ export function CheckDbIsUserLegacyVerified(user_id: string, handle: string): Pr
 	}).catch(e => {
 		// if the db has already been loaded, we can safely reconnect
 		if (legacyDbLoaded) {
-			PopulateVerifiedDb();
+			return PopulateVerifiedDb()
+			.finally(() => {
+				throw e;  // re-throw error
+			});
 		}
 		throw e;  // re-throw error
 	});
 }
 
-let historyDb: IDBDatabase;
+let db: IDBDatabase;
 
-export interface BlockedUser {
-	user_id: string,
-	user: { name: string, screen_name: string },
-	reason: number,
-	external_reason?: string,
-	state: number,
-	time: Date,
-}
-
-const historyDbName = "blue-blocker-db";
+const dbName = "blue-blocker-db";
 export const historyDbStore = "blocked_users";
-const historyDbVersion = 1;
+const dbVersion = 1;
+// used so we don't load the db twice
+let dbLoaded: boolean = false;
 
-export function ConnectHistoryDb(): Promise<IDBDatabase> {
+export function ConnectDb(): Promise<IDBDatabase> {
 	// why use a promise instead of a normal async? so that we can resolve or reject on db connect
-	return new Promise<IDBDatabase>(async (resolve, reject) => {
+	return new Promise<IDBDatabase>((resolve, reject) => {
 		// this logic should also be much easier because we don't need to populate anything (thank god)
-		const DBOpenRequest = indexedDB.open(historyDbName, historyDbVersion);
+		const DBOpenRequest = indexedDB.open(dbName, dbVersion);
 		DBOpenRequest.onerror = DBOpenRequest.onblocked = () => {
-			console.error(logstr, "failed to connect history database:", DBOpenRequest);
+			console.error(logstr, "failed to connect database:", DBOpenRequest);
 			return reject();
 		};
 
 		DBOpenRequest.onupgradeneeded = () => {
-			console.debug(logstr, "upgrading history db:", DBOpenRequest);
-			historyDb = DBOpenRequest.result;
+			console.debug(logstr, "upgrading db:", DBOpenRequest);
+			db = DBOpenRequest.result;
 
-			if (historyDb.objectStoreNames.contains(historyDbStore)) {
-				return;
+			if (!db.objectStoreNames.contains(historyDbStore)) {
+				const store = db.createObjectStore(historyDbStore, { keyPath: "user_id" });
+				store.createIndex("user.name", "user.name", { unique: false });
+				store.createIndex("user.screen_name", "user.screen_name", { unique: false });
+				store.createIndex("time", "time", { unique: false });
+				console.log(logstr, "created history database.");
 			}
-
-			const store = historyDb.createObjectStore(historyDbStore, { keyPath: "user_id" });
-			store.createIndex("user.name", "user.name", { unique: false });
-			store.createIndex("user.screen_name", "user.screen_name", { unique: false });
-			store.createIndex("time", "time", { unique: false });
-			console.log(logstr, "created history database.");
 		};
 
-		DBOpenRequest.onsuccess = () => {
-			historyDb = DBOpenRequest.result;
-			console.log(logstr, "successfully connected to history db");
-			return resolve(historyDb);
+		DBOpenRequest.onsuccess = async () => {
+			db = DBOpenRequest.result;
+			if (dbLoaded) {
+				return resolve(db);
+			}
+			dbLoaded = true;
+
+			console.log(logstr, "successfully connected to db");
+			return resolve(db);
 		};
 	});
 }
 
-export function AddUserToHistory(blockUser: BlockUser): Promise<void> {
-	const user: BlockedUser = {
-		...blockUser,
-		state: HistoryStateBlocked,
-		time: new Date(),
-	};
-	return new Promise<void>(async (resolve, reject) => {
-		const transaction = historyDb.transaction([historyDbStore], "readwrite");
+export function AddUserToHistory(user: BlockedUser): Promise<void> {
+	// @ts-ignore  // typescript is wrong here, this cannot return idb due to final throw
+	return new Promise<void>((resolve, reject) => {
+		const transaction = db.transaction([historyDbStore], "readwrite");
 		transaction.onabort = transaction.onerror = reject;
 		transaction.oncomplete = () => resolve();
 
@@ -244,17 +240,20 @@ export function AddUserToHistory(blockUser: BlockUser): Promise<void> {
 		store.add(user);
 
 		transaction.commit();
-	}).catch(async (e) => {
+	}).catch(e =>
 		// attempt to reconnect to the db
-		await ConnectHistoryDb();
-		throw e;  // re-throw error to retry
-	});
+		ConnectDb()
+		.finally(() => {
+			throw e;  // re-throw error to retry
+		})
+	);
 }
 
 export function RemoveUserFromHistory(user_id: string): Promise<void> {
+	// @ts-ignore  // typescript is wrong here, this cannot return idb due to final throw
 	return new Promise<void>(async (resolve, reject) => {
 		try {
-			const transaction = historyDb.transaction([historyDbStore], "readwrite");
+			const transaction = db.transaction([historyDbStore], "readwrite");
 			transaction.onabort = transaction.onerror = reject;
 			transaction.oncomplete = () => resolve();
 
@@ -266,6 +265,8 @@ export function RemoveUserFromHistory(user_id: string): Promise<void> {
 					const user = req.result as BlockedUser;
 					res(user);
 				};
+			}).catch(e => {
+				throw e;
 			});
 
 			user.state = HistoryStateUnblocked;
@@ -276,9 +277,11 @@ export function RemoveUserFromHistory(user_id: string): Promise<void> {
 		} catch (e) {
 			reject(e);
 		}
-	}).catch(async (e) => {
+	}).catch(e =>
 		// attempt to reconnect to the db
-		await ConnectHistoryDb();
-		throw e;  // re-throw error to retry
-	});
+		ConnectDb()
+		.finally(() => {
+			throw e;  // re-throw error to retry
+		})
+	);
 }
