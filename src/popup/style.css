@@ -167,6 +167,10 @@ h2 img {
 	margin: 0;
 }
 
+.variance {
+	border-bottom: dotted var(--border-size) var(--textcolor);
+}
+
 .integration {
 	display: none;
 }

@@ -57,19 +57,20 @@ function inputMirror(name: string, value: any, onInput: (e: Event) => void, onIn
 	});
 }
 
-function sliderMirror(name: string, key: "popupTimer" | "blockInterval", config: Config) {
+function sliderMirror(name: string, key: "popupTimer" | "blockInterval", config: Config, options: { onInput?: ((e: Event, ele: HTMLInputElement[]) => any) } = { }) {
 	const ele = [...document.getElementsByName(name)] as HTMLInputElement[];
+	ele[0].value = config[key].toString();
+	const onInput = options?.onInput ?? ((_e: Event) => {
+		const target = _e.target as HTMLInputElement;
+		ele.forEach(i => i.value = target.value);
+		document.getElementsByName(target.name + "-value")
+		.forEach(v => v.textContent = target.value.toString() + "s");
+	});
+	onInput({ target: ele[0] } as unknown as Event, ele);
 	ele.forEach(input => {
-		const value = config[key].toString()
+		const value = config[key].toString();
 		input.value = value;
-		const onInput = (_e: Event) => {
-			const e = _e.target as HTMLInputElement;
-			ele.filter(i => i !== e).forEach(i => i.value = e.value);
-			document.getElementsByName(e.name + "-value")
-			.forEach(v => v.textContent = e.value.toString() + "s");
-		};
-		onInput({ target: input } as unknown as Event);
-		input.addEventListener("input", onInput);
+		input.addEventListener("input", e => onInput(e, ele.filter(i => i !== e.target)));
 		input.addEventListener("change", e => {
 			const target = e.target as HTMLInputElement;
 			const targetValue = parseInt(target.value);
@@ -228,8 +229,16 @@ document.addEventListener("DOMContentLoaded", () => {
 			});
 		});
 
-		sliderMirror("block-interval", "blockInterval", config);
 		sliderMirror("popup-timer", "popupTimer", config);
+		sliderMirror("block-interval", "blockInterval", config, { onInput(e, ele) {
+			const target = e.target as HTMLInputElement;	
+			const targetValue = parseInt(target.value);
+			ele.forEach(i => i.value = target.value);
+			document.getElementsByName("variance")
+			.forEach(e => e.innerText = "±" + (targetValue / 10).toFixed(1) + "s");
+			document.getElementsByName(target.name + "-value")
+			.forEach(v => v.textContent = target.value.toString() + "s");
+		}});
 
 		// safelist logic
 		// import cannot be done here, only on a standalone page
