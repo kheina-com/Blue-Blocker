@@ -117,9 +117,11 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 	});
 
+	const defaultInputText = "Click or Drag to Import File";
 	const input = document.getElementById("block-import") as HTMLInputElement;
 	const importLabel = document.getElementById("block-import-label") as HTMLElement;
 	const inputStatus = importLabel.firstElementChild as HTMLElement;
+	inputStatus.innerText = defaultInputText;
 	let timeout: number | null = null;
 
 	function onInput(files: FileList | null | undefined) {
@@ -134,47 +136,57 @@ document.addEventListener("DOMContentLoaded", () => {
 		const reader = new FileReader();
 		let loaded: number = 0;
 		let failures: number = 0;
+		let safelisted: number = 0;
 		reader.addEventListener("load", l => {
 			inputStatus.innerText = "importing...";
 			// @ts-ignore
 			const payload = l.target.result as string;
-			api.storage.local.get({ BlockQueue: [] }).then(items => {
-				const queue: { [u: string]: BlockUser } = { };
-				for (const user of items.BlockQueue as BlockUser[]) {
-					queue[user.user_id] = user;
-				}
-
-				const userList = JSON.parse(payload) as BlockUser[];
-				userList.forEach(user => {
-					// explicitly check to make sure all fields are populated
-					if (
-						user?.user_id === undefined ||
-						user?.user?.name === undefined ||
-						user?.user?.screen_name === undefined ||
-						user?.reason === undefined
-					) {
-						console.error(logstr, "user object could not be processed:", user);
-						failures++;
-						return;
+			api.storage.sync.get({ unblocked: { }})
+			.then(items => items.unblocked as { [k: string]: string | null })
+			.then(safelist => {
+				api.storage.local.get({ BlockQueue: [] }).then(items => {
+					const queue: { [u: string]: BlockUser } = { };
+					for (const user of items.BlockQueue as BlockUser[]) {
+						queue[user.user_id] = user;
 					}
 
-					queue[user.user_id] = user;
-					loaded++;
-				});
+					const userList = JSON.parse(payload) as BlockUser[];
+					userList.forEach(user => {
+						// explicitly check to make sure all fields are populated
+						if (
+							user?.user_id === undefined ||
+							user?.user?.name === undefined ||
+							user?.user?.screen_name === undefined ||
+							user?.reason === undefined
+						) {
+							console.error(logstr, "user object could not be processed:", user);
+							failures++;
+							return;
+						}
 
-				return api.storage.local.set({ BlockQueue: Array.from(Object.values(queue)) });
-			}).then(() => {
-				console.log(logstr, "successfully loaded", loaded, "users into queue. failures:", failures);
-				inputStatus.innerText = `loaded ${commafy(loaded)} users into queue (${commafy(failures)} failures)`;
-				loadQueue();
-			}).catch(e => {
-				console.error(logstr, e);
-				inputStatus.innerText = e.message;
-			}).finally(() => {
-				timeout = setTimeout(() => {
-					inputStatus.innerText = "Click or Drag to Import File";
-					timeout = null;
-				}, 10e3);
+						if (safelist.hasOwnProperty(user.user_id)) {
+							safelisted++;
+							return;
+						}
+
+						queue[user.user_id] = user;
+						loaded++;
+					});
+
+					return api.storage.local.set({ BlockQueue: Array.from(Object.values(queue)) });
+				}).then(() => {
+					console.log(logstr, "successfully loaded", loaded, "users into queue. failures:", failures, "safelisted:", safelisted);
+					inputStatus.innerText = `loaded ${commafy(loaded)} users into queue (${commafy(failures)} failures, ${commafy(safelisted)} safelisted)`;
+					loadQueue();
+				}).catch(e => {
+					console.error(logstr, e);
+					inputStatus.innerText = e.message;
+				}).finally(() => {
+					timeout = setTimeout(() => {
+						inputStatus.innerText = defaultInputText;
+						timeout = null;
+					}, 10e3);
+				});
 			});
 		});
 		for (const i of files) {
