@@ -11,7 +11,7 @@ const refid = RefId();
 blockCounter.getCriticalPoint(refid)
 .then(ConnectDb)
 .then(db => {
-	new Promise<BlockedUser[]>((resolve, reject) => {
+	return new Promise<BlockedUser[]>((resolve, reject) => {
 		const transaction = db.transaction([historyDbStore], "readonly");
 		transaction.onabort = transaction.onerror = reject;
 		const store = transaction.objectStore(historyDbStore);
