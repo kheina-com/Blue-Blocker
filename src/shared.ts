@@ -16,6 +16,7 @@ import {
 	MessageEvent,
 	ReasonTransphobia,
 	ReasonPromoted,
+	HistoryStateGone,
 } from './constants';
 import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory } from './utilities';
 
@@ -124,8 +125,7 @@ function unblockUser(user: { name: string, screen_name: string }, user_id: strin
 					console.error(logstr, `failed to unblock ${FormatLegacyName(user)}:`, user, response);
 				}
 				else {
-					// use catch to retry in case of db failure
-					RemoveUserBlockHistory(user_id).catch(() => RemoveUserBlockHistory(user_id));
+					RemoveUserBlockHistory(user_id).catch(e => console.error(logstr, e));
 					console.log(logstr, `unblocked ${FormatLegacyName(user)}`);
 					MakeToast(`unblocked @${user.screen_name}, they won't be blocked again.`, config);
 				}
@@ -140,7 +140,8 @@ function unblockUser(user: { name: string, screen_name: string }, user_id: strin
 	});
 }
 
-const UserBlockedEvent = 'UserBlockedEvent';
+const UserBlockedEvent = "UserBlockedEvent";
+const UserLogoutEvent = "UserLogoutEvent";
 api.storage.local.onChanged.addListener((items) => {
 	// we're using local storage as a really dirty event driver
 	// TODO: replace this with chrome.tabs.sendmessage at some point. (requires adding tabs permission)
@@ -174,6 +175,12 @@ api.storage.local.onChanged.addListener((items) => {
 					};
 					const screen_name = EscapeHtml(user.screen_name);  // this shouldn't really do anything, but can't be too careful
 					MakeToast(`blocked ${EscapeHtml(name)} (<a href="/${screen_name}">@${screen_name}</a>)`, config, { html: true, elements: [b]})
+				}
+				break;
+
+			case UserLogoutEvent:
+				if (config.showBlockPopups) {
+					MakeToast("You have been logged out, and blocking has been paused.", config, { warn: true })
 				}
 				break;
 
@@ -312,10 +319,12 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 					// user has been logged out, we need to stop queue and re-add
 					consumer.stop();
 					queue.push({user, user_id, reason});
+					api.storage.local.set({ [EventKey]: { type: UserLogoutEvent } });
 					console.log(logstr, "user is logged out, queue consumer has been halted.");
 				}
 				else if (response.status === 404) {
-					console.log(logstr, `did not block ${FormatLegacyName(user)}, user no longer exists`);
+					AddUserBlockHistory({ user_id, user, reason }, HistoryStateGone).catch(e => console.error(logstr, e));
+					console.log(logstr, `could not block ${FormatLegacyName(user)}, user no longer exists`);
 				}
 				else if (response.status >= 300) {
 					consumer.stop();
@@ -324,8 +333,7 @@ function blockUser(user: { name: string, screen_name: string }, user_id: string,
 				}
 				else {
 					blockCounter.increment();
-					// use catch to retry in case of db failure
-					AddUserBlockHistory({ user_id, user, reason }).catch(() => AddUserBlockHistory({ user_id, user, reason }));
+					AddUserBlockHistory({ user_id, user, reason }).catch(e => console.error(logstr, e));
 					console.log(logstr, `blocked ${FormatLegacyName(user)} due to ${ReasonMap[reason]}.`);
 					api.storage.local.set({ [EventKey]: { type: UserBlockedEvent, user, user_id, reason } })
 				}

@@ -1,6 +1,6 @@
 import { api, logstr, AddToHistoryAction, ErrorStatus, IsVerifiedAction, ReasonExternal, RemoveFromHistoryAction, SoupcanExtensionId, SuccessStatus, DefaultOptions } from '../constants';
-import { abbreviate } from '../utilities';
-import { AddUserToHistory, CheckDbIsUserLegacyVerified, ConnectHistoryDb, PopulateVerifiedDb, RemoveUserFromHistory } from './db';
+import { abbreviate, RefId } from '../utilities';
+import { AddUserToHistory, CheckDbIsUserLegacyVerified, ConnectDb, PopulateVerifiedDb, RemoveUserFromHistory } from './db';
 import { BlockQueue } from '../models/block_queue';
 
 api.action.setBadgeBackgroundColor({ color: "#666" });
@@ -37,51 +37,46 @@ api.storage.sync.onChanged.addListener(async items => {
 	}
 });
 
-ConnectHistoryDb();
+ConnectDb();
 
-api.runtime.onMessage.addListener((m, s, r) => { (async (_message, sender, respond) => {
+api.runtime.onMessage.addListener((m, s, r) => { let response: MessageResponse; (async (message: RuntimeMessage, sender) => {
+	const refid = RefId();
+	console.debug(logstr, refid, "recv:", message, sender);
 	// messages are ALWAYS expected to be:
 	// 	1. objects
 	// 	2. contain a string value stored under message.action. should be one defined above
 	// other message contents change based on the defined action
-	let response: MessageResponse;
-	switch (_message?.action) {
-		case IsVerifiedAction:
-			const verifiedMessage = _message as { user_id: string, handle: string };
-			try {
+	try {
+		switch (message?.action) {
+			case IsVerifiedAction:
+				const verifiedMessage = message.data as { user_id: string, handle: string };
 				const isVerified = await CheckDbIsUserLegacyVerified(verifiedMessage.user_id, verifiedMessage.handle);
 				response = { status: SuccessStatus, result: isVerified } as SuccessResponse;
-			} catch (e) {
-				response = { status: ErrorStatus, message: "unknown error", error: e } as ErrorResponse;
-			}
-			break;
+				break;
 
-		case AddToHistoryAction:
-			const historyMessage = _message.data as BlockUser;
-			try {
+			case AddToHistoryAction:
+				const historyMessage = message.data as BlockedUser;
 				await AddUserToHistory(historyMessage);
 				response = { status: SuccessStatus, result: null } as SuccessResponse;
-			} catch (e) {
-				response = { status: ErrorStatus, message: "unknown error", error: e } as ErrorResponse;
-			}
-			break;
+				break;
 
-		case RemoveFromHistoryAction:
-			const removeMessage = _message.data as { user_id: string };
-			try {
+			case RemoveFromHistoryAction:
+				const removeMessage = message.data as { user_id: string };
 				await RemoveUserFromHistory(removeMessage.user_id);
 				response = { status: SuccessStatus, result: null } as SuccessResponse;
-			} catch (e) {
-				response = { status: ErrorStatus, message: "unknown error", error: e } as ErrorResponse;
-			}
-			break;
+				break;
 
-		default:
-			console.error(logstr, "got a message that couldn't be handled from sender:", sender, _message);
-			response = { status: ErrorStatus, message: "unknown action" } as ErrorResponse;
+			default:
+				console.error(logstr, refid, "got a message that couldn't be handled from sender:", sender, message);
+				response = { status: ErrorStatus, message: "unknown action" } as ErrorResponse;
+		}
+	} catch (_e) {
+		const e = _e as Error;
+		console.error(logstr, refid, "unexpected error caught during", message?.action, "action", e);
+		response = { status: ErrorStatus, message: e.message ?? "unknown error" } as ErrorResponse;
 	}
-	respond(response);
-})(m, s, r); return true });
+	console.debug(logstr, refid, "respond:", response);
+})(m, s).finally(() => r(response)); return true });
 
 ////////////////////////////////////////////////// EXTERNAL MESSAGE HANDLING //////////////////////////////////////////////////
 
@@ -89,7 +84,9 @@ const queue = new BlockQueue(api.storage.local);
 const [blockAction] = ["BLOCK"];
 const allowedExtensionIds = new Set([SoupcanExtensionId]);
 
-api.runtime.onMessageExternal.addListener((m, s, r) => { (async (_message, sender, respond) => {
+api.runtime.onMessageExternal.addListener((m, s, r) => { let response: MessageResponse; (async (message, sender) => {
+	const refid = RefId();
+	console.debug(logstr, refid, "ext recv:", message, sender);
 	if (!allowedExtensionIds.has(sender?.id ?? "")) {
 		return;
 	}
@@ -98,21 +95,23 @@ api.runtime.onMessageExternal.addListener((m, s, r) => { (async (_message, sende
 	// 	1. objects
 	// 	2. contain a string value stored under message.action. should be one defined above
 	// other message contents change based on the defined action
-	let response: MessageResponse;
-	switch (_message?.action) {
-		case blockAction:
-			const message = _message as { action: string, user_id: string, name: string, screen_name: string, reason: string };
-			try {
-				await queue.push({ user_id: message.user_id, user: { name: message.name, screen_name: message.screen_name }, reason: ReasonExternal, external_reason: message.reason });
+	try {
+		switch (message?.action) {
+			case blockAction:
+				const blockMessage = message as { user_id: string, name: string, screen_name: string, reason: string };
+				const user: BlockUser = { user_id: blockMessage.user_id, user: { name: blockMessage.name, screen_name: blockMessage.screen_name }, reason: ReasonExternal, external_reason: blockMessage.reason };
+				await queue.push(user);
 				response = { status: SuccessStatus, result: "user queued for blocking" } as SuccessResponse;
-			} catch (e) {
-				response = { status: ErrorStatus, message: "unknown error", error: e } as ErrorResponse;
-			}
-			break;
+				break;
 
-		default:
-			console.error(logstr, "got a message that couldn't be handled from sender:", sender, _message);
-			response = { status: ErrorStatus, message: "unknown action" } as ErrorResponse;
+			default:
+				console.error(logstr, refid, "got a message that couldn't be handled from sender:", sender, message);
+				response = { status: ErrorStatus, message: "unknown action" } as ErrorResponse;
+		}
+	} catch (_e) {
+		const e = _e as Error;
+		console.error(logstr, refid, "unexpected error caught during", message?.action, "action", e);
+		response = { status: ErrorStatus, message: e.message ?? "unknown error" } as ErrorResponse;
 	}
-	respond(response);
-})(m, s, r); return true });
+	console.debug(logstr, refid, "respond:", response);
+})(m, s).finally(() => r(response)); return true });

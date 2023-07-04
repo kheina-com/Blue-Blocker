@@ -49,19 +49,23 @@ type SuccessStatus = "SUCCESS";
 type ErrorStatus = "ERROR";
 type MessageStatus = SuccessStatus | ErrorStatus;
 
+interface RuntimeMessage {
+	action: string,
+	data: any,
+}
+
 interface MessageResponse {
 	status: MessageStatus,
 }
 
 interface SuccessResponse {
-	status: "SUCCESS",
+	status: SuccessStatus,
 	result: any,
 }
 
 interface ErrorResponse {
-	status: "ERROR",
+	status: ErrorStatus,
 	message: string,
-	error?: Error,
 }
 
 interface BlueBlockerEvent {
@@ -98,4 +102,13 @@ interface BlockUser {
 	user: { name: string, screen_name: string },
 	reason: number,
 	external_reason?: string,
+}
+
+interface BlockedUser {
+	user_id: string,
+	user: { name: string, screen_name: string },
+	reason: number,
+	external_reason?: string,
+	state: number,
+	time: Date,
 }

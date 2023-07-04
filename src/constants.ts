@@ -1,8 +1,19 @@
-let _api: typeof chrome | typeof browser;
+let _api: {
+	action: typeof chrome.action | typeof browser.browserAction,
+	runtime: typeof chrome.runtime,
+	storage: typeof chrome.storage | typeof browser.storage,
+};
 try {
-	_api = browser;
-	// manifest v2 has the action api stored in browserAction, so manually assign it to action
-	_api.action = browser.browserAction;
+	_api = {
+		// @ts-ignore
+		runtime: {
+			...browser.runtime,
+			OnInstalledReason: chrome.runtime.OnInstalledReason,
+			restartAfterDelay: chrome.runtime.restartAfterDelay,
+		},
+		storage: browser.storage,
+		action: browser.browserAction,
+	};
 } catch (ReferenceError) {
 	_api = chrome;
 }
@@ -59,7 +70,7 @@ export const Headers = [
 	"x-twitter-auth-type",
 	"x-twitter-client-language",
 ];
-export const [HistoryStateBlocked, HistoryStateUnblocked] = [0, 1];
+export const [HistoryStateBlocked, HistoryStateUnblocked, HistoryStateGone] = [0, 1, 2];
 export const ReasonExternal: number = -1;
 export const ReasonBlueVerified: number = 0;
 export const ReasonNftAvatar: number = 1;
@@ -74,7 +85,7 @@ export const ReasonMap = {
 	[ReasonPromoted]: "promoting tweets",
 };
 export const LegacyVerifiedUrl: string = "https://gist.githubusercontent.com/travisbrown/b50d6745298cccd6b1f4697e4ec22103/raw/012009351630dc351e3a763b49bf24fa50ca3eb7/legacy-verified.csv";
-export const Browser = chrome.runtime.getManifest()?.browser_specific_settings?.gecko === undefined ? "chrome" : "firefox";
+export const Browser = api.runtime.getManifest()?.browser_specific_settings?.gecko === undefined ? "chrome" : "firefox";
 export const SoupcanExtensionId = Browser === "chrome" ? "hcneafegcikghlbibfmlgadahjfckonj" : "soupcan@beth.lgbt";
 
 // internal message actions

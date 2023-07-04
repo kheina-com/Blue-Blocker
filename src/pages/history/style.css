@@ -96,6 +96,7 @@ main {
 }
 .subtitle {
 	margin-bottom: 1em;
+	color: var(--subtle);
 }
 
 #reset-counter {
