@@ -1,44 +1,13 @@
-input {
+input, select {
+	cursor: pointer;
+	margin: 0;
+	padding: 0.5em 1em;
 	-moz-appearance: textfield;
 	appearance: textfield;
 	position: relative;
 	display: inline-block;
 	padding: 0.5em 1em;
-	background: var(--bg0color);
 	color: var(--textcolor);
-	border: var(--border-size) solid var(--bordercolor);
-	box-shadow: 0 2px 3px 1px var(--shadowcolor);
-	border-radius: var(--border-radius);
-	-webkit-transition: var(--transition) var(--fadetime);
-	-moz-transition: var(--transition) var(--fadetime);
-	-o-transition: var(--transition) var(--fadetime);
-	transition: var(--transition) var(--fadetime);
-}
-input:hover {
-	color: var(--interact);
-	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
-}
-input:hover, input:focus {
-	border-color: var(--borderhover);
-}
-
-input[type=checkbox] {
-	position: absolute;
-	display: none;
-	top: -100vh;
-	opacity: 0;
-	height: 0;
-	width: 0;
-}
-label, select {
-	color: var(--textcolor);
-	cursor: pointer;
-	margin: 0;
-	display: inline-flex;
-	white-space: nowrap;
-	align-items: center;
-	padding-left: 0.3em;
-	padding: 0.5em 1em;
 	background: var(--bg2color);
 	border-radius: var(--border-radius);
 	border: var(--border-size) solid var(--bordercolor);
@@ -48,45 +17,13 @@ label, select {
 	-o-transition: var(--transition) var(--fadetime);
 	transition: var(--transition) var(--fadetime);
 }
-label:hover, label:active, select:hover, select:active {
+input:hover, select:hover, select:active {
 	color: var(--interact);
 	border-color: var(--borderhover);
 	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
 }
-label div.checkmark {
-	position: relative;
-	display: block;
-	left: 0;
-	padding: 0;
-	margin: 0 0.5em 0 -0.3em;
-	height: 1.2em;
-	width: 1.2em;
-	border-radius: var(--border-radius);
-	background: var(--bg1color);
-	pointer-events: none;
-}
-label div.checkmark div {
-	border: solid 0 #0000;
-	border-width: 0;
-	position: absolute;
-	-webkit-transition: var(--transition) var(--fadetime);
-	-moz-transition: var(--transition) var(--fadetime);
-	-o-transition: var(--transition) var(--fadetime);
-	transition: var(--transition) var(--fadetime);
-}
-label div.checkmark div {
-	left: 0.35em;
-	top: 0.15em;
-	width: 0.3em;
-	height: 0.55em;
-}
-input:checked + label div.checkmark div,
-label.checked div.checkmark div {
-	border-color: var(--interact);
-	border-width: 0 0.1875em 0.1875em 0;
-	-webkit-transform: rotate(45deg);
-	-ms-transform: rotate(45deg);
-	transform: rotate(45deg);
+input:hover, input:focus {
+	border-color: var(--borderhover);
 }
 
 #integrations > div {
@@ -95,7 +32,6 @@ label.checked div.checkmark div {
 	margin: 0 auto;
 	margin-bottom: 1.5em;
 }
-
 #integrations input, #integrations select {
 	margin-right: 1.5em;
 }

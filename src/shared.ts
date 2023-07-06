@@ -525,7 +525,6 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 				}
 			} catch (_e) {
 				const e = _e as Error;
-				console.debug(logstr, refid, "unexpected error caught during integration", integration, e);
 				if (e.message === "Could not establish connection. Receiving end does not exist.") {
 					updateIntegrations = true;
 					integration.state = IntegrationStateDisabled;
