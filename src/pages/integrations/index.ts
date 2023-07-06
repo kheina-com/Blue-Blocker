@@ -1,188 +1,132 @@
-import { commafy, EscapeHtml, FormatLegacyName } from "../../utilities.js";
-import { api, logstr } from "../../constants.js";
-import { AddUserToQueue, ConnectDb, queueDbStore, WholeQueue } from "../../background/db.js";
+import { RefId } from "../../utilities.js";
+import { IntegrationStateDisabled, IntegrationStateReceiveOnly, IntegrationStateSendAndReceive, IntegrationStateSendOnly, api, logstr } from "../../constants.js";
 import "../style.css";
 import "./style.css";
 
-async function unqueueUser(user_id: string, screen_name: string, safelist: boolean) {
-	// because this page holds onto the critical point, we can modify the queue
-	// without worrying about if it'll affect another tab
-	if (safelist) {
-		api.storage.sync.get({ unblocked: { } }).then(items => {
-			items.unblocked[String(user_id)] = screen_name;
-			api.storage.sync.set(items);
-		});
-	}
-
-	ConnectDb().then(db => {
-		return new Promise<void>((resolve, reject) => {
-			const transaction = db.transaction([queueDbStore], "readwrite");
-			transaction.onabort = transaction.onerror = reject;
-			const store = transaction.objectStore(queueDbStore);
-			store.delete(user_id);
-			transaction.commit();
-			transaction.oncomplete = () => resolve();
-		});
-	}).catch(e => {
-		console.error(logstr, "could not remove user from queue:", e);
-	});
+interface Integration {
+	id: string,
+	name: string,
+	state: number,
 }
-
-function loadQueue() {
-	WholeQueue().then(cue => {
-		const queueDiv = document.getElementById("block-queue") as HTMLElement;
-
-		if (cue.length === 0) {
-			queueDiv.textContent = "your block queue is empty";
-			return;
-		} else if (cue.length >= 10e3) {
-			const dbLimitReached = document.getElementById("db-limit-reached") as HTMLElement;
-			dbLimitReached.style.display = "block";
-		}
-
-		queueDiv.innerHTML = "";
-
-		cue.forEach(item => {
-			const { user, user_id } = item;
-			const div = document.createElement("div");
-
-			const p = document.createElement("p");
-			const screen_name = EscapeHtml(user.screen_name);  // this shouldn't really do anything, but can't be too careful
-			p.innerHTML = `${EscapeHtml(user.name)} (<a href="https://twitter.com/${screen_name}" target="_blank">@${screen_name}</a>)`;
-			div.appendChild(p);
-
-			const remove = document.createElement("button");
-			remove.onclick = () => {
-				div.removeChild(remove);
-				unqueueUser(user_id, user.screen_name, false).then(() => {
-					console.log(logstr, `removed ${FormatLegacyName(user)} from queue`);
-					queueDiv.removeChild(div);
-				});
-			};
-			remove.textContent = "remove";
-			div.appendChild(remove);
-
-			const never = document.createElement("button");
-			never.onclick = () => {
-				div.removeChild(never);
-				unqueueUser(user_id, user.screen_name, true).then(() => {
-					console.log(logstr, `removed and safelisted ${FormatLegacyName(user)} from queue`);
-					queueDiv.removeChild(div);
-				});
-			};
-			never.textContent = "never block";
-			div.appendChild(never);
-
-			queueDiv.appendChild(div);
-		});
-	});
-}
-loadQueue();
 
 document.addEventListener("DOMContentLoaded", () => {
-	const importButton = document.getElementById("import-button") as HTMLElement;
-	const importArrow = document.getElementById("import-arrow") as HTMLElement;
-	const importBlock = document.getElementById("importer") as HTMLElement;
+	const integrationsDiv = document.getElementById("integrations") as HTMLElement;
+	const i: { [n: string]: Integration } = { };
 
-	importButton.addEventListener("click", e => {
-		switch (importArrow.innerText) {
-			case "▾":
-				importBlock.style.display = "block";
-				importArrow.innerText = "▴";
-				break;
-			case "▴":
-				importBlock.style.display = "";
-				importArrow.innerText = "▾";
-				break;
-			default:
-				// what?
-		}
-	});
+	function add(integration: Integration): void {
+		const refid = RefId().toString();
 
-	const defaultInputText = "Click or Drag to Import File";
-	const input = document.getElementById("block-import") as HTMLInputElement;
-	const importLabel = document.getElementById("block-import-label") as HTMLElement;
-	const inputStatus = importLabel.firstElementChild as HTMLElement;
-	inputStatus.innerText = defaultInputText;
-	let timeout: number | null = null;
+		i[refid] = {
+			id: integration.id,
+			name: integration.name,
+			state: integration.state,
+		};
 
-	function onInput(files: FileList | null | undefined) {
-		if (timeout) {
-			clearTimeout(timeout);
-		}
+		const div = document.createElement("div");
+		div.id = refid;
 
-		if (!files?.length) {
-			return;
-		}
-
-		const reader = new FileReader();
-		let loaded: number = 0;
-		let failures: number = 0;
-		let safelisted: number = 0;
-		reader.addEventListener("load", l => {
-			inputStatus.innerText = "importing...";
-			// @ts-ignore
-			const payload = l.target.result as string;
-			api.storage.sync.get({ unblocked: { }})
-			.then(items => items.unblocked as { [k: string]: string | null })
-			.then(safelist => {
-				return new Promise<void>(async (resolve) => {
-					const userList = JSON.parse(payload) as BlockUser[];
-					for (const user of userList) {
-						try {
-							// explicitly check to make sure all fields are populated
-							if (
-								user?.user_id === undefined ||
-								user?.user?.name === undefined ||
-								user?.user?.screen_name === undefined ||
-								user?.reason === undefined
-							) {
-								throw new Error("user object could not be processed:");
-							}
-
-							if (safelist.hasOwnProperty(user.user_id)) {
-								safelisted++;
-								continue;
-							}
-
-							await AddUserToQueue(user);
-							loaded++;
-						} catch (_e) {
-							const e = _e as Error;
-							console.error(logstr, e.message, user, e);
-							failures++;
-							return;
-						}
-					}
-					resolve();
-				}).then(() => {
-					console.log(logstr, "successfully loaded", loaded, "users into queue. failures:", failures);
-					inputStatus.innerText = `loaded ${commafy(loaded)} users into queue (${commafy(failures)} failures)`;
-					loadQueue();
-				}).catch(e => {
-					console.error(logstr, e);
-					inputStatus.innerText = e.message;
-				}).finally(() => {
-					timeout = setTimeout(() => {
-						inputStatus.innerText = "Click or Drag to Import File";
-						timeout = null;
-					}, 10e3);
-				});
-			});
+		const select = document.createElement("select");
+		select.addEventListener("change", e => {
+			const input = e.target as HTMLSelectElement;
+			i[refid].state = parseInt(input.value);
 		});
-		for (const i of files) {
-			reader.readAsText(i);
-		}
+
+		const optionDisabled = document.createElement("option");
+		optionDisabled.value = IntegrationStateDisabled.toString();
+		optionDisabled.innerText = "disabled";
+		select.appendChild(optionDisabled);
+
+		const optionRecvOnly = document.createElement("option");
+		optionRecvOnly.value = IntegrationStateReceiveOnly.toString();
+		optionRecvOnly.innerText = "receive only";
+		select.appendChild(optionRecvOnly);
+
+		const optionSendOnly = document.createElement("option");
+		optionSendOnly.value = IntegrationStateSendOnly.toString();
+		optionSendOnly.innerText = "send only";
+		select.appendChild(optionSendOnly);
+
+		const optionSendRecv = document.createElement("option");
+		optionSendRecv.value = IntegrationStateSendAndReceive.toString();
+		optionSendRecv.innerText = "send and receive";
+		select.appendChild(optionSendRecv);
+
+		select.value = integration.state.toString();
+		div.appendChild(select);
+
+		const extId = document.createElement("input");
+		extId.value = integration.id;
+		extId.placeholder = "external extension id";
+		extId.autocomplete = "off";
+		extId.addEventListener("change", e => {
+			const input = e.target as HTMLInputElement;
+			i[refid].id = input.value;
+		});
+		div.appendChild(extId);
+
+		const extName = document.createElement("input");
+		extName.value = integration.name;
+		extName.placeholder = "extension name";
+		extName.autocomplete = "off";
+		extName.addEventListener("change", e => {
+			const input = e.target as HTMLInputElement;
+			i[refid].name = input.value;
+		});
+		div.appendChild(extName);
+
+		const remove = document.createElement("button");
+		remove.innerText = "Remove";
+		remove.addEventListener("click", e => {
+			delete i[refid];
+			integrationsDiv.removeChild(div);
+		});
+		div.appendChild(remove);
+
+		integrationsDiv.appendChild(div);
 	}
 
-	input.addEventListener("input", e => {
-		const target = e.target as HTMLInputElement;
-		onInput(target.files)
-	});
-	importLabel.addEventListener("dragenter", e => e.preventDefault());
-	importLabel.addEventListener("dragover", e => e.preventDefault());
-	importLabel.addEventListener("drop", e => {
-		e.preventDefault();
-		onInput(e?.dataTransfer?.files);
+	api.storage.local.get({ integrations: { } })
+	.then(items => items.integrations as { [id: string]: { name: string, state: number } })
+	.then(integrations => {
+		console.debug(logstr, "loaded integrations:", integrations);
+		const addButton = document.getElementById("add-button") as HTMLButtonElement;
+		const saveButton = document.getElementById("save-button") as HTMLButtonElement;
+		const saveStatus = document.getElementById("save-status") as HTMLButtonElement;
+
+		addButton.addEventListener("click", e => add({ id: "", name: "", state: IntegrationStateDisabled }));
+		let saveTimeout: number | null = null;
+		saveButton.addEventListener("click", e => {
+			console.debug(logstr, "saving integrations:", i);
+			if (saveTimeout !== null) {
+				clearTimeout(saveTimeout);
+			}
+
+			const integrations: { [id: string]: { name: string, state: number } } = { };
+			for (const integration of Object.values(i)) {
+				integrations[integration.id] = {
+					name: integration.name,
+					state: integration.state,
+				};
+			}
+			api.storage.local.set({ integrations }).then(() => {
+				console.debug(logstr, "saved integrations:", integrations);
+				saveStatus.innerText = "saved!";
+				saveTimeout = setTimeout(() => saveStatus.innerText = "", 1000);
+			});
+		});
+
+		integrationsDiv.innerHTML = "";
+
+		if (Object.entries(integrations).length === 0) {
+			return add({ id: "", name: "", state: IntegrationStateDisabled });
+		}
+
+		for (const [extensionId, integration] of Object.entries(integrations)) {
+			add({
+				id: extensionId,
+				name: integration.name,
+				state: integration.state,
+			});
+		}
 	});
 });

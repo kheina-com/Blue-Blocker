@@ -18,6 +18,8 @@ import {
 	HistoryStateGone,
 	SuccessStatus,
 	ReasonExternal,
+	IntegrationStateDisabled,
+	IntegrationStateReceiveOnly,
 } from './constants';
 import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory, QueuePop, QueuePush, RefId } from './utilities';
 
@@ -223,12 +225,11 @@ function queueBlockUser(user: BlueBlockerUser, user_id: string, reason: number, 
 }
 
 function checkBlockQueue(): Promise<void> {
-	return new Promise<void>(resolve => {
+	return new Promise<void>((resolve, reject) => {
 		QueuePop()
 		.then(item => {
-			if (item === undefined) {
-				consumer.stop();
-				return resolve();
+			if (!item) {
+				return reject();
 			}
 			blockUser(item);
 			resolve();
@@ -497,10 +498,10 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 
 	let updateIntegrations = false;
 	api.storage.local.get({ integrations: [] })
-	.then(items => items.integrations as Integration[])
+	.then(items => items.integrations as { [id: string]: { name: string, state: number } })
 	.then(async (integrations) => {
-		for (const integration of integrations) {
-			if (!integration.enabled) {
+		for (const [extensionId, integration] of Object.entries(integrations)) {
+			if (!extensionId || integration.state === IntegrationStateDisabled || integration.state === IntegrationStateReceiveOnly) {
 				continue;
 			}
 
@@ -508,7 +509,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 			try {
 				const message = { action: "check_twitter_user", data: user, refid };
 				console.debug(logstr, refid, "send:", message, integration);
-				const response = await api.runtime.sendMessage(integration.extensionId, ) as MessageResponse;
+				const response = await api.runtime.sendMessage(extensionId, message) as MessageResponse;
 				console.debug(logstr, refid, "recv:", response);
 
 				if (response?.status !== SuccessStatus) {
@@ -527,7 +528,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 				console.debug(logstr, refid, "unexpected error caught during integration", integration, e);
 				if (e.message === "Could not establish connection. Receiving end does not exist.") {
 					updateIntegrations = true;
-					integration.enabled = false;
+					integration.state = IntegrationStateDisabled;
 					console.log(logstr, refid, "looks like", integration.name, "was uninstalled, disabling integration.");
 				} else {
 					console.error(logstr, refid, `an unknown error occurred while messaging ${integration.name}:`, e);
@@ -536,7 +537,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 		}
 
 		if (updateIntegrations) {
-			api.storage.sync.set({ integrations });
+			api.storage.local.set({ integrations });
 		}
 	}).catch(e =>
 		// this error should basically be unreachable

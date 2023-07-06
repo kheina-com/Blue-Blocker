@@ -153,10 +153,10 @@ export function EscapeHtml(text: string): string {
 	return new Option(text).innerHTML;
 }
 
-export async function QueuePop(): Promise<BlockUser | undefined> {
+export async function QueuePop(): Promise<BlockUser | null> {
 	interface PopFromQueueResponse {
 		status: "SUCCESS",
-		result: BlockUser,
+		result: BlockUser | null,
 	}
 
 	let response: PopFromQueueResponse | MessageResponse | null = null;

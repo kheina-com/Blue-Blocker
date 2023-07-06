@@ -1,102 +1,28 @@
-html {
-	--transition: ease;
-	--fadetime: 0.15s;
-	--interact: #1da1f2;
-	--bg0color: #000000;
-	--bg1color: #1e1f25;
-	--bg2color: #151416;
-	--bg3color: var(--bordercolor);
-	--blockquote: var(--bordercolor);
-	--textcolor: #DDD;
-	--bordercolor: #2D333A;
-	--linecolor: var(--bordercolor);
-	--borderhover: var(--interact);
-	--subtle: #EEEEEE80;
-	--shadowcolor: #00000080;
-	--activeshadowcolor: #000000B3;
-	--screen-cover: #00000080;
-	--border-size: 1px;
-	--border-radius: 3px;
-
-	background: var(--bg0color);
-}
-html * {
-	font-family: Bitstream Vera Sans, DejaVu Sans, Arial, Helvetica, sans-serif;
-}
-body {
-	background: var(--bg1color);
-	color: var(--textcolor);
-}
-html, body, main, h1, p {
-	margin: 0;
-}
-pre, code {
-	font-family: Hack, DejaVu Sans Mono, Inconsolata, monospace !important;
-	background: var(--bg2color);
-	border-radius: var(--border-radius);
-	padding: 0.1em 0.25em;
-}
-pre {
-	padding: 0.5em;
-	white-space: pre-wrap;
-	word-break: break-word;
-	text-align: left;
-}
-
-::-webkit-scrollbar {
-	width: 12px;
-	height:12px;
-}
-::-webkit-scrollbar-track {
-	background: var(--bg2color);
-}
-::-webkit-scrollbar-thumb {
-	background: #4D535A;
-	border-radius: 4px;
-	border: 2px solid var(--bg2color);
-}
-::-webkit-scrollbar-thumb:hover {
-	background: var(--interact);
-}
-::-webkit-scrollbar-corner {
-	background: var(--bg0color);
-}
-
-main {
-	color: var(--textcolor);
-	text-align: center;
-	width: 100%;
-	background: var(--bg1color);
-}
-.inner {
-	padding: 25px;
-}
-.subtitle {
-	color: var(--subtle);
-	margin-bottom: 1em;
-}
-
-#import-button {
-	color: var(--textcolor);
-	cursor: pointer;
-}
-
-#db-limit-reached {
-	display: none;
-}
-
-#importer {
-	display: none;
-}
-#importer p {
-	margin-bottom: 1em;
-}
-#importer pre {
-	max-width: 50em;
-	margin: 0 auto 1em;
-}
-
 input {
+	-moz-appearance: textfield;
+	appearance: textfield;
+	position: relative;
+	display: inline-block;
+	padding: 0.5em 1em;
+	background: var(--bg0color);
+	color: var(--textcolor);
+	border: var(--border-size) solid var(--bordercolor);
+	box-shadow: 0 2px 3px 1px var(--shadowcolor);
+	border-radius: var(--border-radius);
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
+}
+input:hover {
+	color: var(--interact);
+	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
+}
+input:hover, input:focus {
+	border-color: var(--borderhover);
+}
+
+input[type=checkbox] {
 	position: absolute;
 	display: none;
 	top: -100vh;
@@ -104,103 +30,90 @@ input {
 	height: 0;
 	width: 0;
 }
-.file-field {
-	max-width: 50em;
-	margin: 1em auto;
-	display: block;
-	padding: 25px;
-	border-radius: var(--border-radius);
-	border: 2px dashed var(--bordercolor);
-	background: var(--bg2color);
+label, select {
+	color: var(--textcolor);
 	cursor: pointer;
-	-webkit-transition: var(--transition) var(--fadetime);
-	-moz-transition: var(--transition) var(--fadetime);
-	-o-transition: var(--transition) var(--fadetime);
-	transition: var(--transition) var(--fadetime);
-}
-.file-field:hover {
-	color: var(--interact);
-	border-color: var(--interact);
-}
-.file-field span {
-	font-size: 1.25em;
-}
-
-#block-queue {
-	bottom: 0;
+	margin: 0;
 	display: inline-flex;
-	align-items: flex-start;
-	justify-content: center;
-	flex-direction: column;
-}
-
-#block-queue div {
-	display: flex;
-	justify-content: center;
+	white-space: nowrap;
 	align-items: center;
-	background: url('/icon/icon.png') var(--bg2color);
-	background-repeat: no-repeat;
-	background-size: 2.5em;
-	background-position-x: 1em;
-	background-position-y: center;
-	pointer-events: all;
-	padding: 0.75em 1.5em 0.75em 4.25em;
-	margin: 0 0 25px;
-	border: var(--border-size) solid var(--bordercolor);
-	border-radius: var(--border-radius);
-	color: var(--textcolor);
-	box-shadow: 0 2px 3px 1px var(--shadowcolor);
-	min-height: calc(2em + 4px);
-}
-#block-queue div:last-child {
-	margin-bottom: 0;
-}
-#block-queue div.error {
-	background: url('/icon/error.png') var(--bg2color);
-	background-repeat: no-repeat;
-	background-size: 2.5em;
-	background-position-x: 1em;
-	background-position-y: center;
-}
-
-#block-queue div a,
-#block-queue div a:active,
-#block-queue div a:focus {
-	color: var(--textcolor);
-	text-shadow: 0 2px 3px 1px var(--shadowcolor);
-	-webkit-transition: var(--transition) var(--fadetime);
-	-moz-transition: var(--transition) var(--fadetime);
-	-o-transition: var(--transition) var(--fadetime);
-	transition: var(--transition) var(--fadetime);
-	cursor: pointer;
-}
-
-#block-queue div a:hover {
-	text-shadow: 0 0 10px 3px var(--activeshadowcolor);
-	color: var(--interact);
-}
-
-#block-queue div button,
-#block-queue div button:active,
-#block-queue div button:focus {
-	margin-left: 1em;
-	font-size: 1em;
+	padding-left: 0.3em;
 	padding: 0.5em 1em;
-	color: var(--textcolor);
-	background: var(--bg1color);
-	box-shadow: 0 2px 3px 1px var(--shadowcolor);
-	border: var(--border-size) solid var(--bordercolor);
+	background: var(--bg2color);
 	border-radius: var(--border-radius);
+	border: var(--border-size) solid var(--bordercolor);
+	box-shadow: 0 2px 3px 1px var(--shadowcolor);
 	-webkit-transition: var(--transition) var(--fadetime);
 	-moz-transition: var(--transition) var(--fadetime);
 	-o-transition: var(--transition) var(--fadetime);
 	transition: var(--transition) var(--fadetime);
-	cursor: pointer;
 }
-
-#block-queue div button:hover {
-	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
-	border-color: var(--interact);
+label:hover, label:active, select:hover, select:active {
 	color: var(--interact);
+	border-color: var(--borderhover);
+	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
+}
+label div.checkmark {
+	position: relative;
+	display: block;
+	left: 0;
+	padding: 0;
+	margin: 0 0.5em 0 -0.3em;
+	height: 1.2em;
+	width: 1.2em;
+	border-radius: var(--border-radius);
+	background: var(--bg1color);
+	pointer-events: none;
+}
+label div.checkmark div {
+	border: solid 0 #0000;
+	border-width: 0;
+	position: absolute;
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
+}
+label div.checkmark div {
+	left: 0.35em;
+	top: 0.15em;
+	width: 0.3em;
+	height: 0.55em;
+}
+input:checked + label div.checkmark div,
+label.checked div.checkmark div {
+	border-color: var(--interact);
+	border-width: 0 0.1875em 0.1875em 0;
+	-webkit-transform: rotate(45deg);
+	-ms-transform: rotate(45deg);
+	transform: rotate(45deg);
 }
 
+#integrations > div {
+	display: flex;
+	width: 70%;
+	margin: 0 auto;
+	margin-bottom: 1.5em;
+}
+
+#integrations input, #integrations select {
+	margin-right: 1.5em;
+}
+#integrations input {
+	flex: 1;
+}
+
+.buttons {
+	margin-top: 25px;
+	width: 70%;
+	margin: 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+}
+.buttons > * {
+	margin-right: 1.5em;
+}
+.buttons > *:last-child {
+	margin-right: 0;
+}

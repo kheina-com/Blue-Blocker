@@ -372,35 +372,38 @@ export function AddUserToQueue(blockUser: BlockUser): Promise<void> {
 	});
 }
 
-export function PopUserFromQueue(): Promise<BlockUser> {
+export function PopUserFromQueue(): Promise<BlockUser | null> {
 	// @ts-ignore  // typescript is wrong here, this cannot return idb due to final throw
-	return new Promise<BlockUser>(async (resolve, reject) => {
+	return new Promise<BlockUser | null>(async (resolve, reject) => {
 		const transaction = db.transaction([queueDbStore], "readwrite");
 		transaction.onabort = transaction.onerror = reject;
 		const store = transaction.objectStore(queueDbStore);
 		const index = store.index("queue");
 
-		const user = await new Promise<BlockUser>((res, rej) => {
+		const result = await new Promise<QueueUser | undefined>((res, rej) => {
 			const req = index.get(IDBKeyRange.bound(Number.MIN_VALUE, Number.MAX_VALUE));
 			req.onerror = rej;
 			req.onsuccess = () => {
-				const result = req.result as QueueUser;
-				const user: BlockUser = {
-					user_id: result.user_id,
-					user: {
-						name: result.user.name,
-						screen_name: result.user.screen_name,
-					},
-					reason: result.reason,
-				};
-
-				if (result.external_reason) {
-					user.external_reason = result.external_reason;
-				}
-
-				res(user);
+				res(req.result as QueueUser);
 			};
 		});
+
+		if (result === undefined) {
+			return resolve(null);
+		}
+
+		const user: BlockUser = {
+			user_id: result.user_id,
+			user: {
+				name: result.user.name,
+				screen_name: result.user.screen_name,
+			},
+			reason: result.reason,
+		};
+
+		if (result.external_reason) {
+			user.external_reason = result.external_reason;
+		}
 
 		store.delete(user.user_id);
 		transaction.commit();

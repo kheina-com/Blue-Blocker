@@ -87,6 +87,7 @@ export const ReasonMap = {
 export const LegacyVerifiedUrl: string = "https://gist.githubusercontent.com/travisbrown/b50d6745298cccd6b1f4697e4ec22103/raw/012009351630dc351e3a763b49bf24fa50ca3eb7/legacy-verified.csv";
 export const Browser = api.runtime.getManifest()?.browser_specific_settings?.gecko === undefined ? "chrome" : "firefox";
 export const SoupcanExtensionId = Browser === "chrome" ? "hcneafegcikghlbibfmlgadahjfckonj" : "soupcan@beth.lgbt";
+export const [IntegrationStateDisabled, IntegrationStateReceiveOnly, IntegrationStateSendOnly, IntegrationStateSendAndReceive] = [0, 1, 2, 3];
 
 // internal message actions
 export const [IsVerifiedAction, AddToHistoryAction, RemoveFromHistoryAction, AddToQueueAction, PopFromQueueAction] = ["is_verified", "add_user_to_history", "remove_user_from_history", "add_user_to_queue", "pop_user_from_queue"];

@@ -120,6 +120,5 @@ interface BlockedUser {
 
 interface Integration {
 	name: string,
-	extensionId: string,
-	enabled: boolean,
+	state: number,
 }

@@ -1,4 +1,4 @@
-import { api, logstr, AddToHistoryAction, ErrorStatus, IsVerifiedAction, ReasonExternal, RemoveFromHistoryAction, SoupcanExtensionId, SuccessStatus, DefaultOptions, AddToQueueAction, PopFromQueueAction } from '../constants';
+import { api, logstr, AddToHistoryAction, ErrorStatus, IsVerifiedAction, ReasonExternal, RemoveFromHistoryAction, SoupcanExtensionId, SuccessStatus, DefaultOptions, AddToQueueAction, PopFromQueueAction, IntegrationStateSendAndReceive, IntegrationStateDisabled, IntegrationStateSendOnly } from '../constants';
 import { abbreviate, RefId } from '../utilities';
 import { AddUserToHistory, AddUserToQueue, CheckDbIsUserLegacyVerified, ConnectDb, PopUserFromQueue, PopulateVerifiedDb, RemoveUserFromHistory } from './db';
 
@@ -91,14 +91,24 @@ api.runtime.onMessage.addListener((m, s, r) => { let response: MessageResponse; 
 
 ////////////////////////////////////////////////// EXTERNAL MESSAGE HANDLING //////////////////////////////////////////////////
 
-const [blockAction] = ["BLOCK"];
-const allowedExtensionIds = new Set([SoupcanExtensionId]);
+const [blockActionV1, blockAction] = ["BLOCK", "block_user"];
 
 api.runtime.onMessageExternal.addListener((m, s, r) => { let response: MessageResponse; (async (message, sender) => {
 	const refid = RefId();
 	console.debug(logstr, refid, "ext recv:", message, sender);
-	if (!allowedExtensionIds.has(sender?.id ?? "")) {
+	const integrations = await api.storage.local.get({ soupcanIntegration: false, integrations: { } }) as { [id: string]: Integration };
+	integrations[SoupcanExtensionId] = {
+		name: "soupcan",
+		state: integrations.soupcanIntegration ? IntegrationStateSendAndReceive : IntegrationStateDisabled,
+	};
+
+	const senderId = sender.id ?? "";
+	if (!integrations.hasOwnProperty(senderId)) {
 		response = { status: ErrorStatus, message: "extension not allowed" } as ErrorResponse;
+		return;
+	}
+	if (integrations[senderId].state === IntegrationStateDisabled || integrations[senderId].state === IntegrationStateSendOnly) {
+		response = { status: ErrorStatus, message: "extension disabled or not allowed to send messages" } as ErrorResponse;
 		return;
 	}
 
@@ -108,10 +118,16 @@ api.runtime.onMessageExternal.addListener((m, s, r) => { let response: MessageRe
 	// other message contents change based on the defined action
 	try {
 		switch (message?.action) {
+			case blockActionV1:
+				const blockV1Message = message as { user_id: string, name: string, screen_name: string, reason: string };
+				const userV1: BlockUser = { user_id: blockV1Message.user_id, user: { name: blockV1Message.name, screen_name: blockV1Message.screen_name }, reason: ReasonExternal, external_reason: blockV1Message.reason };
+				await AddUserToQueue(userV1).catch(() => AddUserToQueue(userV1));
+				response = { status: SuccessStatus, result: "user queued for blocking" } as SuccessResponse;
+				break;
+
 			case blockAction:
-				const blockMessage = message as { user_id: string, name: string, screen_name: string, reason: string };
-				const user: BlockUser = { user_id: blockMessage.user_id, user: { name: blockMessage.name, screen_name: blockMessage.screen_name }, reason: ReasonExternal, external_reason: blockMessage.reason };
-				await AddUserToQueue(user).catch(() => AddUserToQueue(user));
+				const blockMessage = message.data as BlockUser;
+				await AddUserToQueue(blockMessage).catch(() => AddUserToQueue(blockMessage));
 				response = { status: SuccessStatus, result: "user queued for blocking" } as SuccessResponse;
 				break;
 
