@@ -53,3 +53,9 @@ input:hover, input:focus {
 .buttons > *:last-child {
 	margin-right: 0;
 }
+
+@media only screen and (max-width: 1200px) {
+	#integrations > div, .buttons {
+		width: auto;
+	}
+}

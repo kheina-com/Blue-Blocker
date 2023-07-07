@@ -97,11 +97,6 @@ api.runtime.onMessageExternal.addListener((m, s, r) => { let response: MessageRe
 	const refid = RefId();
 	console.debug(logstr, refid, "ext recv:", message, sender);
 	const integrations = await api.storage.local.get({ soupcanIntegration: false, integrations: { } }) as { [id: string]: Integration };
-	integrations[SoupcanExtensionId] = {
-		name: "soupcan",
-		state: integrations.soupcanIntegration ? IntegrationStateSendAndReceive : IntegrationStateDisabled,
-	};
-
 	const senderId = sender.id ?? "";
 	if (!integrations.hasOwnProperty(senderId)) {
 		response = { status: ErrorStatus, message: "extension not allowed" } as ErrorResponse;

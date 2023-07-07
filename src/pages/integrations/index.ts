@@ -1,5 +1,5 @@
 import { RefId } from "../../utilities.js";
-import { IntegrationStateDisabled, IntegrationStateReceiveOnly, IntegrationStateSendAndReceive, IntegrationStateSendOnly, api, logstr } from "../../constants.js";
+import { api, logstr, IntegrationStateDisabled, IntegrationStateReceiveOnly, IntegrationStateSendAndReceive, IntegrationStateSendOnly, SoupcanExtensionId } from "../../constants.js";
 import "../style.css";
 import "./style.css";
 
@@ -8,6 +8,8 @@ interface Integration {
 	name: string,
 	state: number,
 }
+
+const [ExtensionStateNone, ExtensionStateDisabled, ExtensionStateEnabled] = [0, 1, 2];
 
 document.addEventListener("DOMContentLoaded", () => {
 	const integrationsDiv = document.getElementById("integrations") as HTMLElement;
@@ -23,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		};
 
 		const div = document.createElement("div");
-		div.id = refid;
+		div.id = integration.id || "placeholder";
 
 		const select = document.createElement("select");
 		select.addEventListener("change", e => {
@@ -58,9 +60,10 @@ document.addEventListener("DOMContentLoaded", () => {
 		extId.value = integration.id;
 		extId.placeholder = "external extension id";
 		extId.autocomplete = "off";
-		extId.addEventListener("change", e => {
+		extId.addEventListener("input", e => {
 			const input = e.target as HTMLInputElement;
 			i[refid].id = input.value;
+			div.id = input.value;
 		});
 		div.appendChild(extId);
 
@@ -68,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		extName.value = integration.name;
 		extName.placeholder = "extension name";
 		extName.autocomplete = "off";
-		extName.addEventListener("change", e => {
+		extName.addEventListener("input", e => {
 			const input = e.target as HTMLInputElement;
 			i[refid].name = input.value;
 		});
@@ -85,6 +88,24 @@ document.addEventListener("DOMContentLoaded", () => {
 		integrationsDiv.appendChild(div);
 	}
 
+	integrationsDiv.innerHTML = "";
+	let soupcanState: number = ExtensionStateNone;
+
+	document.addEventListener("soupcan-event", () => {
+		if (soupcanState === ExtensionStateEnabled) {
+			// we don't need a placeholder if we're going to put soupcan in, so remove it
+			const placeholder = document.getElementById("placeholder");
+			if (placeholder) {
+				integrationsDiv.removeChild(placeholder);
+			}	
+			add({
+				id: SoupcanExtensionId,
+				name: "soupcan",
+				state: IntegrationStateDisabled,
+			});
+		}
+	});
+
 	api.storage.local.get({ integrations: { } })
 	.then(items => items.integrations as { [id: string]: { name: string, state: number } })
 	.then(integrations => {
@@ -92,6 +113,24 @@ document.addEventListener("DOMContentLoaded", () => {
 		const addButton = document.getElementById("add-button") as HTMLButtonElement;
 		const saveButton = document.getElementById("save-button") as HTMLButtonElement;
 		const saveStatus = document.getElementById("save-status") as HTMLButtonElement;
+
+		// it's important that this runs *after* getting local storage back
+		api.runtime.sendMessage(
+			SoupcanExtensionId,
+			{ action: "check_twitter_user", screen_name: "elonmusk" },
+		).then((r: any) => {
+			// we could check if response is the expected shape here, if we really wanted
+			if (!r) {
+				soupcanState = ExtensionStateDisabled;
+				throw new Error("extension not enabled");
+			}
+			soupcanState = ExtensionStateEnabled;
+		}).catch(e =>
+			console.debug(logstr, "soupcan error:", e, soupcanState)
+		).finally(() =>
+			// @ts-ignore
+			document.dispatchEvent(new CustomEvent("soupcan-event"))
+		);
 
 		addButton.addEventListener("click", e => add({ id: "", name: "", state: IntegrationStateDisabled }));
 		let saveTimeout: number | null = null;
@@ -115,18 +154,16 @@ document.addEventListener("DOMContentLoaded", () => {
 			});
 		});
 
-		integrationsDiv.innerHTML = "";
-
-		if (Object.entries(integrations).length === 0) {
-			return add({ id: "", name: "", state: IntegrationStateDisabled });
-		}
-
 		for (const [extensionId, integration] of Object.entries(integrations)) {
 			add({
 				id: extensionId,
 				name: integration.name,
 				state: integration.state,
 			});
+		}
+
+		if (Object.entries(i).length === 0) {
+			add({ id: "", name: "", state: IntegrationStateDisabled });
 		}
 	});
 });
