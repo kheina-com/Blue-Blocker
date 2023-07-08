@@ -109,7 +109,7 @@ api.runtime.onMessageExternal.addListener((m, s, r) => { let response: MessageRe
 				const twitterApiResponse = message.data as TwitterApiResponse;
 				response = { status: SuccessStatus, result: "ack" } as SuccessResponse;
 				// run this async so that we don't wait to ack since we never want to error
-				(async () => HandleTwitterApiResponse(message))().catch(e => console.error(logstr, e));
+				(async () => HandleTwitterApiResponse(twitterApiResponse))().catch(e => console.error(logstr, e));
 				break;
 
 			default:

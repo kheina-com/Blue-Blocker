@@ -52,7 +52,7 @@
 							headers: this._requestHeaders,
 							method: this._method,
 						},
-						ok: true,
+						ok: this.status >= 200 && this.status < 300,
 						parsedUrl,
 						url : this._url,
 						text: this.response,
