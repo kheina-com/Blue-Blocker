@@ -36,6 +36,16 @@ export const RefId = (): number => Math.round(Math.random() * MaxId);
 const epoch: number = 2500000000000;
 export const QueueId = (time: Date | null = null): number => epoch - ((time ?? new Date()).valueOf() + Math.random() * 1000);
 
+export function SetHeaders(headers: { [k: string]: string }) {
+	api.storage.local.get({ headers: { }}).then(items => {
+		// so basically we want to only update items that have values
+		for (const [header, value] of Object.entries(headers)) {
+			items.headers[header.toLowerCase()] = value;
+		}
+		api.storage.local.set(items);
+	});
+}
+
 export async function IsUserLegacyVerified(user_id: string, handle: string): Promise<boolean> {
 	interface LegacyVerifiedResponse {
 		status: "SUCCESS",

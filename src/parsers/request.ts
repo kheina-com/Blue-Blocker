@@ -1,10 +1,9 @@
-import { SetHeaders } from "../shared";
 import { api, logstr, DefaultOptions, ErrorEvent, EventKey } from "../constants";
 import { HandleInstructionsResponse } from "./instructions";
 import { HandleForYou } from "./timeline";
 import { HandleTypeahead } from "./search";
 import { HandleUnblock } from "./unblock";
-import { edit } from "../utilities";
+import { edit, SetHeaders } from "../utilities";
 
 const RequestRegex = edit(
 	/^https?:\/\/(?:\w+\.)?twitter.com\/[\w\/\.\-\_\=]+\/({queries})(?:$|\?)/, { queries: [

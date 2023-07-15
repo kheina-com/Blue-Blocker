@@ -125,8 +125,11 @@ export function HandleInstructionsResponse(
 	// pull the "instructions" object from the tweet
 	let _instructions = e.json;
 	for (const key of InstructionsPaths[e.parsedUrl[1]]) {
-		// @ts-ignore
 		_instructions = _instructions[key];
+		if (Object.keys(_instructions).length === 0) {
+			// twitter sent an empty response object. it does this sometimes, apparently
+			return;
+		}
 	}
 
 	// TODO: figure out how to do this cleanly
