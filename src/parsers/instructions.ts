@@ -56,6 +56,7 @@ const UserObjectPath: string[] = [
 ];
 const IgnoreTweetTypes = new Set([
 	"TimelineTimelineCursor",
+	"TweetTombstone",
 ]);
 const PromotedStrings = new Set([
 	"suggest_promoted",
@@ -65,6 +66,9 @@ const PromotedStrings = new Set([
 
 function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 	let ptr = obj;
+	if (ptr.__typename == "TweetTombstone") {
+		return;
+	}
 	for (const key of UserObjectPath) {
 		if (ptr.hasOwnProperty(key)) {
 			ptr = ptr[key];
