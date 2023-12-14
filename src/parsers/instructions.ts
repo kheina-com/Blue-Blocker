@@ -82,7 +82,7 @@ function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 		return;
 	}
 	ptr.promoted_tweet = promoted;
-	ptr.is_blue_verified = editable;
+	ptr.is_blue_verified = (ptr.is_blue_verified ||editable);
 	BlockBlueVerified(ptr as BlueBlockerUser, config);
 }
 
