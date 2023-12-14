@@ -65,13 +65,16 @@ const PromotedStrings = new Set([
 ]);
 
 function handleTweetObject(obj: any, config: Config, promoted: boolean) {
-	let ptr = obj;
+	let ptr = obj, editable = false;
 	if (ptr.__typename == "TweetTombstone") {
 		return;
 	}
 	for (const key of UserObjectPath) {
 		if (ptr.hasOwnProperty(key)) {
 			ptr = ptr[key];
+			if (ptr.__typename == 'Tweet' && ptr?.edit_control?.is_edit_eligible == true) {
+				editable = true;
+			}
 		}
 	}
 	if (ptr.__typename !== 'User') {
@@ -79,6 +82,7 @@ function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 		return;
 	}
 	ptr.promoted_tweet = promoted;
+	ptr.is_blue_verified = editable;
 	BlockBlueVerified(ptr as BlueBlockerUser, config);
 }
 
