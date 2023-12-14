@@ -65,8 +65,8 @@ const PromotedStrings = new Set([
 ]);
 
 function handleTweetObject(obj: any, config: Config, promoted: boolean) {
-	let ptr = obj, editable = false;
-	if (ptr.__typename == "TweetTombstone") {
+	let ptr = obj;
+	if (ptr.__typename == 'TweetTombstone') {
 		return;
 	}
 	for (const key of UserObjectPath) {
