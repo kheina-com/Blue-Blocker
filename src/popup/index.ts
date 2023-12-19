@@ -166,6 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	const blockFollowers = document.getElementById("block-followers") as HTMLInputElement;
 	const skipVerified = document.getElementById("skip-verified") as HTMLInputElement;
 	const skipAffiliated = document.getElementById("skip-affiliated") as HTMLInputElement;
+	const blockNoneASCII = document.getElementById("block-none-ascii") as HTMLInputElement;
 	const skip1Mplus = document.getElementById("skip-1mplus") as HTMLInputElement;
 	const blockPromoted = document.getElementById("block-promoted-tweets") as HTMLInputElement;
 	const blockNftAvatars = document.getElementById("block-nft-avatars") as HTMLInputElement;
@@ -188,6 +189,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		checkHandler(blockFollowers, config, "blockFollowers");
 		checkHandler(skipVerified, config, "skipVerified");
 		checkHandler(skipAffiliated, config, "skipAffiliated");
+		checkHandler(blockNoneASCII, config, "blockNoneASCII");
 		checkHandler(skip1Mplus, config, "skip1Mplus", {
 			optionName: "skip-follower-count-option",
 		});
@@ -231,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 		sliderMirror("popup-timer", "popupTimer", config);
 		sliderMirror("block-interval", "blockInterval", config, { onInput(e, ele) {
-			const target = e.target as HTMLInputElement;	
+			const target = e.target as HTMLInputElement;
 			const targetValue = parseInt(target.value);
 			ele.forEach(i => i.value = target.value);
 			document.getElementsByName("variance")

@@ -17,8 +17,9 @@ import {
 	ReasonTransphobia,
 	ReasonPromoted,
 	HistoryStateGone,
+	ReasonNoneASCII as ReasonNameNoneASCII,
 } from './constants';
-import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory } from './utilities';
+import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsMostlyNoneASCII, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory } from './utilities';
 
 // TODO: tbh this file shouldn't even exist anymore and should be
 // split between content/startup.ts and utilities.ts
@@ -367,6 +368,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 		}
 
 		const formattedUserName = FormatLegacyName(user.legacy);
+		const nameMostlyNoneASCII = IsMostlyNoneASCII(user.legacy);
 		const hasBlockableVerifiedTypes = blockableVerifiedTypes.has(user.legacy?.verified_type || '');
 		const hasBlockableAffiliateLabels = blockableAffiliateLabels.has(
 			user.affiliates_highlighted_label?.label?.userLabelType || '',
@@ -443,10 +445,19 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 				user.legacy?.followers_count > config.skipFollowerCount
 			) {
 				console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they have over ${commafy(config.skipFollowerCount)} followers and Elon is an idiot.`);
+			}else if (
+				// username mostly ASCII
+				config.blockNoneASCII &&
+				!nameMostlyNoneASCII
+			) {
+				console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because their name is mostly ASCII.`);
 			} else {
 				let reason = ReasonBlueVerified;
 				if (hasBlockableVerifiedTypes) {
 					reason = ReasonBusinessVerified;
+				}
+				if (nameMostlyNoneASCII) {
+					reason = ReasonNameNoneASCII;
 				}
 				queueBlockUser(user, String(user.rest_id), reason);
 				return;

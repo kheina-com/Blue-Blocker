@@ -110,6 +110,21 @@ export function FormatLegacyName(user: { name: string, screen_name: string }) {
 	return `${legacyName} (@${screenName})`;
 }
 
+export function IsMostlyNoneASCII(user: { name: string, screen_name: string }) {
+
+	// block users with vietnamese accent characters in their name
+    const vietnameseRegex = /[\u00C0-\u00C3\u00E0-\u00E3\u0102\u0103\u1EA0-\u1EF9]/;
+    if (vietnameseRegex.test(user.name)) {
+        return true;
+    }
+
+    const asciiCount = (user.name.match(/[\x00-\x7F]/g) || []).length;
+    const nonAsciiCount = (user.name.match(/[\u0080-\uFFFF]/g) || []).length;
+
+    return nonAsciiCount > asciiCount;
+}
+
+
 export function MakeToast(content: string, config: Config, options: { html?: boolean, warn?: boolean, error?: boolean, elements?: Array<HTMLElement> } = { }) {
 	const ele = document.getElementById("injected-blue-block-toasts");
 	if (!ele) {
