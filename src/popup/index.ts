@@ -166,7 +166,8 @@ document.addEventListener("DOMContentLoaded", () => {
 	const blockFollowers = document.getElementById("block-followers") as HTMLInputElement;
 	const skipVerified = document.getElementById("skip-verified") as HTMLInputElement;
 	const skipAffiliated = document.getElementById("skip-affiliated") as HTMLInputElement;
-	const blockNoneASCII = document.getElementById("block-none-ascii") as HTMLInputElement;
+	const blockNoneASCIIUsername = document.getElementById("block-none-ascii-username") as HTMLInputElement;
+	const blockNoneASCIIFullText = document.getElementById("block-none-ascii-full-text") as HTMLInputElement;
 	const skip1Mplus = document.getElementById("skip-1mplus") as HTMLInputElement;
 	const blockPromoted = document.getElementById("block-promoted-tweets") as HTMLInputElement;
 	const blockNftAvatars = document.getElementById("block-nft-avatars") as HTMLInputElement;
@@ -189,7 +190,8 @@ document.addEventListener("DOMContentLoaded", () => {
 		checkHandler(blockFollowers, config, "blockFollowers");
 		checkHandler(skipVerified, config, "skipVerified");
 		checkHandler(skipAffiliated, config, "skipAffiliated");
-		checkHandler(blockNoneASCII, config, "blockNoneASCII");
+		checkHandler(blockNoneASCIIUsername, config, "blockNoneASCIIUsername");
+		checkHandler(blockNoneASCIIFullText, config, "blockNoneASCIIFullText");
 		checkHandler(skip1Mplus, config, "skip1Mplus", {
 			optionName: "skip-follower-count-option",
 		});

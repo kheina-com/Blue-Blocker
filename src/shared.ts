@@ -18,6 +18,7 @@ import {
 	ReasonPromoted,
 	HistoryStateGone,
 	ReasonNoneASCII as ReasonNameNoneASCII,
+	ReasonFullTextNoneASCII,
 } from './constants';
 import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsMostlyNoneASCII, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory } from './utilities';
 
@@ -368,7 +369,9 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 		}
 
 		const formattedUserName = FormatLegacyName(user.legacy);
-		const nameMostlyNoneASCII = IsMostlyNoneASCII(user.legacy);
+		const nameMostlyNoneASCII = IsMostlyNoneASCII(user.legacy.name);
+		// check if user.full_text is mostly none ASCII
+		const fullTextMostlyNoneASCII = IsMostlyNoneASCII(user.full_text || "");
 		const hasBlockableVerifiedTypes = blockableVerifiedTypes.has(user.legacy?.verified_type || '');
 		const hasBlockableAffiliateLabels = blockableAffiliateLabels.has(
 			user.affiliates_highlighted_label?.label?.userLabelType || '',
@@ -445,19 +448,26 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 				user.legacy?.followers_count > config.skipFollowerCount
 			) {
 				console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they have over ${commafy(config.skipFollowerCount)} followers and Elon is an idiot.`);
-			}else if (
+			} else if (
+				// tweet mostly ASCII
+				config.blockNoneASCIIFullText &&
+				!fullTextMostlyNoneASCII
+			) {
+				console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because their tweet is mostly ASCII.`);
+			} else if (
 				// username mostly ASCII
-				config.blockNoneASCII &&
-				!nameMostlyNoneASCII
+				config.blockNoneASCIIUsername &&
+				!nameMostlyNoneASCII && !fullTextMostlyNoneASCII
 			) {
 				console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because their name is mostly ASCII.`);
 			} else {
 				let reason = ReasonBlueVerified;
 				if (hasBlockableVerifiedTypes) {
 					reason = ReasonBusinessVerified;
-				}
-				if (nameMostlyNoneASCII) {
+				} else if (nameMostlyNoneASCII) {
 					reason = ReasonNameNoneASCII;
+				} else if (fullTextMostlyNoneASCII) {
+					reason = ReasonFullTextNoneASCII;
 				}
 				queueBlockUser(user, String(user.rest_id), reason);
 				return;

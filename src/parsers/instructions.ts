@@ -65,8 +65,12 @@ const PromotedStrings = new Set([
 
 function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 	let ptr = obj;
+	let full_text = null;
 	for (const key of UserObjectPath) {
 		if (ptr.hasOwnProperty(key)) {
+			if (key === 'core') {
+				full_text = ptr["legacy"].full_text;
+			}
 			ptr = ptr[key];
 		}
 	}
@@ -75,6 +79,9 @@ function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 		return;
 	}
 	ptr.promoted_tweet = promoted;
+	if (full_text !== null) {
+		ptr.full_text = full_text;
+	}
 	BlockBlueVerified(ptr as BlueBlockerUser, config);
 }
 

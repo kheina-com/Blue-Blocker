@@ -25,7 +25,8 @@
 		<input type="checkbox" id="block-followers">
 		<input type="checkbox" id="skip-verified">
 		<input type="checkbox" id="skip-affiliated">
-		<input type="checkbox" id="block-none-ascii">
+		<input type="checkbox" id="block-none-ascii-username">
+		<input type="checkbox" id="block-none-ascii-full-text">
 		<input type="checkbox" id="skip-1mplus">
 		<input type="checkbox" id="block-promoted-tweets">
 		<input type="checkbox" id="block-nft-avatars">
@@ -156,13 +157,22 @@
 				<span name="skip-affiliated-status"></span>
 			</div>
 			<div class="option">
-				<label for="block-none-ascii" name="block-none-ascii">
+				<label for="block-none-ascii-username" name="block-none-ascii-username">
 					<div class="checkmark">
 						<div></div>
 					</div>
 					<p>only block users with none-ASCII usernames</p>
 				</label>
-				<span name="block-none-ascii-status"></span>
+				<span name="block-none-ascii-username-status"></span>
+			</div>
+			<div class="option">
+				<label for="block-none-ascii-full-text" name="block-none-ascii-full-text">
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>only block users that speaks none-ASCII languages</p>
+				</label>
+				<span name="block-none-ascii-full-text-status"></span>
 			</div>
 			<div class="option">
 				<label for="skip-1mplus" name="skip-1mplus">
