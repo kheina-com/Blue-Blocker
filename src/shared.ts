@@ -20,7 +20,7 @@ import {
 	ReasonNoneASCII as ReasonNameNoneASCII,
 	ReasonFullTextNoneASCII,
 } from './constants';
-import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsMostlyNoneASCII, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory } from './utilities';
+import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsUsernameMostlyNoneASCII, IsTweetMostlyNoneASCII, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory } from './utilities';
 
 // TODO: tbh this file shouldn't even exist anymore and should be
 // split between content/startup.ts and utilities.ts
@@ -369,9 +369,9 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 		}
 
 		const formattedUserName = FormatLegacyName(user.legacy);
-		const nameMostlyNoneASCII = IsMostlyNoneASCII(user.legacy.name);
+		const nameMostlyNoneASCII = IsUsernameMostlyNoneASCII(user.legacy.name);
 		// check if user.full_text is mostly none ASCII
-		const fullTextMostlyNoneASCII = IsMostlyNoneASCII(user.full_text || "");
+		const fullTextMostlyNoneASCII = IsTweetMostlyNoneASCII(user.full_text || "");
 		const hasBlockableVerifiedTypes = blockableVerifiedTypes.has(user.legacy?.verified_type || '');
 		const hasBlockableAffiliateLabels = blockableAffiliateLabels.has(
 			user.affiliates_highlighted_label?.label?.userLabelType || '',
