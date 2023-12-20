@@ -111,30 +111,32 @@ export function FormatLegacyName(user: { name: string, screen_name: string }) {
 }
 
 
-export function IsUsernameMostlyNoneASCII(text: string) {
+export function IsUsernameMostlyASCII(text: string) {
 
 	// block users with vietnamese accent characters in their name
     const vietnameseRegex = /[\u00C0-\u00C3\u00E0-\u00E3\u0102\u0103\u1EA0-\u1EF9]/;
     if (vietnameseRegex.test(text)) {
-		return true;
+		return false;
     }
 
-    return IsMostlyNoneASCII(text);
+    return IsMostlyASCII(text);
 }
 
-export function IsTweetMostlyNoneASCII(text: string) {
-	// example: @wangzhian8848 你這樣混下去和趙少康差不多
-	// before IsMostlyNoneASCII, trim the @username
+export function IsTweetMostlyASCII(text: string) {
+	// trim the @username
 	const usernameRegex = /^@[\w]+/;
 	text = text.replace(usernameRegex, "");
-	return IsMostlyNoneASCII(text);
+	return (text.match(/[\u0080-\uFFFF]/g) || []).length == 0;
 }
 
-export function IsMostlyNoneASCII(text: string) {
+export function IsMostlyASCII(text: string) {
+	if (text.length === 0) {
+		return false;
+	}
 	const asciiCount = (text.match(/[\x00-\x7F]/g) || []).length;
 	const nonAsciiCount = (text.match(/[\u0080-\uFFFF]/g) || []).length;
 
-	return nonAsciiCount > asciiCount;
+	return asciiCount > nonAsciiCount;
 }
 
 export function MakeToast(content: string, config: Config, options: { html?: boolean, warn?: boolean, error?: boolean, elements?: Array<HTMLElement> } = { }) {

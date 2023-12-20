@@ -17,10 +17,10 @@ import {
 	ReasonTransphobia,
 	ReasonPromoted,
 	HistoryStateGone,
-	ReasonNoneASCII as ReasonNameNoneASCII,
-	ReasonFullTextNoneASCII,
+	ReasonNameNonASCII as ReasonNameNonASCII,
+	ReasonFullTextNonASCII,
 } from './constants';
-import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsUsernameMostlyNoneASCII, IsTweetMostlyNoneASCII, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory } from './utilities';
+import { commafy, AddUserBlockHistory, EscapeHtml, FormatLegacyName, IsUsernameMostlyASCII, IsTweetMostlyASCII, IsUserLegacyVerified, MakeToast, RemoveUserBlockHistory } from './utilities';
 
 // TODO: tbh this file shouldn't even exist anymore and should be
 // split between content/startup.ts and utilities.ts
@@ -369,9 +369,9 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 		}
 
 		const formattedUserName = FormatLegacyName(user.legacy);
-		const nameMostlyNoneASCII = IsUsernameMostlyNoneASCII(user.legacy.name);
-		// check if user.full_text is mostly none ASCII
-		const fullTextMostlyNoneASCII = IsTweetMostlyNoneASCII(user.full_text || "");
+		const nameMostlyASCII = IsUsernameMostlyASCII(user.legacy.name);
+		// check if user.full_text is mostly non-ASCII
+		const fullTextMostlyASCII = IsTweetMostlyASCII(user.full_text || "");
 		const hasBlockableVerifiedTypes = blockableVerifiedTypes.has(user.legacy?.verified_type || '');
 		const hasBlockableAffiliateLabels = blockableAffiliateLabels.has(
 			user.affiliates_highlighted_label?.label?.userLabelType || '',
@@ -449,25 +449,18 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 			) {
 				console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because they have over ${commafy(config.skipFollowerCount)} followers and Elon is an idiot.`);
 			} else if (
-				// tweet mostly ASCII
-				config.blockNoneASCIIFullText &&
-				!fullTextMostlyNoneASCII
+				!(config.blockNonASCIIUsername && !fullTextMostlyASCII || config.blockNonASCIIFullText &&
+				!fullTextMostlyASCII)
 			) {
-				console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because their tweet is mostly ASCII.`);
-			} else if (
-				// username mostly ASCII
-				config.blockNoneASCIIUsername &&
-				!nameMostlyNoneASCII && !fullTextMostlyNoneASCII
-			) {
-				console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because their name is mostly ASCII.`);
+				console.log(logstr, `did not block Twitter Blue verified user ${formattedUserName} because their username and/or tweet(${user.full_text || ""}) is mostly ASCII.`);
 			} else {
 				let reason = ReasonBlueVerified;
 				if (hasBlockableVerifiedTypes) {
 					reason = ReasonBusinessVerified;
-				} else if (nameMostlyNoneASCII) {
-					reason = ReasonNameNoneASCII;
-				} else if (fullTextMostlyNoneASCII) {
-					reason = ReasonFullTextNoneASCII;
+				} else if (nameMostlyASCII) {
+					reason = ReasonNameNonASCII;
+				} else if (fullTextMostlyASCII) {
+					reason = ReasonFullTextNonASCII;
 				}
 				queueBlockUser(user, String(user.rest_id), reason);
 				return;

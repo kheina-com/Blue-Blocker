@@ -37,8 +37,8 @@ export const DefaultOptions: Config = {
 	skipFollowerCount: 1e6,
 	soupcanIntegration: false,
 	blockPromoted: false,
-	blockNoneASCIIUsername: false,
-	blockNoneASCIIFullText: false,
+	blockNonASCIIUsername: false,
+	blockNonASCIIFullText: false,
 
 	// this isn"t set, but is used
 	// TODO: when migrating to firefox manifest v3, check to see if sets can be stored yet
@@ -79,16 +79,16 @@ export const ReasonNftAvatar: number = 1;
 export const ReasonBusinessVerified: number = 2;
 export const ReasonTransphobia: number = 3;
 export const ReasonPromoted: number = 4;
-export const ReasonNoneASCII: number = 5;
-export const ReasonFullTextNoneASCII: number = 6;
+export const ReasonNameNonASCII: number = 5;
+export const ReasonFullTextNonASCII: number = 6;
 export const ReasonMap = {
 	[ReasonBlueVerified]: "Twitter Blue verified",
 	[ReasonNftAvatar]: "NFT avatar",
 	[ReasonBusinessVerified]: "Twitter Business verified",
 	[ReasonTransphobia]: "transphobia",
 	[ReasonPromoted]: "promoting tweets",
-	[ReasonNoneASCII]: "non-ASCII characters",
-	[ReasonFullTextNoneASCII]: "non-ASCII characters in tweet text",
+	[ReasonNameNonASCII]: "non-ASCII characters in username",
+	[ReasonFullTextNonASCII]: "non-ASCII characters in tweet text",
 };
 export const LegacyVerifiedUrl: string = "https://gist.githubusercontent.com/travisbrown/b50d6745298cccd6b1f4697e4ec22103/raw/012009351630dc351e3a763b49bf24fa50ca3eb7/legacy-verified.csv";
 export const Browser = api.runtime.getManifest()?.browser_specific_settings?.gecko === undefined ? "chrome" : "firefox";
