@@ -73,10 +73,8 @@ function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 		if (ptr.hasOwnProperty(key)) {
 			ptr = ptr[key];
 			if (
-				ptr.__typename == 'Tweet' && (
-					ptr?.edit_control?.is_edit_eligible == true ||
-					ptr?.note_tweet?.is_expandable == true
-				)
+				ptr.__typename == 'Tweet' && 
+				ptr?.note_tweet?.is_expandable == true
 			) {
 				hasBlueFeats = true;
 			}
@@ -87,7 +85,7 @@ function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 		return;
 	}
 	ptr.promoted_tweet = promoted;
-	ptr.is_blue_verified = (ptr.is_blue_verified ||hasBlueFeats);
+	ptr.is_blue_verified = (ptr.is_blue_verified || hasBlueFeats);
 	BlockBlueVerified(ptr as BlueBlockerUser, config);
 }
 
