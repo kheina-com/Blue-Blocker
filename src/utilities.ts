@@ -23,12 +23,28 @@ export function commafy(x: number): string {
 	return parts.join('.');
 }
 
+export function edit(regex: RegExp, replacements: { [k: string]: string }): RegExp {
+	const regexp: string = regex.source;
+	const repl = new RegExp(Object.keys(replacements).map(x => "{" + x + "}").join("|"), "g");
+	return new RegExp(regexp.replaceAll(repl, m => replacements[m.substring(1, m.length - 1)]), regex.flags);
+}
+
 // 64bit random number generator. I believe it's not truly 64 bit
 // due to floating point bullshit, but it's good enough
 const MaxId: number = Number.MAX_SAFE_INTEGER;
 export const RefId = (): number => Math.round(Math.random() * MaxId);
 const epoch: number = 2500000000000;
 export const QueueId = (time: Date | null = null): number => epoch - ((time ?? new Date()).valueOf() + Math.random() * 1000);
+
+export function SetHeaders(headers: { [k: string]: string }) {
+	api.storage.local.get({ headers: { }}).then(items => {
+		// so basically we want to only update items that have values
+		for (const [header, value] of Object.entries(headers)) {
+			items.headers[header.toLowerCase()] = value;
+		}
+		api.storage.local.set(items);
+	});
+}
 
 export async function IsUserLegacyVerified(user_id: string, handle: string): Promise<boolean> {
 	interface LegacyVerifiedResponse {

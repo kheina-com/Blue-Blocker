@@ -29,16 +29,6 @@ const blockCounter = new BlockCounter(api.storage.local);
 const blockCache: Set<string> = new Set();
 export const UnblockCache: Set<string> = new Set();
 
-export function SetHeaders(headers: { [k: string]: string }) {
-	api.storage.local.get({ headers: { }}).then(items => {
-		// so basically we want to only update items that have values
-		for (const [header, value] of Object.entries(headers)) {
-			items.headers[header.toLowerCase()] = value;
-		}
-		api.storage.local.set(items);
-	});
-}
-
 setInterval(blockCache.clear, 10 * 60e3);  // clear the cache every 10 minutes
 // this is just here so we don't double add users unnecessarily (and also overwrite name)
 setInterval(UnblockCache.clear, 10 * 60e3);
