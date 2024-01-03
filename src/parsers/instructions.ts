@@ -94,13 +94,13 @@ export function ParseTimelineTweet(tweet: any, config: Config) {
 
 	try {
 		// Handle retweets and quoted tweets (check the retweeted user, too)
-		if (tweet?.itemContent?.tweet_results?.result?.quoted_status_result) {
+		if (tweet?.itemContent?.tweet_results?.result?.quoted_status_result?.result) {
 			handleTweetObject(
 				tweet.itemContent.tweet_results.result.quoted_status_result.result,
 				config,
 				promoted,
 			);
-		} else if (tweet?.itemContent?.tweet_results?.result?.legacy?.retweeted_status_result) {
+		} else if (tweet?.itemContent?.tweet_results?.result?.legacy?.retweeted_status_result?.result) {
 			handleTweetObject(
 				tweet.itemContent.tweet_results.result.legacy.retweeted_status_result.result,
 				config,
