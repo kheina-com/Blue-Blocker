@@ -8,66 +8,37 @@ import { BlockBlueVerified } from '../shared';
 // when parsing a timeline response body, these are the paths to navigate in the json to retrieve the "instructions" object
 // the key to this object is the capture group from the request regex in inject.js
 const InstructionsPaths: { [key: string]: string[] } = {
-	HomeLatestTimeline: [
-		"data",
-		"home",
-		"home_timeline_urt",
-		"instructions",
-	],
-	HomeTimeline: [
-		"data",
-		"home",
-		"home_timeline_urt",
-		"instructions",
-	],
-	SearchTimeline: [
-		"data",
-		"search_by_raw_query",
-		"search_timeline",
-		"timeline",
-		"instructions",
-	],
-	UserTweets: [
-		"data",
-		"user",
-		"result",
-		"timeline_v2",
-		"timeline",
-		"instructions",
-	],
-	TweetDetail: [
-		"data",
-		"threaded_conversation_with_injections_v2",
-		"instructions",
-	],
-	"search/adaptive.json": [
-		"timeline",
-		"instructions",
-	],
+	HomeLatestTimeline: ['data', 'home', 'home_timeline_urt', 'instructions'],
+	HomeTimeline: ['data', 'home', 'home_timeline_urt', 'instructions'],
+	SearchTimeline: ['data', 'search_by_raw_query', 'search_timeline', 'timeline', 'instructions'],
+	UserTweets: ['data', 'user', 'result', 'timeline_v2', 'timeline', 'instructions'],
+	TweetDetail: ['data', 'threaded_conversation_with_injections_v2', 'instructions'],
+	'search/adaptive.json': ['timeline', 'instructions'],
 };
 // this is the path to retrieve the user object from the individual tweet
 const UserObjectPath: string[] = [
-	"tweet_results",
-	"result",
-	"tweet",
-	"core",
-	"user_results",
-	"result",
+	'tweet_results',
+	'result',
+	'tweet',
+	'core',
+	'user_results',
+	'result',
 ];
-const IgnoreTweetTypes = new Set([
-	"TimelineTimelineCursor",
-]);
-const PromotedStrings = new Set([
-	"suggest_promoted",
-	"Promoted",
-	"promoted",
-]);
+const IgnoreTweetTypes = new Set(['TimelineTimelineCursor', 'TweetTombstone']);
+const PromotedStrings = new Set(['suggest_promoted', 'Promoted', 'promoted']);
 
 function handleTweetObject(obj: any, config: Config, promoted: boolean) {
-	let ptr = obj;
+	let ptr = obj,
+		hasBlueFeats = false;
+	if (ptr.__typename == 'TweetTombstone') {
+		return;
+	}
 	for (const key of UserObjectPath) {
 		if (ptr.hasOwnProperty(key)) {
 			ptr = ptr[key];
+			if (ptr.__typename == 'Tweet' && ptr?.note_tweet?.is_expandable == true) {
+				hasBlueFeats = true;
+			}
 		}
 	}
 	if (ptr.__typename !== 'User') {
@@ -75,6 +46,7 @@ function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 		return;
 	}
 	ptr.promoted_tweet = promoted;
+	ptr.is_blue_verified = ptr.is_blue_verified || hasBlueFeats;
 	BlockBlueVerified(ptr as BlueBlockerUser, config);
 }
 
@@ -88,7 +60,9 @@ export function ParseTimelineTweet(tweet: any, config: Config) {
 		promoted = true;
 	} else if (PromotedStrings.has(tweet?.clientEventInfo?.component)) {
 		promoted = true;
-	} else if (PromotedStrings.has(tweet?.clientEventInfo?.details?.timelinesDetails?.injectionType)) {
+	} else if (
+		PromotedStrings.has(tweet?.clientEventInfo?.details?.timelinesDetails?.injectionType)
+	) {
 		promoted = true;
 	}
 
@@ -100,7 +74,9 @@ export function ParseTimelineTweet(tweet: any, config: Config) {
 				config,
 				promoted,
 			);
-		} else if (tweet?.itemContent?.tweet_results?.result?.legacy?.retweeted_status_result?.result) {
+		} else if (
+			tweet?.itemContent?.tweet_results?.result?.legacy?.retweeted_status_result?.result
+		) {
 			handleTweetObject(
 				tweet.itemContent.tweet_results.result.legacy.retweeted_status_result.result,
 				config,
@@ -109,7 +85,7 @@ export function ParseTimelineTweet(tweet: any, config: Config) {
 		}
 		handleTweetObject(tweet.itemContent, config, promoted);
 	} catch (e) {
-		console.error(logstr, "found unexpected tweet shape:", tweet);
+		console.error(logstr, 'found unexpected tweet shape:', tweet);
 		api.storage.local.set({
 			[EventKey]: {
 				type: ErrorEvent,
@@ -147,7 +123,11 @@ export function HandleInstructionsResponse(
 		}
 	}
 	if (tweets === undefined) {
-		console.error(logstr, 'response object does not contain an instruction to add entries', body);
+		console.error(
+			logstr,
+			'response object does not contain an instruction to add entries',
+			body,
+		);
 		return;
 	}
 

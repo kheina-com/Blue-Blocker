@@ -1,6 +1,6 @@
 {
 	"name": "blue-blocker",
-	"version": "0.3.4",
+	"version": "0.3.5",
 	"author": "DanielleMiu",
 	"description": "Blocks all Twitter Blue verified users on twitter.com",
 	"type": "module",
@@ -18,7 +18,7 @@
 		"dev": "vite",
 		"build": "tsc && vite build",
 		"preview": "vite preview",
-		"fmt": "prettier --write '**/*.{ts,json,css,scss,md}'"
+		"fmt": "prettier --write **/*.{ts,json,css,scss,md}"
 	},
 	"engines": {
 		"node": ">=18.16.0"
