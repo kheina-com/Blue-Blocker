@@ -376,7 +376,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 		if (user.legacy?.verified_type && !blockableVerifiedTypes.has(user.legacy.verified_type)) {
 			return;
 		}
-		if (user.legacy?.blocking) {
+		if (user.legacy?.blocking || (config.mute && user.legacy?.muting)) {
 			return;
 		}
 

@@ -30,7 +30,7 @@ interface BlueBlockerUser {
 		},
 	},
 	legacy: {
-		blocking: boolean,
+		blocking?: boolean,
 		followed_by: boolean,
 		following: boolean,
 		name: string,
@@ -38,6 +38,7 @@ interface BlueBlockerUser {
 		verified: boolean,
 		verified_type?: string,
 		followers_count: number,
+		muting?: boolean,
 	},
 	super_following: boolean,
 	rest_id: string,
