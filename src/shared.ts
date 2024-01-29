@@ -127,39 +127,57 @@ function unblockUser(
 						if (response.status === 403) {
 							// user has been logged out, we need to stop queue and re-add
 							MakeToast(
-								`could not unblock @${user.screen_name}, you may have been logged out.`,
-								config,
-							);
-							console.log(logstr, 'user is logged out, failed to unblock user.');
-						} else if (response.status === 404) {
-							// notice the wording here is different than the blocked 404. the difference is that if the user
-							// is unbanned, they will still be blocked and we want the user to know about that
-							MakeToast(
-								`could not unblock @${user.screen_name}, user has been suspended or no longer exists.`,
+								`could not un${config.mute ? 'mute' : 'block'} @${
+									user.screen_name
+								}, you may have been logged out.`,
 								config,
 							);
 							console.log(
 								logstr,
-								`failed to unblock ${FormatLegacyName(
+								`user is logged out, failed to un${
+									config.mute ? 'mute' : 'block'
+								} user.`,
+							);
+						} else if (response.status === 404) {
+							// notice the wording here is different than the blocked 404. the difference is that if the user
+							// is unbanned, they will still be blocked and we want the user to know about that
+							MakeToast(
+								`could not un${config.mute ? 'mute' : 'block'} @${
+									user.screen_name
+								}, user has been suspended or no longer exists.`,
+								config,
+							);
+							console.log(
+								logstr,
+								`failed to un${config.mute ? 'mute' : 'block'} ${FormatLegacyName(
 									user,
 								)}, user no longer exists`,
 							);
 						} else if (response.status >= 300) {
 							MakeToast(
-								`could not unblock @${user.screen_name}, twitter gave an unfamiliar response code.`,
+								`could not un${config.mute ? 'mute' : 'block'} @${
+									user.screen_name
+								}, twitter gave an unfamiliar response code.`,
 								config,
 							);
 							console.error(
 								logstr,
-								`failed to unblock ${FormatLegacyName(user)}:`,
+								`failed to un${config.mute ? 'mute' : 'block'} ${FormatLegacyName(
+									user,
+								)}:`,
 								user,
 								response,
 							);
 						} else {
 							RemoveUserBlockHistory(user_id).catch((e) => console.error(logstr, e));
-							console.log(logstr, `unblocked ${FormatLegacyName(user)}`);
+							console.log(
+								logstr,
+								`un${config.mute ? 'mut' : 'block'}ed ${FormatLegacyName(user)}`,
+							);
 							MakeToast(
-								`unblocked @${user.screen_name}, they won't be blocked again.`,
+								`un${config.mute ? 'mut' : 'block'}ed @${
+									user.screen_name
+								}, they won't be ${config.mute ? 'mut' : 'block'}ed again.`,
 								config,
 							);
 						}
@@ -170,7 +188,9 @@ function unblockUser(
 						} else {
 							console.error(
 								logstr,
-								`failed to unblock ${FormatLegacyName(user)}:`,
+								`failed to un${config.mute ? 'mute' : 'block'} ${FormatLegacyName(
+									user,
+								)}:`,
 								user,
 								error,
 							);
@@ -218,7 +238,7 @@ api.storage.local.onChanged.addListener((items) => {
 					};
 					const screen_name = EscapeHtml(user.screen_name); // this shouldn't really do anything, but can't be too careful
 					MakeToast(
-						`blocked ${EscapeHtml(
+						`${config.mute ? 'mut' : 'block'}ed ${EscapeHtml(
 							name,
 						)} (<a href="/${screen_name}">@${screen_name}</a>)`,
 						config,
@@ -229,9 +249,15 @@ api.storage.local.onChanged.addListener((items) => {
 
 			case UserLogoutEvent:
 				if (config.showBlockPopups) {
-					MakeToast('You have been logged out, and blocking has been paused.', config, {
-						warn: true,
-					});
+					MakeToast(
+						`You have been logged out, and ${
+							config.mute ? 'mut' : 'block'
+						}ing has been paused.`,
+						config,
+						{
+							warn: true,
+						},
+					);
 				}
 				break;
 
@@ -263,10 +289,15 @@ function queueBlockUser(user: BlueBlockerUser, user_id: string, reason: number) 
 		reason,
 		user: { name: user.legacy.name, screen_name: user.legacy.screen_name },
 	});
-	console.log(
-		logstr,
-		`queued ${FormatLegacyName(user.legacy)} for a block due to ${ReasonMap[reason]}.`,
-	);
+	api.storage.sync.get(DefaultOptions).then((_config) => {
+		const config = _config as Config;
+		console.log(
+			logstr,
+			`queued ${FormatLegacyName(user.legacy)} for a ${
+				config.mute ? 'mute' : 'block'
+			} due to ${ReasonMap[reason]}.`,
+		);
+	});
 	consumer.start();
 }
 
@@ -387,7 +418,11 @@ function blockUser(
 
 				fetch(url, options)
 					.then((response) => {
-						console.debug(logstr, 'block response:', response);
+						console.debug(
+							logstr,
+							`${config.mute ? 'mute' : 'block'} response:`,
+							response,
+						);
 
 						if (response.status === 403 || response.status === 401) {
 							// user has been logged out, we need to stop queue and re-add
@@ -404,14 +439,16 @@ function blockUser(
 							);
 							console.log(
 								logstr,
-								`could not block ${FormatLegacyName(user)}, user no longer exists`,
+								`could not ${config.mute ? 'mute' : 'block'} ${FormatLegacyName(
+									user,
+								)}, user no longer exists`,
 							);
 						} else if (response.status >= 300) {
 							consumer.stop();
 							queue.push({ user, user_id, reason });
 							console.error(
 								logstr,
-								`failed to block ${FormatLegacyName(
+								`failed to ${config.mute ? 'mute' : 'block'} ${FormatLegacyName(
 									user,
 								)}, consumer stopped just in case.`,
 								response,
@@ -423,7 +460,9 @@ function blockUser(
 							);
 							console.log(
 								logstr,
-								`blocked ${FormatLegacyName(user)} due to ${ReasonMap[reason]}.`,
+								`${config.mute ? 'mut' : 'block'}ed ${FormatLegacyName(
+									user,
+								)} due to ${ReasonMap[reason]}.`,
 							);
 							api.storage.local.set({
 								[EventKey]: { type: UserBlockedEvent, user, user_id, reason },
@@ -437,7 +476,9 @@ function blockUser(
 							queue.push({ user, user_id, reason });
 							console.error(
 								logstr,
-								`failed to block ${FormatLegacyName(user)}:`,
+								`failed to ${config.mute ? 'mute' : 'block'} ${FormatLegacyName(
+									user,
+								)}:`,
 								user,
 								error,
 							);
@@ -488,7 +529,9 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 		) {
 			console.debug(
 				logstr,
-				`skipped user ${formattedUserName} because you unblocked them previously.`,
+				`skipped user ${formattedUserName} because you un${
+					config.mute ? 'mut' : 'block'
+				}ed them previously.`,
 			);
 			return;
 		} else if (
@@ -530,7 +573,9 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 			) {
 				console.log(
 					logstr,
-					`did not block Twitter Blue verified user ${formattedUserName} because they are legacy verified.`,
+					`did not ${
+						config.mute ? 'mute' : 'block'
+					} Twitter Blue verified user ${formattedUserName} because they are legacy verified.`,
 				);
 			} else if (
 				// verified via an affiliated organization instead of blue
@@ -539,7 +584,9 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 			) {
 				console.log(
 					logstr,
-					`did not block Twitter Blue verified user ${formattedUserName} because they are verified through an affiliated organization.`,
+					`did not ${
+						config.mute ? 'mute' : 'block'
+					} Twitter Blue verified user ${formattedUserName} because they are verified through an affiliated organization.`,
 				);
 			} else if (
 				// verified by follower count
@@ -548,7 +595,9 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 			) {
 				console.log(
 					logstr,
-					`did not block Twitter Blue verified user ${formattedUserName} because they have over ${commafy(
+					`did not ${
+						config.mute ? 'mute' : 'block'
+					} Twitter Blue verified user ${formattedUserName} because they have over ${commafy(
 						config.skipFollowerCount,
 					)} followers and Elon is an idiot.`,
 				);
