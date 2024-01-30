@@ -17,6 +17,7 @@ import {
 	ReasonTransphobia,
 	ReasonPromoted,
 	HistoryStateGone,
+	ListImportEvent,
 } from './constants';
 import {
 	commafy,
@@ -271,6 +272,20 @@ api.storage.local.onChanged.addListener((items) => {
 					config,
 					{ html: true, error: true },
 				);
+				break;
+
+			case ListImportEvent:
+				const blockList = e.list as BlockUser[];
+				console.log(`${logstr} processing list ${blockList[0].external_reason}`);
+				blockList.forEach(user => {
+					if (blockCache.has(user.user_id)){
+						return;
+					}
+					blockCache.add(user.user_id);
+					queue.push(user);
+					console.log(`${logstr} queued @${user.user.screen_name}`);
+				})
+				consumer.start();
 				break;
 
 			default:
