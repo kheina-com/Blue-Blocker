@@ -7,13 +7,13 @@ html {
 	--bg2color: #151416;
 	--bg3color: var(--bordercolor);
 	--blockquote: var(--bordercolor);
-	--textcolor: #DDD;
-	--bordercolor: #2D333A;
+	--textcolor: #ddd;
+	--bordercolor: #2d333a;
 	--linecolor: var(--bordercolor);
 	--borderhover: var(--interact);
-	--subtle: #EEEEEE80;
+	--subtle: #eeeeee80;
 	--shadowcolor: #00000080;
-	--activeshadowcolor: #000000B3;
+	--activeshadowcolor: #000000b3;
 	--screen-cover: #00000080;
 	--border-size: 1px;
 	--border-radius: 3px;
@@ -21,25 +21,34 @@ html {
 	background: var(--bg0color);
 }
 html * {
-	font-family: Bitstream Vera Sans, DejaVu Sans, Arial, Helvetica, sans-serif;
+	font-family:
+		Bitstream Vera Sans,
+		DejaVu Sans,
+		Arial,
+		Helvetica,
+		sans-serif;
 }
 body {
 	background: var(--bg1color);
 	color: var(--textcolor);
 }
-html, body, main, h1, p {
+html,
+body,
+main,
+h1,
+p {
 	margin: 0;
 }
 
 ::-webkit-scrollbar {
 	width: 12px;
-	height:12px;
+	height: 12px;
 }
 ::-webkit-scrollbar-track {
 	background: var(--bg2color);
 }
 ::-webkit-scrollbar-thumb {
-	background: #4D535A;
+	background: #4d535a;
 	border-radius: 4px;
 	border: 2px solid var(--bg2color);
 }
@@ -54,7 +63,7 @@ main {
 	color: var(--textcolor);
 	text-align: center;
 	width: 100%;
-	background: #1E1F25;
+	background: #1e1f25;
 }
 .inner {
 	padding: 25px;
@@ -86,7 +95,7 @@ h2 img {
 	margin: 0;
 }
 
-input[type="file"] {
+input[type='file'] {
 	position: absolute;
 	display: none;
 	top: -100vh;
