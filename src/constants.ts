@@ -77,12 +77,14 @@ export const ReasonNftAvatar: number = 1;
 export const ReasonBusinessVerified: number = 2;
 export const ReasonTransphobia: number = 3;
 export const ReasonPromoted: number = 4;
+export const ReasonImported: number = 5;
 export const ReasonMap = {
 	[ReasonBlueVerified]: "Twitter Blue verified",
 	[ReasonNftAvatar]: "NFT avatar",
 	[ReasonBusinessVerified]: "Twitter Business verified",
 	[ReasonTransphobia]: "transphobia",
 	[ReasonPromoted]: "promoting tweets",
+	[ReasonImported]: "on an imported blocklist",
 };
 export const LegacyVerifiedUrl: string = "https://gist.githubusercontent.com/travisbrown/b50d6745298cccd6b1f4697e4ec22103/raw/012009351630dc351e3a763b49bf24fa50ca3eb7/legacy-verified.csv";
 export const Browser = api.runtime.getManifest()?.browser_specific_settings?.gecko === undefined ? "chrome" : "firefox";
@@ -97,3 +99,4 @@ export const ErrorStatus: ErrorStatus = "ERROR";
 export const EventKey = "MultiTabEvent";
 export const ErrorEvent = "ErrorEvent";
 export const MessageEvent = "MessageEvent";
+export const ListImportEvent = 'ListImportEvent'
