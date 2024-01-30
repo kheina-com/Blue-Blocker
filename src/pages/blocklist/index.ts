@@ -2,7 +2,7 @@ import { ConnectDb, historyDbStore } from '../../background/db';
 import { api, logstr, EventKey, ReasonImported, ListImportEvent } from '../../constants';
 import { EscapeHtml, commafy } from '../../utilities';
 
-function exportBlockList() {
+export function exportBlockList() {
 	ConnectDb().then((db) => {
 		// Pause queue consumer
 		api.storage.sync.set({ ['suspendedBlockCollection']: true });
