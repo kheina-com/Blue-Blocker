@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<title>Blue Blocker Block Lists</title>
+		<link href="./style.css" rel="stylesheet">
+		<link href="/icon/icon-128.png" rel="icon" type="image/png" sizes="128x128">
+		<script src="./index.ts" type="module"></script>
+	</head>
+	<!-- ♀ -->
+	<body>
+		<main>
+			<div class="inner">
+				<h1>Block List</h1>
+				<p class="subtitle">block list importing supports json and csv. csv must use comma separators and no quotes</p>
+				<p class="subtitle" name="blocklist-status">requires at least user_id or id and an optional name or screen_name</p>
+				<div class="option">
+					<p>block list</p>
+					<input id="import-blocklist" type="file" accept="text/plain,text/csv,application/json" autocomplete="off">
+					<label name="import-blocklist" for="import-blocklist" class="button">import</label>
+					<a name="export-blocklist" class="button">export</a>
+				</div>
+				<div id="current-blocklists">
+					loading...
+				</div>
+			</div>
+		</main>
+	</body>
+</html>
