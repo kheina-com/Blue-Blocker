@@ -14,23 +14,25 @@
 				<h1>Block List</h1>
 				<p class="subtitle">
 					block list importing supports json and csv. csv must use comma separators and no
-					quotes
+					quotes. json must be an array of objects with at least a user_id or id field
+					containing a number
 				</p>
-				<p class="subtitle" name="blocklist-status">
-					requires at least user_id or id and an optional name or screen_name
-				</p>
+
 				<div class="option">
-					<p>block list</p>
+					<a name="export-blocklist" class="button">export current blocks</a>
+				</div>
+				<div class="option">
 					<input
 						id="import-blocklist"
 						type="file"
 						accept="text/plain,text/csv,application/json"
 						autocomplete="off"
 					/>
-					<label name="import-blocklist" for="import-blocklist" class="button"
-						>import</label
+					<label for="import-blocklist" id="import-blocklist-label" class="file-field"
+						><span class="subtitle" name="blocklist-status">
+							Click or Drag to Import File
+						</span></label
 					>
-					<a name="export-blocklist" class="button">export</a>
 				</div>
 				<div id="current-blocklists">loading...</div>
 			</div>

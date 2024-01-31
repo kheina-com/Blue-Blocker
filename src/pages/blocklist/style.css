@@ -87,7 +87,7 @@ h2 img {
 
 .option {
 	display: flex;
-	justify-content: space-between;
+	justify-content: center;
 	align-items: center;
 }
 .option p {
@@ -95,7 +95,7 @@ h2 img {
 	margin: 0;
 }
 
-input[type='file'] {
+input {
 	position: absolute;
 	display: none;
 	top: -100vh;
@@ -103,6 +103,29 @@ input[type='file'] {
 	height: 0;
 	width: 0;
 }
+
+.file-field {
+	max-width: 50em;
+	margin: 1em auto;
+	display: block;
+	padding: 25px;
+	border-radius: var(--border-radius);
+	border: 2px dashed var(--bordercolor);
+	background: var(--bg2color);
+	cursor: pointer;
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
+}
+.file-field:hover {
+	color: var(--interact);
+	border-color: var(--interact);
+}
+.file-field span {
+	font-size: 1.25em;
+}
+
 label {
 	cursor: pointer;
 	margin: 0;

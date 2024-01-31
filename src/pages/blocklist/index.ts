@@ -45,14 +45,19 @@ export function exportBlockList() {
 	});
 }
 
-function importBlockList(target: HTMLInputElement) {
-	if (!target.files?.length) {
-		return;
+function createPromiseArray(callback: Function, ...inputs: File[]) {
+	let result: Promise<BlockUser[]>[] = [];
+	for (const input of inputs) {
+		result.push(callback(input));
 	}
-	for (const file of target.files) {
-		const reader = new FileReader();
-		let success: boolean;
-		const listName = file.name.trim().replace(/\.\w*$/g, '');
+	return result;
+}
+
+async function fileProcess(file: File) {
+	const reader = new FileReader();
+	let success: boolean;
+	const listName = file.name.trim().replace(/\.\w*$/g, '');
+	const p: Promise<BlockUser[]> = new Promise((resolve, reject) => {
 		reader.addEventListener('load', (l) => {
 			// @ts-ignore
 			const payload = l.target.result as string;
@@ -69,10 +74,8 @@ function importBlockList(target: HTMLInputElement) {
 				userList.forEach((user) => {
 					const id = user?.user_id ?? user.id;
 					const screenName = user?.screen_name ?? user.name ?? '';
-					if (!id) {
-						throw new Error(
-							'failed to read user, expected at least one of: {user_id, id}.',
-						);
+					if (id === undefined) {
+						return;
 					}
 					success = true;
 					// In a perfect world we could pull the display name out of the API but im lazy :(
@@ -94,14 +97,12 @@ function importBlockList(target: HTMLInputElement) {
 						.map((i) => i.trim())
 						.forEach((line) => {
 							if (line.match(/"'/)) {
-								throw new Error(
-									'failed to read file, csv must not include quotes.',
-								);
+								reject('failed to read file, csv must not include quotes.');
 							}
 							if (headers === undefined) {
 								headers = line.split(',').map((i) => i.trim());
 								if (!headers.includes('user_id') && !headers.includes('id')) {
-									throw new Error(
+									reject(
 										'failed to read file, expected at least one of: {user_id, id}.',
 									);
 								}
@@ -121,15 +122,15 @@ function importBlockList(target: HTMLInputElement) {
 								.forEach((value, index) => (temp[headers[index]] = value));
 
 							const id = temp?.user_id ?? temp.id;
-							if (!id) {
-								throw new Error('user ID missing');
+							if (id === undefined) {
+								return reject('user ID missing');
 							}
 							const screenName = temp?.screen_name ?? temp?.name ?? '';
 							blockList.push({
 								user_id: id,
 								user: { screen_name: screenName, name: '' },
 								reason: ReasonImported,
-								external_reason: `on block list ${listName}`,
+								external_reason: listName,
 							});
 						});
 				} catch (e) {
@@ -137,46 +138,66 @@ function importBlockList(target: HTMLInputElement) {
 				}
 			}
 			if (!success) {
-				throw new Error(
+				reject(
 					'failed to read file. make sure file is csv or json and contains at least user_id or id for each user.',
 				);
 			}
-			// Filter duplicates
-			blockList = [...new Set(blockList)];
-			//Send MultiTabEvent
-			api.storage.local
-				.set({
-					[EventKey]: {
-						type: ListImportEvent,
-						list: blockList,
-					},
-				})
-				.then(() => {
-					const msg = `loaded ${blockList.length} users from blocklist ${listName}`;
-					const time = new Date();
-					// Store blocklist info
-					api.storage.sync.get({ blockLists: {} }).then((items) => {
-						items.blockLists[listName] = { size: blockList.length, date: time };
-						api.storage.sync.set(items);
-					});
-					console.log(logstr, msg);
-					document.getElementsByName('blocklist-status').forEach((e) => {
-						e.innerText = msg;
-					});
-					addListEntry(
-						document.getElementById('current-blocklists') as HTMLDivElement,
-						listName,
-						{ size: blockList.length, date: time },
-					);
-				})
-				.catch((e) =>
-					document
-						.getElementsByName('blocklist-status')
-						.forEach((s) => (s.innerText = e.message)),
-				);
+			api.storage.sync.get({ blockLists: {} }).then((items) => {
+				items.blockLists[listName] = { size: blockList.length, date: new Date() };
+				api.storage.sync.set(items);
+			});
+			resolve(blockList);
 		});
-		reader.readAsText(file);
+	});
+	reader.readAsText(file);
+	return p;
+}
+
+const defaultInputText = 'Click or Drag to Import File';
+async function importBlockList(files: FileList | undefined | null) {
+	if (!files?.length) {
+		return;
 	}
+	const statusElements = document.getElementsByName('blocklist-status');
+
+	Promise.allSettled(createPromiseArray(fileProcess, ...files))
+		.then(async (results) => {
+			const tmp = (await api.storage.local.get({ BlockQueue: [] })).BlockQueue as BlockUser[];
+			const oldL = tmp.length;
+			const queue: { [k: string]: BlockUser } = {};
+			tmp.forEach((v) => (queue[v.user_id] = v));
+			const safelist = (await api.storage.sync.get({ unblocked: [] })).unblocked as {
+				[k: string]: string | null;
+			};
+
+			for (const result of results) {
+				if (result.status == 'rejected') {
+					continue;
+				}
+				for (const user of result.value) {
+					if (!safelist?.[user.user_id]) {
+						continue;
+					}
+					queue[user.user_id] = user;
+				}
+			}
+			const write = Array.from(Object.values(queue));
+			api.storage.local.set({ BlockQueue: write });
+			const newL = write.length;
+			const msg = `loaded ${commafy(newL - oldL)} into queue`;
+			console.log(logstr, msg);
+			statusElements.forEach((e) => (e.innerText = msg));
+		})
+		.catch((e) => {
+			console.error(logstr, e);
+		})
+		.finally(() => {
+			setTimeout(() => {
+				statusElements.forEach((e) => {
+					e.innerText = 'Click or Drag to Import File';
+				});
+			}, 10e3);
+		});
 }
 
 const now = new Date();
@@ -203,14 +224,26 @@ function addListEntry(target: HTMLDivElement, name: string, val: { size: number;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-	const blockListInput = document.getElementById('import-blocklist') as HTMLInputElement;
-	blockListInput.addEventListener('input', (e) => importBlockList(e.target as HTMLInputElement));
+	const blockListInput = document.getElementById('import-blocklist') as HTMLInputElement,
+		importLabel = document.getElementById('import-blocklist-label') as HTMLElement;
+	blockListInput.addEventListener('input', (e) => {
+		const target = e.target as HTMLInputElement;
+		importBlockList(target.files as FileList);
+	});
+	importLabel.addEventListener('dragenter', (e) => e.preventDefault());
+	importLabel.addEventListener('dragover', (e) => e.preventDefault());
+	importLabel.addEventListener('drop', (e) => {
+		e.preventDefault();
+		importBlockList(e?.dataTransfer?.files);
+	});
+
 	document
 		.getElementsByName('export-blocklist')
 		.forEach((e) => e.addEventListener('click', exportBlockList));
 	api.storage.sync.get({ blockLists: {} }).then((items) => {
 		const lists = items.blockLists as { [k: string]: { size: number; date: Date } };
 		const box = document.getElementById('current-blocklists') as HTMLDivElement;
+		box.innerText = '';
 		for (const [key, val] of Object.entries(lists)) {
 			addListEntry(box, key, val);
 		}
