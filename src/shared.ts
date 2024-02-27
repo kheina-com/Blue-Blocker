@@ -611,16 +611,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 			}
 		}
 
-		// step 2: is user an nft bro
-		if (
-			config.blockNftAvatars &&
-			(user.has_nft_avatar || user.profile_image_shape === 'Hexagon')
-		) {
-			queueBlockUser(user, String(user.rest_id), ReasonNftAvatar);
-			return;
-		}
-
-		// step 3: promoted tweets
+		// step 2: promoted tweets
 		if (config.blockPromoted && user.promoted_tweet) {
 			queueBlockUser(user, String(user.rest_id), ReasonPromoted);
 			return;

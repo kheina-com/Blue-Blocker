@@ -10,7 +10,6 @@ interface Config {
 	skipVerified: boolean;
 	skipAffiliated: boolean;
 	skip1Mplus: boolean;
-	blockNftAvatars: boolean;
 	blockInterval: number;
 	unblocked: { [k: string]: string? };
 	popupTimer: number;
