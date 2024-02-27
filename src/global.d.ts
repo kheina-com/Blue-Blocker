@@ -20,8 +20,6 @@ interface Config {
 
 interface BlueBlockerUser {
 	is_blue_verified: boolean;
-	has_nft_avatar: boolean;
-	profile_image_shape: string;
 	// TODO: verify affiliates_highlighted_label
 	affiliates_highlighted_label?: {
 		label?: {

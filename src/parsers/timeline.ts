@@ -16,7 +16,6 @@ export function HandleForYou(e: CustomEvent<BlueBlockerEvent>, body: Body, confi
 		BlockBlueVerified(
 			{
 				is_blue_verified: user.ext_is_blue_verified,
-				has_nft_avatar: user.ext_has_nft_avatar,
 				legacy: {
 					blocking: user.blocking,
 					followed_by: user.followed_by,
@@ -116,19 +115,11 @@ interface TwitterUser {
 	translator_type: string;
 	withheld_in_countries?: any[];
 	followed_by: boolean;
-	ext_profile_image_shape: string;
-	ext_has_nft_avatar: boolean;
 	ext_is_blue_verified: boolean;
 	ext: {
 		highlightedLabel: {
 			r: {
 				ok: object;
-			};
-			ttl: number;
-		};
-		hasNftAvatar: {
-			r: {
-				ok: boolean;
 			};
 			ttl: number;
 		};

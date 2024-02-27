@@ -7,7 +7,6 @@ import {
 	logstr,
 	Headers,
 	ReasonBlueVerified,
-	ReasonNftAvatar,
 	ReasonBusinessVerified,
 	ReasonMap,
 	SoupcanExtensionId,
