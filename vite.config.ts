@@ -15,6 +15,7 @@ export default defineConfig(() => {
 					queue: './src/pages/queue/index.html',
 					safelist: './src/pages/safelist/index.html',
 					history: './src/pages/history/index.html',
+					integrations: './src/pages/integrations/index.html',
 				},
 				output: {
 					chunkFileNames: 'assets/chunk-[hash].js',

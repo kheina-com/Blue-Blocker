@@ -10,31 +10,33 @@
 	<!-- ♀ -->
 	<body>
 		<main>
-			<div class="inner">
-				<h1>Block Queue</h1>
-				<p class="subtitle">Users will not be added to the queue or blocked while this page is open.&nbsp;&nbsp;&nbsp;<a id="import-button">import <span id="import-arrow">▾</span></a></p>
-				<div id="importer">
-					<p>Blocklist import currently only support json files. files must be arrays containing the following type:</p>
+			<h1>Block Queue</h1>
+			<p class="subtitle">Users may be blocked while this page is open, refresh to update.&nbsp;&nbsp;&nbsp;<a id="import-button">import <span id="import-arrow">▾</span></a></p>
+			<p id="db-limit-reached" class="subtitle">holy shit your queue is huge, results have been limited to the first 10,000</p>
+			<div id="importer">
+				<p>Blocklist import currently only support json files. files must be arrays containing the following type:</p>
 <pre>interface BlockUser {
 	user_id: string,
-	user: { name: string, screen_name: string },
+	user: {
+		name: string,
+		screen_name: string,
+	},
 	reason: number,
 	external_reason?: string,
 }</pre>
-					<p>where reason is an int that refers to one of the following values:</p>
+				<p>where reason is an int that refers to one of the following values:</p>
 <pre>const ReasonExternal: number         = -1; // use external_reason
 const ReasonBlueVerified: number     = 0;  // twitter blue user
 const ReasonNftAvatar: number        = 1;  // user has NFT avatar
 const ReasonBusinessVerified: number = 2;  // verified via a business
 const ReasonTransphobia: number      = 3;  // user is known transphobe
 const ReasonPromoted: number         = 4;  // promoted tweets</pre>
-					<p>reason can also be assigned <code>-1</code> and provided an <code>external_reason</code>.<br>external reason should be omitted if reason is not <code>-1</code>.</p>
-					<input id="block-import" type="file" accept="application/json" autocomplete="off">
-					<label for="block-import" id="block-import-label" class="file-field"><span>Click or Drag to Import File</span></label>
-				</div>
-				<div id="block-queue">
-					loading...
-				</div>
+				<p>reason can also be assigned <code>-1</code> and provided an <code>external_reason</code>.<br>external reason should be omitted if reason is not <code>-1</code>.</p>
+				<input id="block-import" type="file" accept="application/json" autocomplete="off">
+				<label for="block-import" id="block-import-label" class="file-field"><span>Click or Drag to Import File</span></label>
+			</div>
+			<div id="block-queue" class="toasts">
+				loading...
 			</div>
 		</main>
 	</body>
