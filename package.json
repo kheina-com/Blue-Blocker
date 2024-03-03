@@ -18,7 +18,7 @@
 		"dev": "vite",
 		"build": "tsc && vite build",
 		"preview": "vite preview",
-		"fmt": "prettier --write '**/*.{ts,json,css,scss,md}'"
+		"fmt": "prettier --write **/*.{ts,json,css,scss,md}"
 	},
 	"engines": {
 		"node": ">=18.16.0"

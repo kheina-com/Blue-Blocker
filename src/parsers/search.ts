@@ -13,7 +13,6 @@ export function HandleTypeahead(e: CustomEvent<BlueBlockerEvent>, body: Body, co
 		BlockBlueVerified(
 			{
 				is_blue_verified: user.ext_is_blue_verified,
-				has_nft_avatar: user?.ext_has_nft_avatar || false,
 				legacy: {
 					blocking: user?.is_blocked || false,
 					followed_by: user.social_context.followed_by,
@@ -75,6 +74,5 @@ interface TwitterUser {
 	};
 	tokens: any[];
 	inline: boolean;
-	ext_has_nft_avatar?: boolean;
 	ext_verified_type?: boolean;
 }
