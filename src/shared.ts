@@ -26,6 +26,7 @@ import {
 	MakeToast,
 	RemoveUserBlockHistory,
 } from './utilities';
+import { ParseTimelineTweet } from './parsers/instructions';
 
 // TODO: tbh this file shouldn't even exist anymore and should be
 // split between content/startup.ts and utilities.ts
@@ -644,3 +645,38 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 		}
 	}
 }
+
+// Add support for OldTwitter requests.
+window.addEventListener('message', function (ev) {
+	if (ev.data.type !== 'OLDTWITTER_REQUEST_LOAD') return;
+	if (!ev.data.url || !ev.data.body || !ev.data.headers)
+		return console.error(logstr, 'OldTwitter sent an invalid payload.', ev.data);
+
+	const body_str = JSON.stringify(ev.data.body);
+
+	api.storage.sync
+		.get(DefaultOptions)
+		.then((_config) => {
+			const config = _config as Config;
+
+			document.dispatchEvent(
+				new CustomEvent('blue-blocker-event', {
+					detail: {
+						parsedUrl: /(.+)/.exec(ev.data.url)!, // Have to turn the endpoint string into a regex result...
+						url: ev.data.url,
+						body: body_str as XMLHttpRequest['response'],
+						request: {
+							headers: ev.data.headers,
+						},
+						// OldTwitter only emits messages on success.
+						status: 200,
+					},
+				}),
+			);
+
+			ParseTimelineTweet(ev.data, config);
+		})
+		.catch((err) => {
+			console.error(logstr, 'unexpected error occurred while processing OldTwitter request:', err);
+		});
+});
