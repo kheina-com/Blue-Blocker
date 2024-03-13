@@ -26,7 +26,6 @@ import {
 	MakeToast,
 	RemoveUserBlockHistory,
 } from './utilities';
-import { ParseTimelineTweet } from './parsers/instructions';
 
 // TODO: tbh this file shouldn't even exist anymore and should be
 // split between content/startup.ts and utilities.ts
