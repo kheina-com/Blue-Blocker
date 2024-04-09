@@ -29,7 +29,7 @@ const PromotedStrings = new Set(['suggest_promoted', 'Promoted', 'promoted']);
 
 function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 	let ptr = obj,
-		hasBlueFeats = false;
+		uses_blue_feats = false;
 	if (ptr.__typename == 'TweetTombstone') {
 		return;
 	}
@@ -41,7 +41,7 @@ function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 				(ptr?.note_tweet?.is_expandable == true ||
 					typeof ptr?.edit_control?.edit_tweet_ids?.initial_tweet_id == 'string')
 			) {
-				hasBlueFeats = true;
+				uses_blue_feats = true;
 			}
 		}
 	}
@@ -50,7 +50,8 @@ function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 		return;
 	}
 	ptr.promoted_tweet = promoted;
-	ptr.is_blue_verified = ptr.is_blue_verified || hasBlueFeats;
+	ptr.is_blue_verified = ptr.is_blue_verified || uses_blue_feats;
+	ptr.used_blue = uses_blue_feats;
 	BlockBlueVerified(ptr as BlueBlockerUser, config);
 }
 
