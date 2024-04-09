@@ -36,7 +36,11 @@ function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 	for (const key of UserObjectPath) {
 		if (ptr.hasOwnProperty(key)) {
 			ptr = ptr[key];
-			if (ptr.__typename == 'Tweet' && ptr?.note_tweet?.is_expandable == true) {
+			if (
+				ptr.__typename == 'Tweet' &&
+				(ptr?.note_tweet?.is_expandable == true ||
+					typeof ptr?.edit_control?.edit_tweet_ids?.initial_tweet_id == 'string')
+			) {
 				hasBlueFeats = true;
 			}
 		}
