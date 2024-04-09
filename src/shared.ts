@@ -652,6 +652,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 			if (
 				// group for skip-verified option
 				config.skipVerified &&
+				!user.used_blue &&
 				(await new Promise((resolve, reject) => {
 					// basically, we're wrapping a promise around a promise to set a timeout on it
 					// in case the user's device was unable to set up the legacy db
