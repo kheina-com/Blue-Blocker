@@ -15,8 +15,8 @@ export function HandleTypeahead(e: CustomEvent<BlueBlockerEvent>, body: Body, co
 				is_blue_verified: user.ext_is_blue_verified,
 				legacy: {
 					blocking: user?.is_blocked || false,
-					followed_by: user.social_context.followed_by,
-					following: user.social_context.following,
+					followed_by: user?.social_context.followed_by || false,
+					following: user?.social_context.following || false,
 					name: user.name,
 					screen_name: user.screen_name,
 					verified: user.verified,
