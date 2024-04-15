@@ -413,6 +413,15 @@ function blockUser(user: BlockUser, attempt = 1) {
 					}
 				}
 
+				// attempt to manually set the csrf token to the current active cookie
+				const csrf = CsrfTokenRegex.exec(document.cookie);
+				if (csrf) {
+					headers['x-csrf-token'] = csrf[1];
+				} else {
+					// default to the request's csrf token
+					headers['x-csrf-token'] = req_headers['x-csrf-token'];
+				}
+
 				const options: {
 					body: string;
 					headers: { [k: string]: string };
