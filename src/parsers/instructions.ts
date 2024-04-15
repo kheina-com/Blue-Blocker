@@ -32,7 +32,7 @@ const UserObjectPath: string[] = [
 const IgnoreTweetTypes = new Set(['TimelineTimelineCursor', 'TweetTombstone']);
 const PromotedStrings = new Set(['suggest_promoted', 'Promoted', 'promoted']);
 
-function handleUserObject(obj: any, config: Config) {
+function handleUserObject(obj: any, config: Config, from_blue: boolean) {
 	let userObj = obj.user_results.result;
 
 	if (userObj.__typename === "UserUnavailable") {
@@ -44,11 +44,16 @@ function handleUserObject(obj: any, config: Config) {
 		console.error(logstr, "could not parse user object", userObj);
 		return;
 	}
+
+	if (from_blue) {
+		obj.user_results.result.is_blue_verified = true;
+	}
+
 	BlockBlueVerified(obj.user_results.result, config);
 }
 
-export function ParseTimelineUser(obj: any, config: Config) {
-	handleUserObject(obj, config);
+export function ParseTimelineUser(obj: any, config: Config, from_blue: boolean) {
+	handleUserObject(obj, config, from_blue);
 }
 
 function handleTweetObject(obj: any, config: Config, promoted: boolean) {
@@ -180,7 +185,8 @@ export function HandleInstructionsResponse(
 				if (tweet.content.itemContent?.itemType == 'TimelineTweet') {
 					ParseTimelineTweet(tweet.content, config);
 				} else if (tweet.content.itemContent?.itemType == 'TimelineUser') {
-					ParseTimelineUser(tweet.content.itemContent, config);
+					const from_blue = (e.detail.parsedUrl[1] == "BlueVerifiedFollowers");
+					ParseTimelineUser(tweet.content.itemContent, config, from_blue);
 				}
 				break;
 
