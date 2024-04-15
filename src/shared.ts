@@ -351,6 +351,7 @@ function checkBlockQueue(): Promise<void> {
 				});
 				resolve();
 			});
+		});
 	});
 }
 
@@ -399,6 +400,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 				if (req_headers[header]) {
 					headers[header] = req_headers[header];
 				}
+			}
 
 			const options: {
 				body: string,
@@ -457,8 +459,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 					credentials: 'include',
 				};
 
-				fetch(url, options)
-					.then((response) => {
+				fetch(url, options).then((response) => {
 						console.debug(
 							logstr,
 							`${config.mute ? 'mute' : 'block'} response:`,
@@ -468,64 +469,65 @@ function blockUser(user: BlockUser, attempt = 1) {
 						if (response.status === 403 || response.status === 401) {
 							// user has been logged out, we need to stop queue and re-add
 							consumer.stop();
-							queue.push({ user, user_id, reason });
+							QueuePush(user);
 							api.storage.local.set({ [EventKey]: { type: UserLogoutEvent } });
 							console.log(
 								logstr,
 								'user is logged out, queue consumer has been halted.',
 							);
 						} else if (response.status === 404) {
-							AddUserBlockHistory({ user_id, user, reason }, HistoryStateGone).catch(
+							AddUserBlockHistory(user, HistoryStateGone).catch(
 								(e) => console.error(logstr, e),
 							);
 							console.log(
 								logstr,
 								`could not ${config.mute ? 'mute' : 'block'} ${FormatLegacyName(
-									user,
+									user.user,
 								)}, user no longer exists`,
 							);
 						} else if (response.status >= 300) {
 							consumer.stop();
-							queue.push({ user, user_id, reason });
+							QueuePush(user);
 							console.error(
 								logstr,
 								`failed to ${config.mute ? 'mute' : 'block'} ${FormatLegacyName(
-									user,
+									user.user,
 								)}, consumer stopped just in case.`,
 								response,
 							);
 						} else {
 							blockCounter.increment();
-							AddUserBlockHistory({ user_id, user, reason }).catch((e) =>
+							AddUserBlockHistory(user).catch((e) =>
 								console.error(logstr, e),
 							);
 							console.log(
 								logstr,
 								`${config.mute ? 'mut' : 'block'}ed ${FormatLegacyName(
-									user,
-								)} due to ${ReasonMap[reason]}.`,
+									user.user,
+								)} due to ${ReasonMap[user.reason]}.`,
 							);
 							api.storage.local.set({
-								[EventKey]: { type: UserBlockedEvent, user, user_id, reason },
+								[EventKey]: { type: UserBlockedEvent, ...user },
 							});
 						}
 					})
 					.catch((error) => {
 						if (attempt < 3) {
-							blockUser(user, user_id, reason, attempt + 1);
+							blockUser(user, attempt + 1);
 						} else {
-							queue.push({ user, user_id, reason });
+							QueuePush(user);
 							console.error(
 								logstr,
 								`failed to ${config.mute ? 'mute' : 'block'} ${FormatLegacyName(
-									user,
+									user.user,
 								)}:`,
 								user,
 								error,
 							);
 						}
-					});
+					})
 			});
+		});
 	});
 }
 
