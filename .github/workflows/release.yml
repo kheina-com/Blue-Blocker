@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v4.0.2
       with:
         node-version: '18.x'
     - name: Install dependencies
@@ -25,7 +25,7 @@ jobs:
         make firefox
         echo "filename=blue-blocker-firefox-$(make version).zip" >> "$GITHUB_OUTPUT"
     - name: publish firefox
-      uses: wdzeng/firefox-addon@v1
+      uses: wdzeng/firefox-addon@v1.0.5
       with:
         addon-guid: "{119be3f3-597c-4f6a-9caf-627ee431d374}"
         xpi-path: "${{ steps.build.outputs.filename }}"
@@ -43,7 +43,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v4.0.2
       with:
         node-version: '18.x'
     - name: Install dependencies
@@ -56,7 +56,7 @@ jobs:
         make chrome
         echo "filename=blue-blocker-chrome-$(make version).zip" >> "$GITHUB_OUTPUT"
     - name: publish chrome
-      uses: Klemensas/chrome-extension-upload-action@v1
+      uses: Klemensas/chrome-extension-upload-action@v1.4.1
       with:
         refresh-token: ${{ secrets.CHROME_WEB_STORE_REFRESH_TOKEN }}
         client-id: ${{ secrets.CHROME_WEB_STORE_CLIENT_ID }}
