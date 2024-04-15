@@ -11,6 +11,12 @@ jobs:
       filename: ${{ steps.build.outputs.filename }}
     steps:
     - uses: actions/checkout@v4
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+    - name: Install dependencies
+      run: npm install
     - name: build firefox
       run: npm run build
     - name: zip firefox
@@ -36,6 +42,12 @@ jobs:
       filename: ${{ steps.build.outputs.filename }}
     steps:
     - uses: actions/checkout@v4
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+    - name: Install dependencies
+      run: npm install
     - name: build chrome
       run: npm run build
     - name: zip chrome
