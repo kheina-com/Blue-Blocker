@@ -12,6 +12,9 @@ const InstructionsPaths: { [key: string]: string[] } = {
 	HomeTimeline: ['data', 'home', 'home_timeline_urt', 'instructions'],
 	SearchTimeline: ['data', 'search_by_raw_query', 'search_timeline', 'timeline', 'instructions'],
 	UserTweets: ['data', 'user', 'result', 'timeline_v2', 'timeline', 'instructions'],
+	Followers: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
+	Following: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
+	UserCreatorSubscriptions: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
 	TweetDetail: ['data', 'threaded_conversation_with_injections_v2', 'instructions'],
 	'search/adaptive.json': ['timeline', 'instructions'],
 };
@@ -26,6 +29,25 @@ const UserObjectPath: string[] = [
 ];
 const IgnoreTweetTypes = new Set(['TimelineTimelineCursor', 'TweetTombstone']);
 const PromotedStrings = new Set(['suggest_promoted', 'Promoted', 'promoted']);
+
+function handleUserObject(obj: any, config: Config) {
+	let userObj = obj.user_results.result;
+
+	if (userObj.__typename === "UserUnavailable") {
+		console.log(logstr, "user is unavailable", userObj);
+		return;
+	}
+
+	if (userObj.__typename !== "User") {
+		console.error(logstr, "could not parse user object", userObj);
+		return;
+	}
+	BlockBlueVerified(obj.user_results.result, config);
+}
+
+export function ParseTimelineUser(obj: any, config: Config) {
+	handleUserObject(obj, config);
+}
 
 function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 	let ptr = obj,
@@ -155,6 +177,8 @@ export function HandleInstructionsResponse(
 			case 'TimelineTimelineItem':
 				if (tweet.content.itemContent?.itemType == 'TimelineTweet') {
 					ParseTimelineTweet(tweet.content, config);
+				} else if (tweet.content.itemContent?.itemType == 'TimelineUser') {
+					ParseTimelineUser(tweet.content.itemContent, config);
 				}
 				break;
 
