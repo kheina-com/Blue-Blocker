@@ -29,6 +29,6 @@
 		"@types/firefox-webext-browser": "^111.0.1",
 		"prettier": "^2.8.8",
 		"typescript": "^5.0.4",
-		"vite": "^2.9.16"
+		"vite": "^2.9.18"
 	}
 }

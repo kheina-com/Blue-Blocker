@@ -6,6 +6,10 @@ ifneq ($(VERSION), $(PKG_VERSION))
 $(error Extension version mismatch. manifest: $(VERSION), package.json: $(PKG_VERSION))
 endif
 
+.PHONY: version
+version:
+	@echo ${VERSION}
+
 .PHONY: firefox
 firefox:
 # ifneq (,$(wildcard blue-blocker-firefox-$(VERSION).zip))

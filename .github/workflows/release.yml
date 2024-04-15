@@ -1,0 +1,50 @@
+name: Publish Releases
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  Release-FireFox:
+    runs-on: ubuntu-latest
+    outputs:
+      filename: ${{ steps.build.outputs.filename }}
+    steps:
+    - uses: actions/checkout@v4
+    - name: build firefox
+      id: build
+      run: |
+        make firefox
+        echo "filename=blue-blocker-firefox-$(make version).zip" >> "$GITHUB_OUTPUT"
+    - name: publish firefox
+      uses: wdzeng/firefox-addon@v1
+      with:
+        addon-guid: "{119be3f3-597c-4f6a-9caf-627ee431d374}"
+        xpi-path: "${{ steps.build.outputs.filename }}"
+        self-hosted: false
+        release-notes: "{\"en-US\": toJSON(${{ github.event.body }})}" # this should be the content of the release, make sure to include changelog
+        approval-notes: "Source code is available at https://github.com/kheina-com/Blue-Blocker and the extension can be built and tested locally using `make firefox`"
+        license: MPL-2.0
+        jwt-issuer: ${{ secrets.MOZILLA_ADDONS_JWT_ISSUER }}
+        jwt-secret: ${{ secrets.MOZILLA_ADDONS_JWT_SECRET }}
+
+  Release-Chrome:
+    runs-on: ubuntu-latest
+    outputs:
+      filename: ${{ steps.build.outputs.filename }}
+    steps:
+    - uses: actions/checkout@v4
+    - name: build chrome
+      id: build
+      run: |
+        make chrome
+        echo "filename=blue-blocker-chrome-$(make version).zip" >> "$GITHUB_OUTPUT"
+    - name: publish chrome
+      uses: Klemensas/chrome-extension-upload-action@v1
+      with:
+        refresh-token: ${{ secrets.CHROME_WEB_STORE_REFRESH_TOKEN }}
+        client-id: ${{ secrets.CHROME_WEB_STORE_CLIENT_ID }}
+        client-secret: ${{ secrets.CHROME_WEB_STORE_CLIENT_SECRET }}
+        file-name: "${{ steps.build.outputs.filename }}"
+        app-id: 'jgpjphkbfjhlbajmmcoknjjppoamhpmm'
+        publish: true
