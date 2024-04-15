@@ -37,6 +37,8 @@ document.addEventListener("blue-blocker-event", function (e: CustomEvent<BlueBlo
 				case "Following":
 				case "Followers":
 				case "UserCreatorSubscriptions":
+				case "FollowersYouKnow":
+				case "BlueVerifiedFollowers":
 					return HandleInstructionsResponse(e, parsed_body, config);
 				case "timeline/home.json":
 				case "search/adaptive.json":

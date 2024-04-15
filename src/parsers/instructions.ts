@@ -15,6 +15,8 @@ const InstructionsPaths: { [key: string]: string[] } = {
 	Followers: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
 	Following: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
 	UserCreatorSubscriptions: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
+	FollowersYouKnow: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
+	BlueVerifiedFollowers: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
 	TweetDetail: ['data', 'threaded_conversation_with_injections_v2', 'instructions'],
 	'search/adaptive.json': ['timeline', 'instructions'],
 };
