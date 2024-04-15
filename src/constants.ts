@@ -107,3 +107,8 @@ export const ErrorStatus: ErrorStatus = 'ERROR';
 export const EventKey = 'MultiTabEvent';
 export const ErrorEvent = 'ErrorEvent';
 export const MessageEvent = 'MessageEvent';
+
+export const IntegrationStateDisabled = 0;
+export const IntegrationStateReceiveOnly= 1;
+export const IntegrationStateSendAndReceive = 2;
+export const IntegrationStateSendOnly = 3;
