@@ -31,7 +31,7 @@ jobs:
         xpi-path: "${{ steps.build.outputs.filename }}"
         self-hosted: false
         release-notes: "{\"en-US\": toJSON(${{ github.event.body }})}" # this should be the content of the release, make sure to include changelog
-        approval-notes: "Source code is available at https://github.com/kheina-com/Blue-Blocker and the extension can be built and tested locally using `make firefox`"
+        approval-notes: "source code for this version is available at https://github.com/kheina-com/Blue-Blocker/releases/tag/${{ github.event.tag_name }}\nrunning `npm run build` and then `make firefox` should build the addon package, then load and use twitter. you should start seeing users be blocked fairly quickly"
         license: MPL-2.0
         jwt-issuer: ${{ secrets.MOZILLA_ADDONS_JWT_ISSUER }}
         jwt-secret: ${{ secrets.MOZILLA_ADDONS_JWT_SECRET }}
