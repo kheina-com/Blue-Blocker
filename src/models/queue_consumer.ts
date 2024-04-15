@@ -51,7 +51,7 @@ export class QueueConsumer {
 					},
 				});
 				await new Promise((r) => setTimeout(r, 10)); // wait a second to make sure any other sets have resolved
-				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey].refId;
+				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey]?.refId;
 			} else {
 				// console.debug(logstr, this._refId, "failed to obtain critical point");
 				return false;
