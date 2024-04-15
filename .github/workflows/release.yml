@@ -12,6 +12,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: build firefox
+      run: npm run build
+    - name: zip firefox
       id: build
       run: |
         make firefox
@@ -35,6 +37,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: build chrome
+      run: npm run build
+    - name: zip chrome
       id: build
       run: |
         make chrome
