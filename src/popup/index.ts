@@ -1,8 +1,6 @@
 import {
 	api,
-	logstr,
 	DefaultOptions,
-	SoupcanExtensionId,
 } from '../constants.js';
 import { abbreviate, commafy } from '../utilities.js';
 import { QueueLength } from "../background/db.js";
@@ -220,6 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const skipAffiliated = document.getElementById('skip-affiliated') as HTMLInputElement;
 	const skip1Mplus = document.getElementById('skip-1mplus') as HTMLInputElement;
 	const blockPromoted = document.getElementById('block-promoted-tweets') as HTMLInputElement;
+	const blockForUse = document.getElementById('block-for-use') as HTMLInputElement;
 	const soupcanIntegration = document.getElementById('soupcan-integration') as HTMLInputElement;
 
 	api.storage.sync.get(DefaultOptions).then((_config) => {
@@ -245,6 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			optionName: 'skip-follower-count-option',
 		});
 		checkHandler(blockPromoted, config, 'blockPromoted');
+		checkHandler(blockForUse, config, 'blockForUse')
 		checkHandler(soupcanIntegration, config, 'soupcanIntegration', {
 			optionName: '', // integration isn't controlled by the toggle, so unset
 		});

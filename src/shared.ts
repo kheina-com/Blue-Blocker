@@ -650,22 +650,24 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 		// step 1: is user verified
 		if (user.is_blue_verified || hasBlockableVerifiedTypes || hasBlockableAffiliateLabels) {
 			if (
+				// skip checking for legacy if the config says to
+				// if the option is disabled, non-legacy verified blue users will still get caught by the last else block
+				(config.blockForUse && user.used_blue) ||
 				// group for skip-verified option
-				config.skipVerified &&
-				!user.used_blue &&
-				(await new Promise((resolve, reject) => {
-					// basically, we're wrapping a promise around a promise to set a timeout on it
-					// in case the user's device was unable to set up the legacy db
-					function disableSkipLegacy() {
-						api.storage.sync.set({ skipVerified: false });
-						reject(legacyDbRejectMessage);
-					}
-					const timeout = setTimeout(disableSkipLegacy, 1000); // 1 second. indexed db is crazy fast (<10ms), this should be plenty
-					IsUserLegacyVerified(user.rest_id, user.legacy.screen_name)
-						.then(resolve)
-						.catch(disableSkipLegacy)
-						.finally(() => clearTimeout(timeout));
-				}))
+				(config.skipVerified &&
+					(await new Promise((resolve, reject) => {
+						// basically, we're wrapping a promise around a promise to set a timeout on it
+						// in case the user's device was unable to set up the legacy db
+						function disableSkipLegacy() {
+							api.storage.sync.set({ skipVerified: false });
+							reject(legacyDbRejectMessage);
+						}
+						const timeout = setTimeout(disableSkipLegacy, 1000); // 1 second. indexed db is crazy fast (<10ms), this should be plenty
+						IsUserLegacyVerified(user.rest_id, user.legacy.screen_name)
+							.then(resolve)
+							.catch(disableSkipLegacy)
+							.finally(() => clearTimeout(timeout));
+					})))
 			) {
 				console.log(
 					logstr,
@@ -698,10 +700,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 					)} followers and Elon is an idiot.`,
 				);
 			} else {
-				let reason = ReasonBlueVerified;
-				if (hasBlockableVerifiedTypes) {
-					reason = ReasonBusinessVerified;
-				}
+				const reason = (hasBlockableVerifiedTypes) ? ReasonBusinessVerified : ReasonBlueVerified;
 				queueBlockUser(user, String(user.rest_id), reason);
 				return;
 			}

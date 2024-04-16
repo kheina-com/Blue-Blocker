@@ -40,6 +40,7 @@ export const DefaultOptions: Config = {
 	// this isn"t set, but is used
 	// TODO: when migrating to firefox manifest v3, check to see if sets can be stored yet
 	unblocked: {},
+	blockForUse: false,
 };
 export const Headers = [
 	// set by function:

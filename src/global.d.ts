@@ -16,6 +16,7 @@ interface Config {
 	skipFollowerCount: number;
 	soupcanIntegration: boolean;
 	blockPromoted: boolean;
+	blockForUse: boolean;
 }
 
 interface BlueBlockerUser {
