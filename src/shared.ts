@@ -1,5 +1,4 @@
 import { BlockCounter } from './models/block_counter';
-import { BlockQueue } from './models/block_queue';
 import { QueueConsumer } from './models/queue_consumer';
 import {
 	api,
@@ -16,7 +15,12 @@ import {
 	ReasonTransphobia,
 	ReasonPromoted,
 	HistoryStateGone,
+	SuccessStatus,
+	ReasonExternal,
+	IntegrationStateDisabled,
+	IntegrationStateReceiveOnly,
 } from './constants';
+
 import {
 	commafy,
 	AddUserBlockHistory,
@@ -25,13 +29,15 @@ import {
 	IsUserLegacyVerified,
 	MakeToast,
 	RemoveUserBlockHistory,
+	QueuePop,
+	QueuePush,
+	RefId,
 } from './utilities';
 
 // TODO: tbh this file shouldn't even exist anymore and should be
 // split between content/startup.ts and utilities.ts
 
 // Define constants that shouldn't be exported to the rest of the addon
-const queue = new BlockQueue(api.storage.local);
 const blockCounter = new BlockCounter(api.storage.local);
 const blockCache: Set<string> = new Set();
 export const UnblockCache: Set<string> = new Set();
@@ -278,16 +284,31 @@ api.storage.local.onChanged.addListener((items) => {
 	});
 });
 
-function queueBlockUser(user: BlueBlockerUser, user_id: string, reason: number) {
+function queueBlockUser(
+	user: BlueBlockerUser,
+	user_id: string,
+	reason: number,
+	external_reason: string | null = null,
+) {
 	if (blockCache.has(user_id)) {
 		return;
 	}
 	blockCache.add(user_id);
-	queue.push({
+
+	const blockUser: BlockUser = {
 		user_id,
 		reason,
-		user: { name: user.legacy.name, screen_name: user.legacy.screen_name },
-	});
+		user: {
+			name: user.legacy.name,
+			screen_name: user.legacy.screen_name,
+		},
+	};
+
+	if (external_reason) {
+		blockUser.external_reason = external_reason;
+	}
+
+	QueuePush(blockUser);
 	api.storage.sync.get(DefaultOptions).then((_config) => {
 		const config = _config as Config;
 		console.log(
@@ -297,31 +318,18 @@ function queueBlockUser(user: BlueBlockerUser, user_id: string, reason: number) 
 			} due to ${ReasonMap[reason]}.`,
 		);
 	});
+
 	consumer.start();
 }
 
 function checkBlockQueue(): Promise<void> {
-	return new Promise<void>((resolve) => {
-		queue
-			.shift()
-			.then((_item) => {
-				const item = _item as BlockUser;
-				if (item === undefined) {
-					consumer.stop();
-					return;
+	return new Promise<void>((resolve, reject) => {
+		QueuePop()
+			.then((item) => {
+				if (!item) {
+					return reject();
 				}
-				const { user, user_id, reason } = item;
-
-				// required for users enqueued before 0.3.0
-				if (user.hasOwnProperty('legacy')) {
-					// @ts-ignore
-					for (const [key, value] of Object.entries(user.legacy)) {
-						// @ts-ignore
-						user[key] = value;
-					}
-				}
-
-				blockUser(user, user_id, reason);
+				blockUser(item);
 				resolve();
 			})
 			.catch((error) => {
@@ -330,14 +338,29 @@ function checkBlockQueue(): Promise<void> {
 					'unexpected error occurred while processing block queue',
 					error,
 				);
-				api.storage.local.set({
-					[EventKey]: {
-						type: ErrorEvent,
-						message: 'unexpected error occurred while processing block queue',
-						detail: { error, event: null },
-					},
-				});
-				resolve();
+				api.storage.local
+					.set({
+						[EventKey]: {
+							type: ErrorEvent,
+							message: 'unexpected error occurred while processing block queue',
+							detail: { error, event: null },
+						},
+					})
+					.catch((error) => {
+						console.error(
+							logstr,
+							'unexpected error occurred while processing block queue',
+							error,
+						);
+						api.storage.local.set({
+							[EventKey]: {
+								type: ErrorEvent,
+								message: 'unexpected error occurred while processing block queue',
+								detail: { error, event: null },
+							},
+						});
+						resolve();
+					});
 			});
 	});
 }
@@ -349,12 +372,8 @@ const consumer = new QueueConsumer(api.storage.local, checkBlockQueue, async () 
 consumer.start();
 
 const CsrfTokenRegex = /ct0=\s*(\w+);/;
-function blockUser(
-	user: { name: string; screen_name: string },
-	user_id: string,
-	reason: number,
-	attempt = 1,
-) {
+
+function blockUser(user: BlockUser, attempt = 1) {
 	const match = window.location.href.match(/^https?:\/\/(?:\w+\.)?twitter.com(?=$|\/)/);
 
 	if (!match) {
@@ -381,8 +400,8 @@ function blockUser(
 		api.storage.local
 			.get({ headers: null })
 			.then((items) => items.headers as { [k: string]: string })
-			.then((req_headers: { [k: string]: string }) => {
-				const body = `user_id=${user_id}`;
+			.then((req_headers) => {
+				const body = `user_id=${user.user_id}`;
 				const headers: { [k: string]: string } = {
 					'content-length': body.length.toString(),
 					'content-type': 'application/x-www-form-urlencoded',
@@ -417,71 +436,148 @@ function blockUser(
 
 				fetch(url, options)
 					.then((response) => {
-						console.debug(
-							logstr,
-							`${config.mute ? 'mute' : 'block'} response:`,
-							response,
-						);
+						console.debug(logstr, 'block response:', response);
 
 						if (response.status === 403 || response.status === 401) {
 							// user has been logged out, we need to stop queue and re-add
 							consumer.stop();
-							queue.push({ user, user_id, reason });
+							QueuePush(user);
 							api.storage.local.set({ [EventKey]: { type: UserLogoutEvent } });
 							console.log(
 								logstr,
 								'user is logged out, queue consumer has been halted.',
 							);
 						} else if (response.status === 404) {
-							AddUserBlockHistory({ user_id, user, reason }, HistoryStateGone).catch(
-								(e) => console.error(logstr, e),
+							AddUserBlockHistory(user, HistoryStateGone).catch((e) =>
+								console.error(logstr, e),
 							);
 							console.log(
 								logstr,
-								`could not ${config.mute ? 'mute' : 'block'} ${FormatLegacyName(
-									user,
+								`could not block ${FormatLegacyName(
+									user.user,
 								)}, user no longer exists`,
 							);
 						} else if (response.status >= 300) {
 							consumer.stop();
-							queue.push({ user, user_id, reason });
+							QueuePush(user);
 							console.error(
 								logstr,
-								`failed to ${config.mute ? 'mute' : 'block'} ${FormatLegacyName(
-									user,
+								`failed to block ${FormatLegacyName(
+									user.user,
 								)}, consumer stopped just in case.`,
 								response,
 							);
 						} else {
 							blockCounter.increment();
-							AddUserBlockHistory({ user_id, user, reason }).catch((e) =>
-								console.error(logstr, e),
-							);
+							AddUserBlockHistory(user).catch((e) => console.error(logstr, e));
 							console.log(
 								logstr,
-								`${config.mute ? 'mut' : 'block'}ed ${FormatLegacyName(
-									user,
-								)} due to ${ReasonMap[reason]}.`,
+								`blocked ${FormatLegacyName(user.user)} due to ${
+									ReasonMap?.[user.reason] ?? user?.external_reason
+								}.`,
 							);
 							api.storage.local.set({
-								[EventKey]: { type: UserBlockedEvent, user, user_id, reason },
+								[EventKey]: { type: UserBlockedEvent, ...user },
 							});
 						}
 					})
 					.catch((error) => {
 						if (attempt < 3) {
-							blockUser(user, user_id, reason, attempt + 1);
+							blockUser(user, attempt + 1);
 						} else {
-							queue.push({ user, user_id, reason });
+							QueuePush(user);
 							console.error(
 								logstr,
-								`failed to ${config.mute ? 'mute' : 'block'} ${FormatLegacyName(
-									user,
-								)}:`,
+								`failed to block ${FormatLegacyName(user.user)}:`,
 								user,
 								error,
 							);
 						}
+
+						const options: {
+							body: string;
+							headers: { [k: string]: string };
+							method: string;
+							credentials: RequestCredentials;
+						} = {
+							body,
+							headers,
+							method: 'POST',
+							credentials: 'include',
+						};
+
+						fetch(url, options)
+							.then((response) => {
+								console.debug(
+									logstr,
+									`${config.mute ? 'mute' : 'block'} response:`,
+									response,
+								);
+
+								if (response.status === 403 || response.status === 401) {
+									// user has been logged out, we need to stop queue and re-add
+									consumer.stop();
+									QueuePush(user);
+									api.storage.local.set({
+										[EventKey]: { type: UserLogoutEvent },
+									});
+									console.log(
+										logstr,
+										'user is logged out, queue consumer has been halted.',
+									);
+								} else if (response.status === 404) {
+									AddUserBlockHistory(user, HistoryStateGone).catch((e) =>
+										console.error(logstr, e),
+									);
+									console.log(
+										logstr,
+										`could not ${
+											config.mute ? 'mute' : 'block'
+										} ${FormatLegacyName(user.user)}, user no longer exists`,
+									);
+								} else if (response.status >= 300) {
+									consumer.stop();
+									QueuePush(user);
+									console.error(
+										logstr,
+										`failed to ${
+											config.mute ? 'mute' : 'block'
+										} ${FormatLegacyName(
+											user.user,
+										)}, consumer stopped just in case.`,
+										response,
+									);
+								} else {
+									blockCounter.increment();
+									AddUserBlockHistory(user).catch((e) =>
+										console.error(logstr, e),
+									);
+									console.log(
+										logstr,
+										`${config.mute ? 'mut' : 'block'}ed ${FormatLegacyName(
+											user.user,
+										)} due to ${ReasonMap[user.reason]}.`,
+									);
+									api.storage.local.set({
+										[EventKey]: { type: UserBlockedEvent, ...user },
+									});
+								}
+							})
+							.catch((error) => {
+								if (attempt < 3) {
+									blockUser(user, attempt + 1);
+								} else {
+									QueuePush(user);
+									console.error(
+										logstr,
+										`failed to ${
+											config.mute ? 'mute' : 'block'
+										} ${FormatLegacyName(user.user)}:`,
+										user,
+										error,
+									);
+								}
+							});
 					});
 			});
 	});
@@ -643,4 +739,80 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 			}
 		}
 	}
+
+	let updateIntegrations = false;
+	api.storage.local
+		.get({ integrations: [] })
+		.then((items) => items.integrations as { [id: string]: { name: string; state: number } })
+		.then(async (integrations) => {
+			for (const [extensionId, integration] of Object.entries(integrations)) {
+				if (
+					!extensionId ||
+					integration.state === IntegrationStateDisabled ||
+					integration.state === IntegrationStateReceiveOnly
+				) {
+					continue;
+				}
+
+				const refid = RefId();
+				try {
+					const message = { action: 'check_twitter_user', data: user, refid };
+					console.debug(logstr, refid, 'send:', message, integration);
+					const response = (await api.runtime.sendMessage(
+						extensionId,
+						message,
+					)) as MessageResponse;
+					console.debug(logstr, refid, 'recv:', response);
+
+					if (response?.status !== SuccessStatus) {
+						console.error(
+							logstr,
+							refid,
+							'received a non-success status from',
+							integration.name,
+							response,
+						);
+						return;
+					}
+
+					const successResponse = response as SuccessResponse;
+					const result = successResponse.result as ExternalBlockResponse;
+					if (result.block) {
+						queueBlockUser(user, String(user.rest_id), ReasonExternal, result.reason);
+						return;
+					}
+				} catch (_e) {
+					const e = _e as Error;
+					if (
+						e.message ===
+						'Could not establish connection. Receiving end does not exist.'
+					) {
+						updateIntegrations = true;
+						integration.state = IntegrationStateDisabled;
+						console.log(
+							logstr,
+							refid,
+							'looks like',
+							integration.name,
+							'was uninstalled, disabling integration.',
+						);
+					} else {
+						console.error(
+							logstr,
+							refid,
+							`an unknown error occurred while messaging ${integration.name}:`,
+							e,
+						);
+					}
+				}
+			}
+
+			if (updateIntegrations) {
+				api.storage.local.set({ integrations });
+			}
+		})
+		.catch((e) =>
+			// this error should basically be unreachable
+			console.error(logstr, 'an unexpected error occurred while processing integrations:', e),
+		);
 }

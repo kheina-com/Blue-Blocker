@@ -175,6 +175,10 @@ h2 img {
 	display: none;
 }
 
+.integrations {
+	justify-content: center;
+}
+
 input[type="checkbox"],
 input[type="file"] {
 	position: absolute;

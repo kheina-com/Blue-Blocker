@@ -1,6 +1,6 @@
 import { api, logstr, DefaultOptions, ErrorEvent, EventKey, MessageEvent, SoupcanExtensionId } from "../../constants.js";
 import { commafy } from "../../utilities.js";
-import "./style.css";
+import "../style.css";
 import "./style.css";
 
 function importSafelist(target: HTMLInputElement) {

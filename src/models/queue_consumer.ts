@@ -12,9 +12,9 @@ export class QueueConsumer {
 	private _interval: number;
 	private _func_timeout: number | null;
 	private _refId: number;
-	/*
+	/**
 		storage: the storage type used to sync tabs. likely chrome.storage.local
-		func: the function used to consume from the queue
+		func: async function used to consume from the queue. reject stops consumer, resolve queues next run
 		interval_func: async function to retrieve cadence with which func should run. accepts storage as first arg
 	*/
 	constructor(
@@ -51,7 +51,7 @@ export class QueueConsumer {
 					},
 				});
 				await new Promise((r) => setTimeout(r, 10)); // wait a second to make sure any other sets have resolved
-				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey].refId;
+				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey]?.refId;
 			} else {
 				// console.debug(logstr, this._refId, "failed to obtain critical point");
 				return false;
@@ -79,7 +79,7 @@ export class QueueConsumer {
 			// if we just got it, func will be null and we can schedule it
 			// if we already had it, it already finished or its waiting on queue
 			if (this._func_timeout === null) {
-				this._func_timeout = setTimeout(() => this.func().finally(() => { this._func_timeout = null; this.sync(); }), this._interval + this.entropy());
+				this._func_timeout = setTimeout(() => this.func().then(() => { this._func_timeout = null; this.sync(); }).catch(() => this.stop()), this._interval + this.entropy());
 			}
 			this._timeout = null;  // set timeout to null, just for the running check in start
 		} else {

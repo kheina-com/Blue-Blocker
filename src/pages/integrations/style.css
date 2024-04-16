@@ -1,0 +1,61 @@
+input, select {
+	cursor: pointer;
+	margin: 0;
+	padding: 0.5em 1em;
+	-moz-appearance: textfield;
+	appearance: textfield;
+	position: relative;
+	display: inline-block;
+	padding: 0.5em 1em;
+	color: var(--textcolor);
+	background: var(--bg2color);
+	border-radius: var(--border-radius);
+	border: var(--border-size) solid var(--bordercolor);
+	box-shadow: 0 2px 3px 1px var(--shadowcolor);
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
+}
+input:hover, select:hover, select:active {
+	color: var(--interact);
+	border-color: var(--borderhover);
+	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
+}
+input:hover, input:focus {
+	border-color: var(--borderhover);
+}
+
+#integrations > div {
+	display: flex;
+	width: 70%;
+	margin: 0 auto;
+	margin-bottom: 1.5em;
+}
+#integrations input, #integrations select {
+	margin-right: 1.5em;
+}
+#integrations input {
+	flex: 1;
+}
+
+.buttons {
+	margin-top: 25px;
+	width: 70%;
+	margin: 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+}
+.buttons > * {
+	margin-right: 1.5em;
+}
+.buttons > *:last-child {
+	margin-right: 0;
+}
+
+@media only screen and (max-width: 1200px) {
+	#integrations > div, .buttons {
+		width: auto;
+	}
+}

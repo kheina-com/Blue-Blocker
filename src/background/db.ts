@@ -1,5 +1,5 @@
-import { api, logstr, EventKey, LegacyVerifiedUrl, MessageEvent, ErrorEvent, HistoryStateUnblocked } from "../constants";
-import { commafy } from "../utilities";
+import { api, logstr, EventKey, LegacyVerifiedUrl, MessageEvent, ErrorEvent, HistoryStateBlocked, HistoryStateUnblocked } from "../constants";
+import { commafy, QueueId } from "../utilities";
 
 const expectedVerifiedUsersCount = 407520;
 let legacyDb: IDBDatabase;
@@ -29,8 +29,8 @@ export async function PopulateVerifiedDb() {
 		console.error(logstr, "failed to open legacy verified user database:", DBOpenRequest);
 	};
 
-	DBOpenRequest.onupgradeneeded = () => {
-		console.debug(logstr, "legacy db onupgradeneeded:", DBOpenRequest);
+	DBOpenRequest.onupgradeneeded = e => {
+		console.debug(logstr, "legacy db onupgradeneeded:", e);
 		legacyDb = DBOpenRequest.result;
 		if (legacyDb.objectStoreNames.contains(legacyDbStore)) {
 			return;
@@ -189,7 +189,8 @@ let db: IDBDatabase;
 
 const dbName = "blue-blocker-db";
 export const historyDbStore = "blocked_users";
-const dbVersion = 1;
+export const queueDbStore = "block_queue";
+const dbVersion = 2;
 // used so we don't load the db twice
 let dbLoaded: boolean = false;
 
@@ -203,8 +204,8 @@ export function ConnectDb(): Promise<IDBDatabase> {
 			return reject();
 		};
 
-		DBOpenRequest.onupgradeneeded = () => {
-			console.debug(logstr, "upgrading db:", DBOpenRequest);
+		DBOpenRequest.onupgradeneeded = e => {
+			console.debug(logstr, "upgrading db:", e);
 			db = DBOpenRequest.result;
 
 			if (!db.objectStoreNames.contains(historyDbStore)) {
@@ -214,6 +215,13 @@ export function ConnectDb(): Promise<IDBDatabase> {
 				store.createIndex("time", "time", { unique: false });
 				console.log(logstr, "created history database.");
 			}
+
+			if (!db.objectStoreNames.contains(queueDbStore)) {
+				const store = db.createObjectStore(queueDbStore, { keyPath: "user_id" });
+				store.createIndex("user_id", "user_id", { unique: true });
+				store.createIndex("queue", "queue", { unique: false });
+				console.log(logstr, "created queue database.");
+			}
 		};
 
 		DBOpenRequest.onsuccess = async () => {
@@ -222,6 +230,41 @@ export function ConnectDb(): Promise<IDBDatabase> {
 				return resolve(db);
 			}
 			dbLoaded = true;
+
+			const items = await api.storage.local.get({ BlockQueue: [] });
+			if (items?.BlockQueue?.length !== undefined && items?.BlockQueue?.length > 0) {
+				const transaction = db.transaction([queueDbStore], "readwrite");
+				transaction.onabort = transaction.onerror = reject;	
+				const store = transaction.objectStore(queueDbStore);
+
+				items.BlockQueue.forEach((item: BlockUser) => {
+					// required for users enqueued before 0.3.0
+					if (item.user.hasOwnProperty("legacy")) {
+						// @ts-ignore
+						item.user.name = item.user.legacy.name;
+						// @ts-ignore
+						item.user.screen_name = item.user.legacy.screen_name;
+						// @ts-ignore
+						delete item.user.legacy;
+					}
+
+					const user: QueueUser = {
+						user_id: item.user_id,
+						user: {
+							name: item.user.name,
+							screen_name: item.user.screen_name,
+						},
+						reason: item.reason,
+						queue: QueueId(),
+					};
+					// TODO: add error handling here
+					store.add(user);
+				});
+
+				api.storage.local.set({ BlockQueue: null });
+				transaction.commit();
+				console.debug(logstr, "imported", items.BlockQueue.length, "users from local storage queue");
+			}
 
 			console.log(logstr, "successfully connected to db");
 			return resolve(db);
@@ -283,5 +326,136 @@ export function RemoveUserFromHistory(user_id: string): Promise<void> {
 		.finally(() => {
 			throw e;  // re-throw error to retry
 		})
+	);
+}
+
+interface QueueUser {
+	queue: number,
+	user_id: string,
+	user: { name: string, screen_name: string },
+	reason: number,
+	external_reason?: string,
+}
+
+export function AddUserToQueue(blockUser: BlockUser): Promise<void> {
+	const user: QueueUser = {
+		user_id: blockUser.user_id,
+		user: {
+			name: blockUser.user.name,
+			screen_name: blockUser.user.screen_name,
+		},
+		reason: blockUser.reason,
+		queue: QueueId(),
+	};
+
+	if (blockUser.external_reason) {
+		user.external_reason = blockUser.external_reason;
+	}
+
+	// @ts-ignore  // typescript is wrong here, this cannot return idb due to final throw
+	return new Promise<void>((resolve, reject) => {
+		const transaction = db.transaction([queueDbStore], "readwrite");
+		transaction.onabort = transaction.onerror = reject;
+
+		const store = transaction.objectStore(queueDbStore);
+		store.add(user);
+		transaction.oncomplete = () => resolve();
+		transaction.commit();
+	}).catch(e => {
+		if (e?.target?.error?.name !== "ConstraintError") {
+			// attempt to reconnect to the db
+			return ConnectDb()
+			.finally(() => {
+				throw e;  // re-throw error to retry
+			});
+		}
+	});
+}
+
+export function PopUserFromQueue(): Promise<BlockUser | null> {
+	// @ts-ignore  // typescript is wrong here, this cannot return idb due to final throw
+	return new Promise<BlockUser | null>(async (resolve, reject) => {
+		const transaction = db.transaction([queueDbStore], "readwrite");
+		transaction.onabort = transaction.onerror = reject;
+		const store = transaction.objectStore(queueDbStore);
+		const index = store.index("queue");
+
+		const result = await new Promise<QueueUser | undefined>((res, rej) => {
+			const req = index.get(IDBKeyRange.bound(Number.MIN_VALUE, Number.MAX_VALUE));
+			req.onerror = rej;
+			req.onsuccess = () => {
+				res(req.result as QueueUser);
+			};
+		});
+
+		if (result === undefined) {
+			return resolve(null);
+		}
+
+		const user: BlockUser = {
+			user_id: result.user_id,
+			user: {
+				name: result.user.name,
+				screen_name: result.user.screen_name,
+			},
+			reason: result.reason,
+		};
+
+		if (result.external_reason) {
+			user.external_reason = result.external_reason;
+		}
+
+		store.delete(user.user_id);
+		transaction.commit();
+		transaction.oncomplete = () => resolve(user);
+	}).catch(e =>
+		// attempt to reconnect to the db
+		ConnectDb()
+		.finally(() => {
+			throw e;  // re-throw error to retry
+		})
+	);
+}
+
+export function WholeQueue(): Promise<BlockUser[]> {
+	return ConnectDb().then(qdb => {
+		return new Promise<BlockUser[]>((resolve, reject) => {
+			const transaction = qdb.transaction([queueDbStore], "readonly");
+			transaction.onabort = transaction.onerror = reject;
+			const store = transaction.objectStore(queueDbStore);
+			const index = store.index("queue");
+			const req = index.getAll(IDBKeyRange.bound(Number.MIN_VALUE, Number.MAX_VALUE), 10000);
+
+			req.onerror = reject;
+			req.onsuccess = () => {
+				const users = req.result as BlockUser[];
+				resolve(users);
+			};
+		});
+	}).catch(() => 
+		api.storage.local.get({ BlockQueue: [] }).then(items =>
+			items?.BlockQueue
+		)
+	);
+}
+
+export function QueueLength(): Promise<number> {
+	return ConnectDb().then(qdb => {
+		return new Promise<number>((resolve, reject) => {
+			const transaction = qdb.transaction([queueDbStore], "readonly");
+			transaction.onabort = transaction.onerror = reject;
+			const store = transaction.objectStore(queueDbStore);
+			const req = store.count();
+
+			req.onerror = reject;
+			req.onsuccess = () => {
+				const users = req.result as number;
+				resolve(users);
+			};
+		});
+	}).catch(() => 
+		api.storage.local.get({ BlockQueue: [] }).then(items =>
+			items?.BlockQueue?.length
+		)
 	);
 }
