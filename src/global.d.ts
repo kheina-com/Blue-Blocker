@@ -20,7 +20,10 @@ interface Config {
 }
 
 interface BlueBlockerUser {
+	__typename: 'User';
 	is_blue_verified: boolean;
+	rest_id: string;
+	id: string;
 	// TODO: verify affiliates_highlighted_label
 	affiliates_highlighted_label?: {
 		label?: {
@@ -37,9 +40,41 @@ interface BlueBlockerUser {
 		verified_type?: string;
 		followers_count: number;
 		muting?: boolean;
+		protected: boolean;
+		can_dm: boolean;
+		can_media_tag: boolean;
+		created_at: string,
+		default_profile: boolean;
+		default_profile_image: boolean;
+		description: string;
+		entities: {
+			description: {
+				urls: string[];
+			}
+		}
+		fast_followers_count: number;
+		favourites_count: number;
+		friends_count: number;
+		has_custom_timelines: boolean;
+		is_translator: boolean;
+		listed_count: number;
+		location: string;
+		media_count: number;
+		normal_followers_count: number;
+		normal_followers_count: string[];
+		possibly_sensitive: boolean;
+		profile_banner_url: string;
+		profile_banner_url_https: string;
+		profile_interstitial_type: string;
+		statuses_count: string;
+		translator_type: string;
+		want_retweets: boolean;
+		withheld_in_countries: string[];
 	};
-	super_following: boolean;
-	rest_id: string;
+	tipjar_settings: {/* TODO: figure out what gets put here */}
+	super_following?: boolean;
+	has_graduated_access: boolean;
+	profile_image_shape: string;
 	promoted_tweet?: boolean;
 	used_blue?: boolean;
 }
