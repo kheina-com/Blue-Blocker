@@ -37,10 +37,11 @@ npm run dev
 
 ### Firefox
 
-1. Run `make firefox`
-2. Visit the [firefox addon debugging page](about:debugging#/runtime/this-firefox)
+1. Run `npm run build`
+2. Run `make firefox`
+3. Visit the [firefox addon debugging page](about:debugging#/runtime/this-firefox)
    1. (or enter `about:debugging#/runtime/this-firefox` in the Firefox url bar)
-3. Click `Load Temporary Add-on` in the top right and select `manifest.json` in the `blue-blocker/build` folder
+4. Click `Load Temporary Add-on` in the top right and select `manifest.json` in the `blue-blocker/build` folder
 
 ## License
 
