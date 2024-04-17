@@ -25,7 +25,7 @@ jobs:
         make firefox
         echo "filename=blue-blocker-firefox-$(make version).zip" >> "$GITHUB_OUTPUT"
     - name: publish firefox
-      uses: wdzeng/firefox-addon@v1.0.5
+      uses: wdzeng/firefox-addon@v1.1.0-alpha.0
       with:
         addon-guid: "{119be3f3-597c-4f6a-9caf-627ee431d374}"
         xpi-path: "${{ steps.build.outputs.filename }}"
