@@ -650,11 +650,13 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 		// step 1: is user verified
 		if (user.is_blue_verified || hasBlockableVerifiedTypes || hasBlockableAffiliateLabels) {
 			if (
-				// skip checking for legacy if the config says to
-				// if the option is disabled, non-legacy verified blue users will still get caught by the last else block
-				(config.blockForUse && user.used_blue) ||
 				// group for skip-verified option
-				(config.skipVerified &&
+				config.skipVerified &&
+				(
+					// if the user used blue features and the config says to, we can skip loading and checking the legacy database
+					(config.blockForUse &&
+					!user.used_blue) ||
+					// ok so they didn't use blue features, load the DB and check
 					(await new Promise((resolve, reject) => {
 						// basically, we're wrapping a promise around a promise to set a timeout on it
 						// in case the user's device was unable to set up the legacy db
@@ -667,7 +669,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 							.then(resolve)
 							.catch(disableSkipLegacy)
 							.finally(() => clearTimeout(timeout));
-					})))
+				})))
 			) {
 				console.log(
 					logstr,
@@ -700,7 +702,9 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 					)} followers and Elon is an idiot.`,
 				);
 			} else {
-				const reason = (hasBlockableVerifiedTypes) ? ReasonBusinessVerified : ReasonBlueVerified;
+				const reason = hasBlockableVerifiedTypes
+					? ReasonBusinessVerified
+					: ReasonBlueVerified;
 				queueBlockUser(user, String(user.rest_id), reason);
 				return;
 			}
