@@ -39,6 +39,7 @@
 		<input type="checkbox" id="skip-1mplus" />
 		<input type="checkbox" id="block-promoted-tweets" />
 		<input type="checkbox" id="soupcan-integration" />
+		<input type="checkbox" id="block-for-use">
 		<div class="tab" id="quick" style="display: block">
 			<div class="option">
 				<label for="suspend-block-collection" name="suspend-block-collection">
@@ -221,7 +222,7 @@
 										fill="#d18800"
 									></path>
 								</g>
-							</g></svg
+							</g></svg>
 						>)
 					</p>
 				</label>
@@ -257,6 +258,15 @@
 					∟ this option blocks legacy verified users!
 					<img src="/icon/warn.png" alt="⚠️" class="emoji" />
 				</p>
+			</div>
+			<div class="option">
+				<label for="block-for-use" name="block-for-use">
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>block legacy verified users that use blue features</p>
+				</label>
+				<span name="block-for-use-status"></span>
 			</div>
 			<div class="integration option" name="soupcan-integration-option">
 				<label for="soupcan-integration" name="soupcan-integration">
@@ -312,7 +322,11 @@
 				</div>
 			</div>
 			<div class="option integrations">
-				<p><a href="/src/pages/integrations/index.html" target="_blank">manage integrations</a></p>
+				<p>
+					<a href="/src/pages/integrations/index.html" target="_blank"
+						>manage integrations</a
+					>
+				</p>
 			</div>
 		</div>
 	</body>

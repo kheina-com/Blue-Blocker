@@ -16,6 +16,7 @@ interface Config {
 	skipFollowerCount: number;
 	soupcanIntegration: boolean;
 	blockPromoted: boolean;
+	blockForUse: boolean;
 }
 
 interface BlueBlockerUser {
@@ -40,6 +41,7 @@ interface BlueBlockerUser {
 	super_following: boolean;
 	rest_id: string;
 	promoted_tweet?: boolean;
+	used_blue?: boolean;
 }
 
 // extension message types

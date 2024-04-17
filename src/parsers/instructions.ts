@@ -58,15 +58,19 @@ export function ParseTimelineUser(obj: any, config: Config, from_blue: boolean) 
 
 function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 	let ptr = obj,
-		hasBlueFeats = false;
+		uses_blue_feats = false;
 	if (ptr.__typename == 'TweetTombstone') {
 		return;
 	}
 	for (const key of UserObjectPath) {
 		if (ptr.hasOwnProperty(key)) {
 			ptr = ptr[key];
-			if (ptr.__typename == 'Tweet' && ptr?.note_tweet?.is_expandable == true) {
-				hasBlueFeats = true;
+			if (
+				ptr.__typename == 'Tweet' &&
+				(ptr?.note_tweet?.is_expandable == true ||
+					typeof ptr?.edit_control?.edit_tweet_ids?.initial_tweet_id == 'string')
+			) {
+				uses_blue_feats = true;
 			}
 		}
 	}
@@ -75,7 +79,8 @@ function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 		return;
 	}
 	ptr.promoted_tweet = promoted;
-	ptr.is_blue_verified = ptr.is_blue_verified || hasBlueFeats;
+	ptr.is_blue_verified = ptr.is_blue_verified || uses_blue_feats;
+	ptr.used_blue = uses_blue_feats;
 	BlockBlueVerified(ptr as BlueBlockerUser, config);
 }
 
