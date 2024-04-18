@@ -29,7 +29,7 @@ const UserObjectPath: string[] = [
 	'user_results',
 	'result',
 ];
-const IgnoreTweetTypes = new Set(['TimelineTimelineCursor', 'TweetTombstone']);
+const IgnoreTweetTypes = new Set(['TimelineTimelineCursor']);
 const PromotedStrings = new Set(['suggest_promoted', 'Promoted', 'promoted']);
 
 function handleUserObject(obj: any, config: Config, from_blue: boolean) {
@@ -59,10 +59,11 @@ export function ParseTimelineUser(obj: any, config: Config, from_blue: boolean) 
 function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 	let ptr = obj,
 		uses_blue_feats = false;
-	if (ptr.__typename == 'TweetTombstone') {
-		return;
-	}
 	for (const key of UserObjectPath) {
+		if (ptr.__typename == 'TweetTombstone') {
+			// If we hit a deleted tweet, we bail
+			return;
+		}
 		if (ptr.hasOwnProperty(key)) {
 			ptr = ptr[key];
 			if (
