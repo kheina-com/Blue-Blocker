@@ -7,9 +7,7 @@ try {
 	_api = {
 		// @ts-ignore
 		runtime: {
-			...browser.runtime,
-			OnInstalledReason: chrome.runtime.OnInstalledReason,
-			restartAfterDelay: chrome.runtime.restartAfterDelay,
+			...browser.runtime
 		},
 		storage: browser.storage,
 		action: browser.browserAction,
