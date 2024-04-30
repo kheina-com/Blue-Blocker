@@ -14,6 +14,8 @@ import {
 	IntegrationStateSendAndReceive,
 	IntegrationStateDisabled,
 	IntegrationStateSendOnly,
+	EventKey,
+	MessageEvent
 } from '../constants';
 import { abbreviate, RefId } from '../utilities';
 import {
@@ -142,19 +144,45 @@ api.runtime.onMessage.addListener((m, s, r) => {
 
 ////////////////////////////////////////////////// EXTERNAL MESSAGE HANDLING //////////////////////////////////////////////////
 
-const [blockActionV1, blockAction] = ['BLOCK', 'block_user'];
+const [blockActionV1, blockAction] = ['BLOCK', 'block_user', 'register'];
 
 api.runtime.onMessageExternal.addListener((m, s, r) => {
 	let response: MessageResponse;
 	(async (message, sender) => {
 		const refid = RefId();
 		console.debug(logstr, refid, 'ext recv:', message, sender);
-		const integrations = (await api.storage.local.get({
-			soupcanIntegration: false,
-			integrations: {},
-		})) as { [id: string]: Integration };
+		const integrations = (
+			await api.storage.local.get({ soupcanIntegration: false, integrations: {} })
+		).integrations as { [id: string]: Integration };
 		const senderId = sender.id ?? '';
 		if (!integrations.hasOwnProperty(senderId)) {
+			if (message?.action == 'register') {
+				//External extension wants to register
+				const reg_request = message as RegisterRequest;
+				integrations[senderId] = {
+					name: reg_request.name,
+					state: IntegrationStateDisabled,
+				};
+				api.storage.local.set({
+					integrations,
+					[EventKey]: {
+						type: MessageEvent,
+						message: `<p>The extension <b>${reg_request.name}</b> would like to integrate with BlueBlocker.<br>Visit the <a href="${api.runtime.getURL("/src/pages/integrations/index.html")}" target="_blank">integrations page</a> to complete set up.</p>`,
+						options: { html: true },
+					},
+				});
+				response = {
+					status: SuccessStatus,
+					result: 'integration registered',
+				} as SuccessResponse;
+				console.debug(
+					logstr,
+					refid,
+					`registered a new extention: ${reg_request.name} ${senderId}. ext resp:`,
+					response,
+				);
+				return;
+			}
 			response = { status: ErrorStatus, message: 'extension not allowed' } as ErrorResponse;
 			return;
 		}
