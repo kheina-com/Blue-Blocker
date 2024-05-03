@@ -222,7 +222,7 @@ api.storage.local.onChanged.addListener((items) => {
 		switch (e.type) {
 			case MessageEvent:
 				if (config.showBlockPopups) {
-					MakeToast(e.message, config);
+					MakeToast(e.message, config, e.options);
 				}
 				break;
 
@@ -746,7 +746,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 
 	let updateIntegrations = false;
 	api.storage.local
-		.get({ integrations: [] })
+		.get({ integrations: {} })
 		.then((items) => items.integrations as { [id: string]: { name: string; state: number } })
 		.then(async (integrations) => {
 			for (const [extensionId, integration] of Object.entries(integrations)) {

@@ -89,6 +89,11 @@ interface RuntimeMessage {
 	data: any;
 }
 
+interface RegisterRequest {
+	action: "register";
+	name: string;
+}
+
 interface MessageResponse {
 	status: MessageStatus;
 }
