@@ -36,6 +36,7 @@ export const DefaultOptions: Config = {
 	skipFollowerCount: 1e6,
 	soupcanIntegration: false,
 	blockPromoted: false,
+	disallowedWords: [],
 
 	// this isn"t set, but is used
 	// TODO: when migrating to firefox manifest v3, check to see if sets can be stored yet
@@ -77,12 +78,14 @@ export const ReasonNftAvatar: number = 1;
 export const ReasonBusinessVerified: number = 2;
 export const ReasonTransphobia: number = 3;
 export const ReasonPromoted: number = 4;
+export const ReasonDisallowedWordsOrEmojis: number = 5;
 export const ReasonMap = {
 	[ReasonBlueVerified]: 'Twitter Blue verified',
 	[ReasonNftAvatar]: 'NFT avatar',
 	[ReasonBusinessVerified]: 'Twitter Business verified',
 	[ReasonTransphobia]: 'transphobia',
 	[ReasonPromoted]: 'promoting tweets',
+	[ReasonDisallowedWordsOrEmojis]: 'disallowed words or emojis',
 };
 
 export const LegacyVerifiedUrl: string =

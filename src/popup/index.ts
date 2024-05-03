@@ -66,6 +66,18 @@ function checkHandler(
 	});
 }
 
+function checkHandlerArrayToString(target: HTMLInputElement, config: Config, key: string) {
+	// @ts-ignore
+	const value: string[] = config[key];
+	let txt = "";
+	value.forEach(word => {
+		txt += word + ", ";
+	});
+	target.value = txt;
+
+	target.addEventListener('input', updateDisallowedWordsInUsernames);
+}
+
 function inputMirror(
 	name: string,
 	value: any,
@@ -149,6 +161,20 @@ function exportSafelist() {
 	});
 }
 
+function updateDisallowedWordsInUsernames(changeEvent : Event){
+	const target = changeEvent.target as HTMLInputElement;
+	let words = target.value.split(',');
+	// strip leading/trailing/multiple spaces and filter empties
+	words = words.map(v => v.replace(/^ +|(?<= ) +| +$/, '')).filter(w => w !== '');
+	api.storage.sync.set({ disallowedWords: words }).then(() => {
+	// Update status to let user know options were saved.
+		document.getElementsByName(target.name + '-status').forEach((status) => {
+		status.textContent = 'saved';
+		setTimeout(() => (status.textContent = null), 1000);
+		});
+	});
+}
+
 // start this immediately so that it's ready when the document loads
 const popupPromise = api.storage.local.get({ popupActiveTab: 'quick' });
 
@@ -220,6 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const blockPromoted = document.getElementById('block-promoted-tweets') as HTMLInputElement;
 	const blockForUse = document.getElementById('block-for-use') as HTMLInputElement;
 	const soupcanIntegration = document.getElementById('soupcan-integration') as HTMLInputElement;
+	const disallowedWordsInput = document.getElementById('blockstrings-input') as HTMLInputElement;
 
 	api.storage.sync.get(DefaultOptions).then((_config) => {
 		const config = _config as Config;
@@ -244,10 +271,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			optionName: 'skip-follower-count-option',
 		});
 		checkHandler(blockPromoted, config, 'blockPromoted');
-		checkHandler(blockForUse, config, 'blockForUse')
+		checkHandler(blockForUse, config, 'blockForUse');
 		checkHandler(soupcanIntegration, config, 'soupcanIntegration', {
 			optionName: '', // integration isn't controlled by the toggle, so unset
 		});
+		checkHandlerArrayToString(disallowedWordsInput, config, 'disallowedWords');
 
 		document
 			.getElementsByName('skip-follower-count-value')
@@ -320,7 +348,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
-
 	// set the block value immediately
 	api.storage.local.get({ BlockCounter: 0 }).then(items => {
 		blockedUsersCount.textContent = commafy(items.BlockCounter);
@@ -330,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			blockedUsersCount.textContent = commafy(items.BlockCounter.newValue);
 			QueueLength().then(count => {
 				blockedUserQueueLength.textContent = commafy(count);
-			});		
+			});
 		}
 		if (items.hasOwnProperty('BlockQueue')) {
 			blockedUserQueueLength.textContent = commafy(items.BlockQueue.newValue.length);

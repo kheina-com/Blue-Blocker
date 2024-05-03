@@ -19,6 +19,7 @@ import {
 	ReasonExternal,
 	IntegrationStateDisabled,
 	IntegrationStateReceiveOnly,
+	ReasonDisallowedWordsOrEmojis,
 } from './constants';
 
 import {
@@ -643,6 +644,22 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 		) {
 			console.debug(logstr, `skipped user ${formattedUserName} because they follow you.`);
 			return;
+		}
+
+		// Step 0: Check for disallowed words or emojis in usernames.
+		const disallowedWordsWithoutEmptyStrings = config.disallowedWords.filter(word => word !== '');
+		if (disallowedWordsWithoutEmptyStrings.length > 0){
+			// this makes extra sure that emojis are always detected, regardless if they are attached to a word or another string of emojis.
+			// the 'i' makes the test case insensitive, which helps users not have to worry about typing the same word multiple times with different variations.
+			const disallowedWordsAndEmojis = new RegExp(config.disallowedWords.join('|'), 'i');
+			const wordsInUserName = user.legacy.name.toLocaleLowerCase().split(/\s+/);
+			for (const word of wordsInUserName) {
+				if (disallowedWordsAndEmojis.test(word)) {
+					queueBlockUser(user, String(user.rest_id), ReasonDisallowedWordsOrEmojis);
+					console.log(logstr, `${config.mute ? 'muted' : 'blocked'} ${formattedUserName} for having disallowed words/emojis in their username.`);
+					return;
+				}
+			}
 		}
 
 		const legacyDbRejectMessage =

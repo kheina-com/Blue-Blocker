@@ -258,7 +258,7 @@ input[type=number] {
 	width: 7em;
 	height: 1em;
 }
-input[type=number], select {
+input[type=number], select, textarea {
 	top: -0.1em;
 	position: relative;
 	display: inline-block;
@@ -273,13 +273,26 @@ input[type=number], select {
 	-o-transition: var(--transition) var(--fadetime);
 	transition: var(--transition) var(--fadetime);
 }
-input[type=number]:hover, select:hover {
+input[type=number]:hover, select:hover, textarea:hover {
 	color: var(--interact);
 	border-color: var(--borderhover);
 	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
 }
 input[type=number]:focus, select:focus {
 	color: var(--textcolor);
+}
+
+textarea {
+	text-align: left;
+	min-height: 1.5em;
+	min-width: 20em;
+}
+
+.blockstrings-option {
+	margin-left: 1em;
+}
+.blockstrings-option > .option {
+	margin-top: .1em;
 }
 
 .gold-check {

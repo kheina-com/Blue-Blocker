@@ -17,6 +17,7 @@ interface Config {
 	soupcanIntegration: boolean;
 	blockPromoted: boolean;
 	blockForUse: boolean;
+	disallowedWords: string[];
 }
 
 interface BlueBlockerUser {
