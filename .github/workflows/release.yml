@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       filename: ${{ steps.build.outputs.filename }}
+      sourcefile: ${{ steps.src.outputs.sourcefile }}
     steps:
     - uses: actions/checkout@v4
     - name: Set up Node.js
@@ -24,17 +25,24 @@ jobs:
       run: |
         make firefox
         echo "filename=blue-blocker-firefox-$(make version).zip" >> "$GITHUB_OUTPUT"
+    - name: downloading source code
+      id: src
+      run: |
+        export SOURCE_FILENAME="blue-blocker-source-v$(make version).zip"
+        curl --connect-timeout 5 --retry 10 --retry-delay 10 --retry-max-time 30 ${{ github.event.zipball_url }} -o $SOURCE_FILENAME
+        echo "sourcefile=$SOURCE_FILENAME" >> "$GITHUB_OUTPUT"
     - name: publish firefox
-      uses: wdzeng/firefox-addon@v1.1.0-alpha.0
+      uses: browser-actions/release-firefox-addon@v0.1.3  # https://github.com/marketplace/actions/release-firefox-addon#inputs
       with:
-        addon-guid: "{119be3f3-597c-4f6a-9caf-627ee431d374}"
-        xpi-path: "${{ steps.build.outputs.filename }}"
-        self-hosted: false
-        release-notes: "{\"en-US\": toJSON(${{ github.event.body }})}" # this should be the content of the release, make sure to include changelog
-        approval-notes: "source code for this version is available at https://github.com/kheina-com/Blue-Blocker/releases/tag/${{ github.event.tag_name }}\nrunning `npm run build` and then `make firefox` should build the addon package, then load and use twitter. you should start seeing users be blocked fairly quickly"
+        addon-id: "{119be3f3-597c-4f6a-9caf-627ee431d374}"
+        addon-path: "${{ steps.build.outputs.filename }}"
+        source-path: "${{ steps.src.outputs.sourcefile }}"
+        approval-note: "The extension can be built and tested locally using `make firefox`. Simply navigate to twitter.com and you should see users being queued and blocked fairly quickly."
+        release-note: "{\"en-US\": ${{ toJSON(toJSON(github.event.body)) }}}" # this should be the content of the release, make sure to include changelog. also yes the double use of tojson is intentional
+        compatibility-firefox-min: 48.0
         license: MPL-2.0
-        jwt-issuer: ${{ secrets.MOZILLA_ADDONS_JWT_ISSUER }}
-        jwt-secret: ${{ secrets.MOZILLA_ADDONS_JWT_SECRET }}
+        auth-api-issuer: ${{ secrets.MOZILLA_ADDONS_JWT_ISSUER }}
+        auth-api-secret: ${{ secrets.MOZILLA_ADDONS_JWT_SECRET }}
 
   Release-Chrome:
     runs-on: ubuntu-latest
