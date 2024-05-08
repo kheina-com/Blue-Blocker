@@ -1,4 +1,4 @@
-import { commafy, EscapeHtml, RefId } from "../../utilities.js";
+import { commafy, EscapeHtml, RefId, UsernameElement } from "../../utilities.js";
 import { api, logstr, HistoryStateBlocked, ReasonMap, ReasonExternal, HistoryStateUnblocked, HistoryStateGone } from "../../constants.js";
 import { ConnectDb, historyDbStore } from "../../background/db.js";
 import { BlockCounter } from "../../models/block_counter";
@@ -26,7 +26,7 @@ blockCounter.getCriticalPoint(refid)
 	}).then(users => {
 		const queueDiv = document.getElementById("block-history") as HTMLElement;
 
-		queueDiv.innerHTML = "";
+		queueDiv.textContent = "";
 		let blockedCount: number = 0;
 
 		const reasons: { [r: number]: number } = { };
@@ -36,9 +36,7 @@ blockCounter.getCriticalPoint(refid)
 			}
 
 			const div = document.createElement("div");
-			const p = document.createElement("p");
-			const screen_name = EscapeHtml(item.user.screen_name);
-			p.innerHTML = `${EscapeHtml(item.user.name)} (<a href="https://twitter.com/${screen_name}" target="_blank">@${screen_name}</a>)`;
+			const p = UsernameElement(item.user.name, item.user.screen_name);
 			div.appendChild(p);
 
 			const p2 = document.createElement("p");

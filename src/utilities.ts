@@ -152,3 +152,18 @@ export function MakeToast(content: string, config: Config, options: { html?: boo
 export function EscapeHtml(text: string): string {
 	return new Option(text).innerHTML;
 }
+
+export function UsernameElement(userName: string, screenName: string): HTMLParagraphElement {
+	const p = document.createElement("p");
+	p.textContent = `${userName} (`;
+
+	const a = document.createElement("a");
+	a.href = `https://twitter.com/${screenName}`;
+	a.target = "_blank";
+	a.textContent = `@${screenName}`;
+	p.appendChild(a);
+
+	const t = document.createTextNode(")");
+	p.appendChild(t);
+	return p;
+}
