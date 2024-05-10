@@ -648,7 +648,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 		const legacyDbRejectMessage =
 			'could not access the legacy verified database, skip legacy has been disabled.';
 		// step 1: is user verified
-		if (user.is_blue_verified || hasBlockableVerifiedTypes || hasBlockableAffiliateLabels) {
+		if ((config.skipBlueCheckmark == false && user.is_blue_verified) || hasBlockableVerifiedTypes || hasBlockableAffiliateLabels) {
 			if (
 				// skip checking for legacy if the config says to
 				// if the option is disabled, non-legacy verified blue users will still get caught by the last else block

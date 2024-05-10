@@ -219,6 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const skip1Mplus = document.getElementById('skip-1mplus') as HTMLInputElement;
 	const blockPromoted = document.getElementById('block-promoted-tweets') as HTMLInputElement;
 	const blockForUse = document.getElementById('block-for-use') as HTMLInputElement;
+	const skipCheckmark = document.getElementById('skip-checkmark') as HTMLInputElement;
 	const soupcanIntegration = document.getElementById('soupcan-integration') as HTMLInputElement;
 
 	api.storage.sync.get(DefaultOptions).then((_config) => {
@@ -244,7 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			optionName: 'skip-follower-count-option',
 		});
 		checkHandler(blockPromoted, config, 'blockPromoted');
-		checkHandler(blockForUse, config, 'blockForUse')
+		checkHandler(blockForUse, config, 'blockForUse');
+		checkHandler(skipCheckmark, config, 'skipBlueCheckmark');
 		checkHandler(soupcanIntegration, config, 'soupcanIntegration', {
 			optionName: '', // integration isn't controlled by the toggle, so unset
 		});
@@ -330,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			blockedUsersCount.textContent = commafy(items.BlockCounter.newValue);
 			QueueLength().then(count => {
 				blockedUserQueueLength.textContent = commafy(count);
-			});		
+			});
 		}
 		if (items.hasOwnProperty('BlockQueue')) {
 			blockedUserQueueLength.textContent = commafy(items.BlockQueue.newValue.length);
