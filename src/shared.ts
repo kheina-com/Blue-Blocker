@@ -19,6 +19,7 @@ import {
 	ReasonExternal,
 	IntegrationStateDisabled,
 	IntegrationStateReceiveOnly,
+	ReasonDisallowedWordsOrEmojis,
 } from './constants';
 
 import {
@@ -222,7 +223,7 @@ api.storage.local.onChanged.addListener((items) => {
 		switch (e.type) {
 			case MessageEvent:
 				if (config.showBlockPopups) {
-					MakeToast(e.message, config);
+					MakeToast(e.message, config, e.options);
 				}
 				break;
 
@@ -645,16 +646,31 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 			return;
 		}
 
+		// Step 0: Check for disallowed words or emojis in usernames.
+		const disallowedWordsWithoutEmptyStrings = config.disallowedWords.filter(word => word !== '');
+		if (disallowedWordsWithoutEmptyStrings.length > 0){
+			// this makes extra sure that emojis are always detected, regardless if they are attached to a word or another string of emojis.
+			// the 'i' makes the test case insensitive, which helps users not have to worry about typing the same word multiple times with different variations.
+			const disallowedWordsAndEmojis = new RegExp(`${config.disallowedWords.map(word=>word.split('').join(' *')).join('(?= |$)|')}(?= |$)`, 'i');
+			const usernameToTest = (user.legacy.name).replace(/(?<= ) +/, '');
+			if (disallowedWordsAndEmojis.test(usernameToTest)) {
+				queueBlockUser(user, String(user.rest_id), ReasonDisallowedWordsOrEmojis);
+				console.log(logstr, `${config.mute ? 'muted' : 'blocked'} ${formattedUserName} for having disallowed words/emojis in their username.`);
+			  }
+		}
+
 		const legacyDbRejectMessage =
 			'could not access the legacy verified database, skip legacy has been disabled.';
 		// step 1: is user verified
 		if ((config.skipBlueCheckmark == false && user.is_blue_verified) || hasBlockableVerifiedTypes || hasBlockableAffiliateLabels) {
 			if (
-				// skip checking for legacy if the config says to
-				// if the option is disabled, non-legacy verified blue users will still get caught by the last else block
-				(config.blockForUse && user.used_blue) ||
 				// group for skip-verified option
-				(config.skipVerified &&
+				config.skipVerified &&
+				(
+					// if the user used blue features and the config says to, we can skip loading and checking the legacy database
+					(config.blockForUse &&
+					!user.used_blue) ||
+					// ok so they didn't use blue features, load the DB and check
 					(await new Promise((resolve, reject) => {
 						// basically, we're wrapping a promise around a promise to set a timeout on it
 						// in case the user's device was unable to set up the legacy db
@@ -667,7 +683,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 							.then(resolve)
 							.catch(disableSkipLegacy)
 							.finally(() => clearTimeout(timeout));
-					})))
+				})))
 			) {
 				console.log(
 					logstr,
@@ -700,7 +716,9 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 					)} followers and Elon is an idiot.`,
 				);
 			} else {
-				const reason = (hasBlockableVerifiedTypes) ? ReasonBusinessVerified : ReasonBlueVerified;
+				const reason = hasBlockableVerifiedTypes
+					? ReasonBusinessVerified
+					: ReasonBlueVerified;
 				queueBlockUser(user, String(user.rest_id), reason);
 				return;
 			}
@@ -742,7 +760,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 
 	let updateIntegrations = false;
 	api.storage.local
-		.get({ integrations: [] })
+		.get({ integrations: {} })
 		.then((items) => items.integrations as { [id: string]: { name: string; state: number } })
 		.then(async (integrations) => {
 			for (const [extensionId, integration] of Object.entries(integrations)) {
