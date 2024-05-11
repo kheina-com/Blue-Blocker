@@ -144,7 +144,7 @@ api.runtime.onMessage.addListener((m, s, r) => {
 
 ////////////////////////////////////////////////// EXTERNAL MESSAGE HANDLING //////////////////////////////////////////////////
 
-const [blockActionV1, blockAction] = ['BLOCK', 'block_user', 'register'];
+const [blockActionV1, blockAction, registerAction] = ['BLOCK', 'block_user', 'register'];
 
 api.runtime.onMessageExternal.addListener((m, s, r) => {
 	let response: MessageResponse;
