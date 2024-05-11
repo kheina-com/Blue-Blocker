@@ -156,7 +156,7 @@ api.runtime.onMessageExternal.addListener((m, s, r) => {
 		).integrations as { [id: string]: Integration };
 		const senderId = sender.id ?? '';
 		if (!integrations.hasOwnProperty(senderId)) {
-			if (message?.action == 'register') {
+			if (message?.action === registerAction) {
 				//External extension wants to register
 				const reg_request = message as RegisterRequest;
 				integrations[senderId] = {
