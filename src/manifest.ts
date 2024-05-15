@@ -18,7 +18,7 @@ export default defineManifest({
 	},
 	content_scripts: [
 		{
-			matches: ["*://*.twitter.com/*", "*://twitter.com/*"],
+			matches: ["*://*.twitter.com/*", "*://twitter.com/*", "*://*.x.com/*", "*://x.com/*"],
 			js: ["src/content/index.ts"],
 		},
 	],
@@ -30,7 +30,7 @@ export default defineManifest({
 				"src/injected/*",
 				"icon/*",
 			],
-			matches: ["*://*.twitter.com/*", "*://twitter.com/*"],
+			matches: ["*://*.twitter.com/*", "*://twitter.com/*", "*://*.x.com/*", "*://x.com/*"],
 		},
 	],
 });
