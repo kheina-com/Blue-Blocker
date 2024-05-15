@@ -57,6 +57,8 @@ setInterval(blockCache.clear, 10 * 60e3); // clear the cache every 10 minutes
 // this is just here so we don't double add users unnecessarily (and also overwrite name)
 setInterval(UnblockCache.clear, 10 * 60e3);
 
+const twitterWindowRegex = /^https?:\/\/(?:\w+\.)?(?:twitter|x)\.com(?=$|\/)/;
+
 function unblockUser(
 	user: { name: string; screen_name: string },
 	user_id: string,
@@ -69,7 +71,7 @@ function unblockUser(
 		api.storage.sync.set(items);
 	});
 
-	const match = window.location.href.match(/^https?:\/\/(?:\w+\.)?twitter.com(?=$|\/)/);
+	const match = window.location.href.match(twitterWindowRegex);
 
 	if (!match) {
 		throw new Error('unexpected or incorrectly formatted url');
@@ -375,7 +377,7 @@ consumer.start();
 const CsrfTokenRegex = /ct0=\s*(\w+);/;
 
 function blockUser(user: BlockUser, attempt = 1) {
-	const match = window.location.href.match(/^https?:\/\/(?:\w+\.)?twitter.com(?=$|\/)/);
+	const match = window.location.href.match(twitterWindowRegex);
 
 	if (!match) {
 		throw new Error('unexpected or incorrectly formatted url');
