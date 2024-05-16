@@ -7,6 +7,7 @@ interface Config {
 	mute: boolean;
 	blockFollowing: boolean;
 	blockFollowers: boolean;
+	skipBlueCheckmark : boolean;
 	skipVerified: boolean;
 	skipAffiliated: boolean;
 	skip1Mplus: boolean;
