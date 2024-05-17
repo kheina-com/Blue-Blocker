@@ -654,7 +654,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 			// this makes extra sure that emojis are always detected, regardless if they are attached to a word or another string of emojis.
 			// the 'i' makes the test case insensitive, which helps users not have to worry about typing the same word multiple times with different variations.
 			const disallowedWordsAndEmojis = new RegExp(`${config.disallowedWords.join('(?= |$)|')}(?= |$)`, 'i');
-			const usernameToTest = (user.legacy.name).replace(/ {2,}/, '');
+			const usernameToTest = (user.legacy.name).replace(/ {2,}/, ' ');
 			if (disallowedWordsAndEmojis.test(usernameToTest)) {
 				queueBlockUser(user, String(user.rest_id), ReasonDisallowedWordsOrEmojis);
 				console.log(logstr, `${config.mute ? 'muted' : 'blocked'} ${formattedUserName} for having disallowed words/emojis in their username.`);
