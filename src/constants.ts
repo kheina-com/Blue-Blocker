@@ -1,14 +1,12 @@
 let _api: {
 	action: typeof chrome.action | typeof browser.browserAction;
-	runtime: typeof chrome.runtime;
+	runtime: typeof chrome.runtime |typeof browser.runtime;
 	storage: typeof chrome.storage | typeof browser.storage;
 };
 try {
 	_api = {
 		// @ts-ignore
-		runtime: {
-			...browser.runtime
-		},
+		runtime: browser.runtime,
 		storage: browser.storage,
 		action: browser.browserAction,
 	};
