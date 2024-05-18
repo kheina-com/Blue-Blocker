@@ -160,7 +160,7 @@ function exportSafelist() {
 
 function compileDisallowedWordsRegExp (wordList: string[]) {
 	return new RegExp(
-		wordList.map(word => word.match(emojiRegExp) ? escapeRegExp(word) : `(?:^|\s)${escapeRegExp(word)}(?:$|\s)`).join("|")
+		wordList.map(word => word.match(emojiRegExp) ? escapeRegExp(word) : `(?:^|\\s)${escapeRegExp(word)}(?:$|\\s)`).join("|")
 	)
 }
 
