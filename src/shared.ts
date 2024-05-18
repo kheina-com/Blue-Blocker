@@ -81,7 +81,7 @@ function unblockUser(
 	let url: string = '';
 
 	if (root.includes('tweetdeck')) {
-		url = 'https://api.twitter.com/1.1/';
+		url = 'https://api.x.com/1.1/';
 	} else {
 		url = `${root}/i/api/1.1/`;
 	}
