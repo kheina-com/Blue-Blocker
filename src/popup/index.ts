@@ -2,7 +2,7 @@ import {
 	api,
 	DefaultOptions,
 } from '../constants.js';
-import { abbreviate, commafy } from '../utilities.js';
+import { abbreviate, commafy, escapeRegExp, unescapeRegExp } from '../utilities.js';
 import { QueueLength } from "../background/db.js";
 import './style.css';
 
@@ -161,24 +161,16 @@ function exportSafelist() {
 	});
 }
 
-function escapeRegExp(text: string) {
-	//stolen straight from MDN, o7
-	return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 function updateDisallowedWordsInUsernames(changeEvent : Event){
 	const target = changeEvent.target as HTMLInputElement;
-	let words = target.value.split(',');
-	words = words.map(word =>
-		//escape characters that are important for regex
-		escapeRegExp(
-			//trim white space
-			word.trim()
-				//remove double spaces
-				.replace(/ {2,}/g, ' ')
-		)
+	let wordList = target.value.split(',');
+	wordList = wordList.map(word =>
+		// trim white space
+		word.trim()
+			//remove double spaces
+			.replace(/ {2,}/g, ' ')
 	).filter(w => w);
-	api.storage.sync.set({ disallowedWords: words }).then(() => {
+	api.storage.sync.set({ disallowedWords: wordList }).then(() => {
 	// Update status to let user know options were saved.
 		document.getElementsByName(target.name + '-status').forEach((status) => {
 		status.textContent = 'saved';

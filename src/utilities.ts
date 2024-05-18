@@ -149,6 +149,16 @@ export function MakeToast(content: string, config: Config, options: { html?: boo
 	ele.appendChild(t);
 }
 
+export function escapeRegExp(text: string) {
+	// stolen straight from MDN, o7
+	return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export function unescapeRegExp(text: string) {
+	// just replace escape sequences with nothing
+	return text.replace(/\\{2}/g, '');
+}
+
 export function EscapeHtml(text: string): string {
 	return new Option(text).innerHTML;
 }
