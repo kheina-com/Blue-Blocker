@@ -33,7 +33,10 @@ export const DefaultOptions: Config = {
 	skipFollowerCount: 1e6,
 	soupcanIntegration: false,
 	blockPromoted: false,
-	disallowedWords: [],
+	disallowedWords: {
+		list: [],
+		regExp: new RegExp('')
+	},
 
 	// this isn"t set, but is used
 	// TODO: when migrating to firefox manifest v3, check to see if sets can be stored yet
@@ -84,6 +87,8 @@ export const ReasonMap = {
 	[ReasonPromoted]: 'promoting tweets',
 	[ReasonDisallowedWordsOrEmojis]: 'disallowed words or emojis',
 };
+
+export const emojiRegExp = RegExp(/(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/, 'g')
 
 export const LegacyVerifiedUrl: string =
 	'https://gist.githubusercontent.com/travisbrown/b50d6745298cccd6b1f4697e4ec22103/raw/012009351630dc351e3a763b49bf24fa50ca3eb7/legacy-verified.csv';

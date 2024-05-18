@@ -154,11 +154,6 @@ export function escapeRegExp(text: string) {
 	return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-export function unescapeRegExp(text: string) {
-	// just replace escape sequences with nothing
-	return text.replace(/\\{2}/g, '');
-}
-
 export function EscapeHtml(text: string): string {
 	return new Option(text).innerHTML;
 }
