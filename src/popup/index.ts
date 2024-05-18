@@ -161,11 +161,23 @@ function exportSafelist() {
 	});
 }
 
+function escapeRegExp(text: string) {
+	//stolen straight from MDN, o7
+	return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function updateDisallowedWordsInUsernames(changeEvent : Event){
 	const target = changeEvent.target as HTMLInputElement;
 	let words = target.value.split(',');
-	// strip leading/trailing/multiple spaces and filter empties
-	words = words.map(v => v.trim().replace(/ {2,}/g, ' ')).filter(w => w);
+	words = words.map(word =>
+		//escape characters that are important for regex
+		escapeRegExp(
+			//trim white space
+			word.trim()
+				//remove double spaces
+				.replace(/ {2,}/g, ' ')
+		)
+	).filter(w => w);
 	api.storage.sync.set({ disallowedWords: words }).then(() => {
 	// Update status to let user know options were saved.
 		document.getElementsByName(target.name + '-status').forEach((status) => {
