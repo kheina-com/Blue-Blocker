@@ -1,6 +1,6 @@
 let _api: {
 	action: typeof chrome.action | typeof browser.browserAction;
-	runtime: typeof chrome.runtime |typeof browser.runtime;
+	runtime: typeof chrome.runtime;
 	storage: typeof chrome.storage | typeof browser.storage;
 };
 try {
