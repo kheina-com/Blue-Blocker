@@ -1,9 +1,8 @@
 import {
 	api,
 	DefaultOptions,
-	emojiRegExp,
 } from '../constants.js';
-import { abbreviate, commafy, escapeRegExp} from '../utilities.js';
+import { abbreviate, commafy } from '../utilities.js';
 import { QueueLength } from "../background/db.js";
 import './style.css';
 
@@ -158,12 +157,6 @@ function exportSafelist() {
 	});
 }
 
-function compileDisallowedWordsRegExp (wordList: string[]) {
-	return new RegExp(
-		wordList.map(word => word.match(emojiRegExp) ? escapeRegExp(word) : `(?:^|\\s)${escapeRegExp(word)}(?:$|\\s)`).join("|")
-	)
-}
-
 function updateDisallowedWordsInUsernames(changeEvent : Event){
 	const target = changeEvent.target as HTMLInputElement;
 	let wordList = target.value.split(',');
@@ -173,10 +166,7 @@ function updateDisallowedWordsInUsernames(changeEvent : Event){
 			//remove double spaces
 			.replace(/ {2,}/g, ' ')
 	).filter(w => w);
-	api.storage.sync.set({ disallowedWords: {
-		list: wordList,
-		regExp: compileDisallowedWordsRegExp(wordList)
-	}}).then(() => {
+	api.storage.sync.set({ disallowedWords: wordList}).then(() => {
 		// Update status to let user know options were saved.
 		document.getElementsByName(target.name + '-status').forEach((status) => {
 		status.textContent = 'saved';

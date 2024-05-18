@@ -588,7 +588,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 
 const blockableAffiliateLabels: Set<string> = new Set([]);
 const blockableVerifiedTypes: Set<string> = new Set(['Business']);
-export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
+export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledConfig) {
 	// We're not currently adding anything to the queue so give up.
 	if (config.suspendedBlockCollection) {
 		return;
@@ -649,7 +649,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 		}
 
 		// Step 0: Check for disallowed words or emojis in usernames.
-		if (config.disallowedWords.regExp.test((user.legacy.name).replace(/\s{2,}/g, ' '))) {
+		if (config.disallowedWords.test((user.legacy.name).replace(/\s{2,}/g, ' '))) {
 			queueBlockUser(user, user.rest_id, ReasonDisallowedWordsOrEmojis);
 			console.log(logstr, `${config.mute ? 'muted' : 'blocked'} ${formattedUserName} for having disallowed words/emojis in their username.`);
 		}
