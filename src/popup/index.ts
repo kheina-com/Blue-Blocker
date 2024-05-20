@@ -68,7 +68,7 @@ function checkHandler(
 
 function checkHandlerArrayToString(target: HTMLInputElement, config: Config, key: string) {
 	// @ts-ignore
-	const value: string[] = config[key].list;
+	const value: string[] = config[key];
 	target.value = value.join(', ');
 
 	target.addEventListener('input', updateDisallowedWordsInUsernames);
