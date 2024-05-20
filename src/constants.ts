@@ -85,7 +85,7 @@ export const ReasonMap = {
 	[ReasonDisallowedWordsOrEmojis]: 'disallowed words or emojis',
 };
 
-export const emojiRegExp = RegExp(/(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/, 'g')
+export const emojiRegExp = RegExp(/[\p{Emoji_Presentation}\u200d]+/, 'gu')
 
 export const LegacyVerifiedUrl: string =
 	'https://gist.githubusercontent.com/travisbrown/b50d6745298cccd6b1f4697e4ec22103/raw/012009351630dc351e3a763b49bf24fa50ca3eb7/legacy-verified.csv';
