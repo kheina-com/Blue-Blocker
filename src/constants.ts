@@ -33,10 +33,7 @@ export const DefaultOptions: Config = {
 	skipFollowerCount: 1e6,
 	soupcanIntegration: false,
 	blockPromoted: false,
-	disallowedWords: {
-		list: [],
-		regExp: new RegExp('')
-	},
+	disallowedWords: [],
 
 	// this isn"t set, but is used
 	// TODO: when migrating to firefox manifest v3, check to see if sets can be stored yet

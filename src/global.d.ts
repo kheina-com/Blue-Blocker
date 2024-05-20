@@ -18,10 +18,28 @@ interface Config {
 	soupcanIntegration: boolean;
 	blockPromoted: boolean;
 	blockForUse: boolean;
-	disallowedWords: {
-		list: string[],
-		regExp: RegExp;
-	};
+	disallowedWords: string[];
+}
+
+interface CompiledConfig {
+	suspendedBlockCollection: boolean;
+	showBlockPopups: boolean;
+	toastsLocation: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+	mute: boolean;
+	blockFollowing: boolean;
+	blockFollowers: boolean;
+	skipBlueCheckmark : boolean;
+	skipVerified: boolean;
+	skipAffiliated: boolean;
+	skip1Mplus: boolean;
+	blockInterval: number;
+	unblocked: { [k: string]: string? };
+	popupTimer: number;
+	skipFollowerCount: number;
+	soupcanIntegration: boolean;
+	blockPromoted: boolean;
+	blockForUse: boolean;
+	disallowedWords: RegExp;
 }
 
 interface BlueBlockerUser {

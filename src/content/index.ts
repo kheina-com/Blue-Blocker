@@ -1,10 +1,43 @@
 import { SetHeaders } from "../shared";
-import { api, logstr, DefaultOptions, ErrorEvent, EventKey } from "../constants";
+import {
+	api,
+	logstr,
+	DefaultOptions,
+	emojiRegExp,
+	ErrorEvent,
+	EventKey,
+} from "../constants";
+import { escapeRegExp } from "../utilities";
 import { HandleInstructionsResponse } from "../parsers/instructions";
 import { HandleForYou } from "../parsers/timeline";
 import { HandleTypeahead } from "../parsers/search";
 import { HandleUnblock } from "../parsers/unblock";
 import "./startup.ts";
+
+function compileConfig (config: Config): CompiledConfig {
+	return {
+		suspendedBlockCollection: config.suspendedBlockCollection,
+		showBlockPopups: config.showBlockPopups,
+		toastsLocation: config.toastsLocation,
+		mute: config.mute,
+		blockFollowing: config.blockFollowing,
+		blockFollowers: config.blockFollowers,
+		skipBlueCheckmark : config.skipBlueCheckmark,
+		skipVerified: config.skipVerified,
+		skipAffiliated: config.skipAffiliated,
+		skip1Mplus: config.skip1Mplus,
+		blockInterval: config.blockInterval,
+		unblocked: config.unblocked,
+		popupTimer: config.popupTimer,
+		skipFollowerCount: config.skipFollowerCount,
+		soupcanIntegration: config.blockFollowers,
+		blockPromoted: config.blockPromoted,
+		blockForUse: config.blockForUse,
+		disallowedWords: new RegExp(
+			config.disallowedWords.map(word => word.match(emojiRegExp) ? escapeRegExp(word) : `(?:^|\\s)${escapeRegExp(word)}(?:$|\\s)`).join("|")
+		),
+	} as CompiledConfig;
+}
 
 document.addEventListener("blue-blocker-event", function (e: CustomEvent<BlueBlockerEvent>) {
 	if (e.detail.status < 300) {
@@ -39,12 +72,12 @@ document.addEventListener("blue-blocker-event", function (e: CustomEvent<BlueBlo
 				case "UserCreatorSubscriptions":
 				case "FollowersYouKnow":
 				case "BlueVerifiedFollowers":
-					return HandleInstructionsResponse(e, parsed_body, config);
+					return HandleInstructionsResponse(e, parsed_body, compileConfig(config));
 				case "timeline/home.json":
 				case "search/adaptive.json":
-					return HandleForYou(e, parsed_body, config);
+					return HandleForYou(e, parsed_body, compileConfig(config));
 				case "search/typeahead.json":
-					return HandleTypeahead(e, parsed_body, config);
+					return HandleTypeahead(e, parsed_body, compileConfig(config));
 				default:
 					console.error(logstr, "found an unexpected url that we don't know how to handle", e);
 					api.storage.local.set({
