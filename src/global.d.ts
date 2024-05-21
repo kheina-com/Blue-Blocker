@@ -39,7 +39,7 @@ interface CompiledConfig {
 	soupcanIntegration: boolean;
 	blockPromoted: boolean;
 	blockForUse: boolean;
-	disallowedWords: RegExp;
+	disallowedWords: RegExp | null;
 }
 
 interface BlueBlockerUser {

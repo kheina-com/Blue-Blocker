@@ -649,7 +649,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 		}
 
 		// Step 0: Check for disallowed words or emojis in usernames.
-		if (config.disallowedWords.test((user.legacy.name).replace(/\s{2,}/g, ' '))) {
+		if (config.disallowedWords?.test((user.legacy.name).replace(/\s{2,}/g, ' '))) {
 			queueBlockUser(user, user.rest_id, ReasonDisallowedWordsOrEmojis);
 			console.log(logstr, `${config.mute ? 'muted' : 'blocked'} ${formattedUserName} for having disallowed words/emojis in their username.`);
 		}

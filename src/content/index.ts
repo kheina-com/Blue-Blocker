@@ -33,9 +33,7 @@ function compileConfig (config: Config): CompiledConfig {
 		soupcanIntegration: config.blockFollowers,
 		blockPromoted: config.blockPromoted,
 		blockForUse: config.blockForUse,
-		disallowedWords: new RegExp(
-			config.disallowedWords.map(word => word.match(emojiRegExp) ? escapeRegExp(word) : `(?:^|\\s)${escapeRegExp(word)}(?:$|\\s)`).join("|")
-		),
+		disallowedWords: (config.disallowedWords.length === 0) ? null : new RegExp(config.disallowedWords.map(word => word.match(emojiRegExp) ? word : `(?:^|\\s)${escapeRegExp(word)}(?:$|\\s)`).join("|"), 'i'),
 	} as CompiledConfig;
 }
 
