@@ -26,6 +26,7 @@ function compileConfig(config: Config): CompiledConfig {
 		soupcanIntegration: config.blockFollowers,
 		blockPromoted: config.blockPromoted,
 		blockForUse: config.blockForUse,
+		blockDisallowedWords: config.blockDisallowedWords,
 		disallowedWords:
 			config.disallowedWords.length === 0
 				? null

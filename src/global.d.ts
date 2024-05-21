@@ -18,6 +18,7 @@ interface Config {
 	soupcanIntegration: boolean;
 	blockPromoted: boolean;
 	blockForUse: boolean;
+	blockDisallowedWords: boolean;
 	disallowedWords: string[];
 }
 
@@ -39,6 +40,7 @@ interface CompiledConfig {
 	soupcanIntegration: boolean;
 	blockPromoted: boolean;
 	blockForUse: boolean;
+	blockDisallowedWords: boolean;
 	disallowedWords: RegExp | null;
 }
 
