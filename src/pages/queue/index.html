@@ -25,12 +25,14 @@
 	external_reason?: string,
 }</pre>
 				<p>where reason is an int that refers to one of the following values:</p>
-<pre>const ReasonExternal: number         = -1; // use external_reason
-const ReasonBlueVerified: number     = 0;  // twitter blue user
-const ReasonNftAvatar: number        = 1;  // user has NFT avatar
-const ReasonBusinessVerified: number = 2;  // verified via a business
-const ReasonTransphobia: number      = 3;  // user is known transphobe
-const ReasonPromoted: number         = 4;  // promoted tweets</pre>
+<pre>const ReasonExternal: number                = -1; // use external_reason
+const ReasonBlueVerified: number            = 0;  // twitter blue user
+const ReasonNftAvatar: number               = 1;  // user has NFT avatar
+const ReasonBusinessVerified: number        = 2;  // verified via a business
+const ReasonTransphobia: number             = 3;  // user is known transphobe
+const ReasonPromoted: number                = 4;  // promoted tweets
+const ReasonDisallowedWordsOrEmojis: number = 5;  // disallowed words or emojis
+const ReasonUsingBlueFeatures: number       = 6;  // using Twitter Blue features</pre>
 				<p>reason can also be assigned <code>-1</code> and provided an <code>external_reason</code>.<br>external reason should be omitted if reason is not <code>-1</code>.</p>
 				<input id="block-import" type="file" accept="application/json" autocomplete="off">
 				<label for="block-import" id="block-import-label" class="file-field"><span>Click or Drag to Import File</span></label>
