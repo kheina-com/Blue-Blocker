@@ -35,10 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		const div = document.createElement('div');
 		div.id = integration.id || 'placeholder';
 
+		const logupdate = () => console.debug(logstr, 'updated integration', refid, i[refid]);
+
 		const select = document.createElement('select');
 		select.addEventListener('change', (e) => {
 			const input = e.target as HTMLSelectElement;
 			i[refid].state = parseInt(input.value);
+			logupdate();
 		});
 
 		const optionDisabled = document.createElement('option');
@@ -72,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			const input = e.target as HTMLInputElement;
 			i[refid].id = input.value;
 			div.id = input.value;
+			logupdate();
 		});
 		div.appendChild(extId);
 
@@ -82,14 +86,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		extName.addEventListener('input', (e) => {
 			const input = e.target as HTMLInputElement;
 			i[refid].name = input.value;
+			logupdate();
 		});
 		div.appendChild(extName);
 
 		const remove = document.createElement('button');
 		remove.innerText = 'Remove';
 		remove.addEventListener('click', (e) => {
+			const deleted = i[refid];
 			delete i[refid];
 			integrationsDiv.removeChild(div);
+			console.debug(logstr, 'deleted integration', refid, deleted, i);
 		});
 		div.appendChild(remove);
 
@@ -99,20 +106,22 @@ document.addEventListener('DOMContentLoaded', () => {
 	integrationsDiv.innerHTML = '';
 	let soupcanState: number = ExtensionStateNone;
 
-	document.addEventListener('soupcan-event', () => {
-		if (soupcanState === ExtensionStateEnabled) {
-			// we don't need a placeholder if we're going to put soupcan in, so remove it
-			const placeholder = document.getElementById('placeholder');
-			if (placeholder) {
-				integrationsDiv.removeChild(placeholder);
-			}
-			add({
-				id: SoupcanExtensionId,
-				name: 'soupcan',
-				state: IntegrationStateDisabled,
-			});
-		}
-	});
+	// soupcan doesn't work with the new integration system for now
+	// document.addEventListener('soupcan-event', () => {
+	// 	if (soupcanState === ExtensionStateEnabled) {
+	// 		// we don't need a placeholder if we're going to put soupcan in, so remove it
+	// 		const placeholder = document.getElementById('placeholder');
+	// 		if (placeholder) {
+	// 			// the only button in here should be the remove button
+	// 			placeholder.getElementsByTagName('button')[0].click();
+	// 		}
+	// 		add({
+	// 			id: SoupcanExtensionId,
+	// 			name: 'soupcan',
+	// 			state: IntegrationStateDisabled,
+	// 		});
+	// 	}
+	// });
 
 	api.storage.local
 		.get({ integrations: {} })
@@ -124,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			const saveStatus = document.getElementById('save-status') as HTMLButtonElement;
 
 			// it's important that this runs *after* getting local storage back
+			if (!integrations.hasOwnProperty(SoupcanExtensionId)) {
 			api.runtime
 				.sendMessage(SoupcanExtensionId, {
 					action: 'check_twitter_user',
@@ -142,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					// @ts-ignore
 					document.dispatchEvent(new CustomEvent('soupcan-event')),
 				);
+			}
 
 			addButton.addEventListener('click', (e) =>
 				add({ id: '', name: '', state: IntegrationStateDisabled }),
