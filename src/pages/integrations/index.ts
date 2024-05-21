@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const logupdate = () => console.debug(logstr, 'updated integration', refid, i[refid]);
 
 		const select = document.createElement('select');
-		select.addEventListener('change', (e) => {
+		select.addEventListener('change', e => {
 			const input = e.target as HTMLSelectElement;
 			i[refid].state = parseInt(input.value);
 			logupdate();
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		extId.value = integration.id;
 		extId.placeholder = 'external extension id';
 		extId.autocomplete = 'off';
-		extId.addEventListener('input', (e) => {
+		extId.addEventListener('input', e => {
 			const input = e.target as HTMLInputElement;
 			i[refid].id = input.value;
 			div.id = input.value;
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		extName.value = integration.name;
 		extName.placeholder = 'extension name';
 		extName.autocomplete = 'off';
-		extName.addEventListener('input', (e) => {
+		extName.addEventListener('input', e => {
 			const input = e.target as HTMLInputElement;
 			i[refid].name = input.value;
 			logupdate();
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const remove = document.createElement('button');
 		remove.innerText = 'Remove';
-		remove.addEventListener('click', (e) => {
+		remove.addEventListener('click', e => {
 			const deleted = i[refid];
 			delete i[refid];
 			integrationsDiv.removeChild(div);
@@ -125,8 +125,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	api.storage.local
 		.get({ integrations: {} })
-		.then((items) => items.integrations as { [id: string]: { name: string; state: number } })
-		.then((integrations) => {
+		.then(items => items.integrations as { [id: string]: { name: string; state: number } })
+		.then(integrations => {
 			console.debug(logstr, 'loaded integrations:', integrations);
 			const addButton = document.getElementById('add-button') as HTMLButtonElement;
 			const saveButton = document.getElementById('save-button') as HTMLButtonElement;
@@ -134,31 +134,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			// it's important that this runs *after* getting local storage back
 			if (!integrations.hasOwnProperty(SoupcanExtensionId)) {
-			api.runtime
-				.sendMessage(SoupcanExtensionId, {
-					action: 'check_twitter_user',
-					screen_name: 'elonmusk',
-				})
-				.then((r: any) => {
-					// we could check if response is the expected shape here, if we really wanted
-					if (!r) {
-						soupcanState = ExtensionStateDisabled;
-						throw new Error('extension not enabled');
-					}
-					soupcanState = ExtensionStateEnabled;
-				})
-				.catch((e) => console.debug(logstr, 'soupcan error:', e, soupcanState))
-				.finally(() =>
-					// @ts-ignore
-					document.dispatchEvent(new CustomEvent('soupcan-event')),
-				);
+				api.runtime
+					.sendMessage(SoupcanExtensionId, {
+						action: 'check_twitter_user',
+						screen_name: 'elonmusk',
+					})
+					.then((r: any) => {
+						// we could check if response is the expected shape here, if we really wanted
+						if (!r) {
+							soupcanState = ExtensionStateDisabled;
+							throw new Error('extension not enabled');
+						}
+						soupcanState = ExtensionStateEnabled;
+					})
+					.catch(e => console.debug(logstr, 'soupcan error:', e, soupcanState))
+					.finally(() =>
+						// @ts-ignore
+						document.dispatchEvent(new CustomEvent('soupcan-event')),
+					);
 			}
 
-			addButton.addEventListener('click', (e) =>
+			addButton.addEventListener('click', e =>
 				add({ id: '', name: '', state: IntegrationStateDisabled }),
 			);
 			let saveTimeout: number | null = null;
-			saveButton.addEventListener('click', (e) => {
+			saveButton.addEventListener('click', e => {
 				console.debug(logstr, 'saving integrations:', i);
 				if (saveTimeout !== null) {
 					clearTimeout(saveTimeout);

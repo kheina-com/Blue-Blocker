@@ -1,21 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<meta charset="utf-8"/>
+		<meta charset="utf-8" />
 		<title>Blue Blocker Queue</title>
-		<link href="./style.css" rel="stylesheet">
-		<link href="/icon/icon-128.png" rel="icon" type="image/png" sizes="128x128">
+		<link href="./style.css" rel="stylesheet" />
+		<link href="/icon/icon-128.png" rel="icon" type="image/png" sizes="128x128" />
 		<script src="./index.ts" type="module"></script>
 	</head>
 	<!-- ♀ -->
 	<body>
 		<main>
 			<h1>SafeList</h1>
-			<p class="subtitle">safelist importing supports json and csv. csv must use comma separators and no quotes</p>
-			<p class="subtitle" name="safelist-status">requires at least user_id or id and an optional name or screen_name</p>
+			<p class="subtitle">
+				safelist importing supports json and csv. csv must use comma separators and no
+				quotes
+			</p>
+			<p class="subtitle" name="safelist-status">
+				requires at least user_id or id and an optional name or screen_name
+			</p>
 			<div class="option">
 				<p>safelist</p>
-				<input id="import-safelist" type="file" accept="text/plain,text/csv,application/json" autocomplete="off">
+				<input
+					id="import-safelist"
+					type="file"
+					accept="text/plain,text/csv,application/json"
+					autocomplete="off" />
 				<label name="import-safelist" for="import-safelist" class="button">import</label>
 				<a name="export-safelist" class="button">export</a>
 				<a name="clear-safelist" class="button">clear</a>

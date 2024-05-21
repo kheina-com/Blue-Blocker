@@ -166,7 +166,7 @@ export function MakeToast(
 	}
 
 	if (options?.elements) {
-		options.elements.forEach((e) => t.appendChild(e));
+		options.elements.forEach(e => t.appendChild(e));
 	}
 	const close = document.createElement('a');
 	close.innerText = '✕';

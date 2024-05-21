@@ -54,7 +54,7 @@ export class QueueConsumer {
 						time: new Date().valueOf() + (this._interval || 0) * 1.5,
 					},
 				});
-				await new Promise((r) => setTimeout(r, 10)); // wait a second to make sure any other sets have resolved
+				await new Promise(r => setTimeout(r, 10)); // wait a second to make sure any other sets have resolved
 				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey]
 					?.refId;
 			} else {

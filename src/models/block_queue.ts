@@ -28,14 +28,14 @@ export class BlockQueue {
 				await this.storage.set({
 					[criticalPointKey]: { refId, time: new Date().valueOf() + interval * 1.5 },
 				});
-				await new Promise((r) => setTimeout(r, 10)); // wait a second to make sure any other sets have resolved
+				await new Promise(r => setTimeout(r, 10)); // wait a second to make sure any other sets have resolved
 				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey]
 					?.refId;
 			} else {
 				// rather than continually try to obtain the critical point, exit
 				// if the consumer only queues the next run after successfully finishing the last, this can go back to only sleeping
 				// console.debug(logstr, refId, "failed to obtain critical point, sleeping");
-				await new Promise((r) => setTimeout(r, sleep));
+				await new Promise(r => setTimeout(r, sleep));
 				sleep = Math.min(sleep ** 2, interval);
 			}
 		} while (cpRefId !== refId);

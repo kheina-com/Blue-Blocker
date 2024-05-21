@@ -38,7 +38,7 @@ export async function PopulateVerifiedDb() {
 		console.error(logstr, 'failed to open legacy verified user database:', DBOpenRequest);
 	};
 
-	DBOpenRequest.onupgradeneeded = (e) => {
+	DBOpenRequest.onupgradeneeded = e => {
 		console.debug(logstr, 'legacy db onupgradeneeded:', e);
 		legacyDb = DBOpenRequest.result;
 		if (legacyDb.objectStoreNames.contains(legacyDbStore)) {
@@ -111,7 +111,7 @@ export async function PopulateVerifiedDb() {
 			})();
 
 			let count: number = 0;
-			const body = await fetch(LegacyVerifiedUrl).then((r) => r.text());
+			const body = await fetch(LegacyVerifiedUrl).then(r => r.text());
 
 			let intact: boolean = false;
 			const transaction = legacyDb.transaction([legacyDbStore], 'readwrite');
@@ -199,7 +199,7 @@ export function CheckDbIsUserLegacyVerified(user_id: string, handle: string): Pr
 			const user = req.result as LegacyVerifiedUser;
 			resolve(user_id === user?.user_id && handle === user?.handle);
 		};
-	}).catch((e) => {
+	}).catch(e => {
 		// if the db has already been loaded, we can safely reconnect
 		if (legacyDbLoaded) {
 			return PopulateVerifiedDb().finally(() => {
@@ -229,7 +229,7 @@ export function ConnectDb(): Promise<IDBDatabase> {
 			return reject();
 		};
 
-		DBOpenRequest.onupgradeneeded = (e) => {
+		DBOpenRequest.onupgradeneeded = e => {
 			console.debug(logstr, 'upgrading db:', e);
 			db = DBOpenRequest.result;
 
@@ -313,7 +313,7 @@ export function AddUserToHistory(user: BlockedUser): Promise<void> {
 		store.add(user);
 
 		transaction.commit();
-	}).catch((e) =>
+	}).catch(e =>
 		// attempt to reconnect to the db
 		ConnectDb().finally(() => {
 			throw e; // re-throw error to retry
@@ -337,7 +337,7 @@ export function RemoveUserFromHistory(user_id: string): Promise<void> {
 					const user = req.result as BlockedUser;
 					res(user);
 				};
-			}).catch((e) => {
+			}).catch(e => {
 				throw e;
 			});
 
@@ -349,7 +349,7 @@ export function RemoveUserFromHistory(user_id: string): Promise<void> {
 		} catch (e) {
 			reject(e);
 		}
-	}).catch((e) =>
+	}).catch(e =>
 		// attempt to reconnect to the db
 		ConnectDb().finally(() => {
 			throw e; // re-throw error to retry
@@ -389,7 +389,7 @@ export function AddUserToQueue(blockUser: BlockUser): Promise<void> {
 		store.add(user);
 		transaction.oncomplete = () => resolve();
 		transaction.commit();
-	}).catch((e) => {
+	}).catch(e => {
 		if (e?.target?.error?.name !== 'ConstraintError') {
 			// attempt to reconnect to the db
 			return ConnectDb().finally(() => {
@@ -435,7 +435,7 @@ export function PopUserFromQueue(): Promise<BlockUser | null> {
 		store.delete(user.user_id);
 		transaction.commit();
 		transaction.oncomplete = () => resolve(user);
-	}).catch((e) =>
+	}).catch(e =>
 		// attempt to reconnect to the db
 		ConnectDb().finally(() => {
 			throw e; // re-throw error to retry
@@ -445,7 +445,7 @@ export function PopUserFromQueue(): Promise<BlockUser | null> {
 
 export function WholeQueue(): Promise<BlockUser[]> {
 	return ConnectDb()
-		.then((qdb) => {
+		.then(qdb => {
 			return new Promise<BlockUser[]>((resolve, reject) => {
 				const transaction = qdb.transaction([queueDbStore], 'readonly');
 				transaction.onabort = transaction.onerror = reject;
@@ -463,12 +463,12 @@ export function WholeQueue(): Promise<BlockUser[]> {
 				};
 			});
 		})
-		.catch(() => api.storage.local.get({ BlockQueue: [] }).then((items) => items?.BlockQueue));
+		.catch(() => api.storage.local.get({ BlockQueue: [] }).then(items => items?.BlockQueue));
 }
 
 export function QueueLength(): Promise<number> {
 	return ConnectDb()
-		.then((qdb) => {
+		.then(qdb => {
 			return new Promise<number>((resolve, reject) => {
 				const transaction = qdb.transaction([queueDbStore], 'readonly');
 				transaction.onabort = transaction.onerror = reject;
@@ -483,6 +483,6 @@ export function QueueLength(): Promise<number> {
 			});
 		})
 		.catch(() =>
-			api.storage.local.get({ BlockQueue: [] }).then((items) => items?.BlockQueue?.length),
+			api.storage.local.get({ BlockQueue: [] }).then(items => items?.BlockQueue?.length),
 		);
 }

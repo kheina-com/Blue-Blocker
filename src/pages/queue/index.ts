@@ -8,14 +8,14 @@ async function unqueueUser(user_id: string, screen_name: string, safelist: boole
 	// because this page holds onto the critical point, we can modify the queue
 	// without worrying about if it'll affect another tab
 	if (safelist) {
-		api.storage.sync.get({ unblocked: {} }).then((items) => {
+		api.storage.sync.get({ unblocked: {} }).then(items => {
 			items.unblocked[String(user_id)] = screen_name;
 			api.storage.sync.set(items);
 		});
 	}
 
 	ConnectDb()
-		.then((db) => {
+		.then(db => {
 			return new Promise<void>((resolve, reject) => {
 				const transaction = db.transaction([queueDbStore], 'readwrite');
 				transaction.onabort = transaction.onerror = reject;
@@ -25,13 +25,13 @@ async function unqueueUser(user_id: string, screen_name: string, safelist: boole
 				transaction.oncomplete = () => resolve();
 			});
 		})
-		.catch((e) => {
+		.catch(e => {
 			console.error(logstr, 'could not remove user from queue:', e);
 		});
 }
 
 function loadQueue() {
-	WholeQueue().then((cue) => {
+	WholeQueue().then(cue => {
 		const queueDiv = document.getElementById('block-queue') as HTMLElement;
 
 		if (cue.length === 0) {
@@ -44,7 +44,7 @@ function loadQueue() {
 
 		queueDiv.innerHTML = '';
 
-		cue.forEach((item) => {
+		cue.forEach(item => {
 			const { user, user_id } = item;
 			const div = document.createElement('div');
 
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const importArrow = document.getElementById('import-arrow') as HTMLElement;
 	const importBlock = document.getElementById('importer') as HTMLElement;
 
-	importButton.addEventListener('click', (e) => {
+	importButton.addEventListener('click', e => {
 		switch (importArrow.innerText) {
 			case '▾':
 				importBlock.style.display = 'block';
@@ -126,15 +126,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		let loaded: number = 0;
 		let failures: number = 0;
 		let safelisted: number = 0;
-		reader.addEventListener('load', (l) => {
+		reader.addEventListener('load', l => {
 			inputStatus.innerText = 'importing...';
 			// @ts-ignore
 			const payload = l.target.result as string;
 			api.storage.sync
 				.get({ unblocked: {} })
-				.then((items) => items.unblocked as { [k: string]: string | null })
-				.then((safelist) => {
-					return new Promise<void>(async (resolve) => {
+				.then(items => items.unblocked as { [k: string]: string | null })
+				.then(safelist => {
+					return new Promise<void>(async resolve => {
 						const userList = JSON.parse(payload) as BlockUser[];
 						for (const user of userList) {
 							try {
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
 							)} users into queue (${commafy(failures)} failures)`;
 							loadQueue();
 						})
-						.catch((e) => {
+						.catch(e => {
 							console.error(logstr, e);
 							inputStatus.innerText = e.message;
 						})
@@ -194,13 +194,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	input.addEventListener('input', (e) => {
+	input.addEventListener('input', e => {
 		const target = e.target as HTMLInputElement;
 		onInput(target.files);
 	});
-	importLabel.addEventListener('dragenter', (e) => e.preventDefault());
-	importLabel.addEventListener('dragover', (e) => e.preventDefault());
-	importLabel.addEventListener('drop', (e) => {
+	importLabel.addEventListener('dragenter', e => e.preventDefault());
+	importLabel.addEventListener('dragover', e => e.preventDefault());
+	importLabel.addEventListener('drop', e => {
 		e.preventDefault();
 		onInput(e?.dataTransfer?.files);
 	});

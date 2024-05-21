@@ -19,14 +19,14 @@ const toasts = document.createElement('div');
 toasts.id = 'injected-blue-block-toasts';
 document.body.appendChild(toasts);
 
-api.storage.sync.get(DefaultOptions).then((_config) => {
+api.storage.sync.get(DefaultOptions).then(_config => {
 	const config = _config as Config;
 	// @ts-ignore
 	toasts.classList = '';
 	toasts.classList.add(config.toastsLocation);
 });
 
-api.storage.sync.onChanged.addListener((items) => {
+api.storage.sync.onChanged.addListener(items => {
 	if (items.hasOwnProperty('toastsLocation')) {
 		// @ts-ignore
 		toasts.classList = '';

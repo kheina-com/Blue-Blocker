@@ -35,7 +35,7 @@ if (api.action.hasOwnProperty('setBadgeTextColor')) {
 }
 
 // TODO: change to message listener ?
-api.storage.local.onChanged.addListener((items) => {
+api.storage.local.onChanged.addListener(items => {
 	if (items.hasOwnProperty('BlockCounter')) {
 		api.action.setBadgeText({
 			text: abbreviate(items.BlockCounter.newValue),
@@ -43,7 +43,7 @@ api.storage.local.onChanged.addListener((items) => {
 	}
 });
 
-api.storage.sync.get(DefaultOptions).then(async (items) => {
+api.storage.sync.get(DefaultOptions).then(async items => {
 	// set initial extension state
 	api.action.setIcon({
 		path: items.suspendedBlockCollection
@@ -56,7 +56,7 @@ api.storage.sync.get(DefaultOptions).then(async (items) => {
 });
 
 // populate verified db
-api.storage.sync.onChanged.addListener(async (items) => {
+api.storage.sync.onChanged.addListener(async items => {
 	if (
 		items.hasOwnProperty('skipVerified') &&
 		items.skipVerified.oldValue === false &&

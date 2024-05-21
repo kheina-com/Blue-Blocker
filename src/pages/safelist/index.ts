@@ -18,19 +18,19 @@ function importSafelist(target: HTMLInputElement) {
 	const reader = new FileReader();
 	let loaded: number = 0;
 	let success: boolean;
-	reader.addEventListener('load', (l) => {
+	reader.addEventListener('load', l => {
 		// @ts-ignore
 		const payload = l.target.result as string;
 		api.storage.sync
 			.get({ unblocked: {} })
-			.then((items) => {
+			.then(items => {
 				// so we have plain text files as an accepted type, so lets try both json and csv formats
 				try {
 					// json
 					const userList = JSON.parse(payload) as [
 						{ user_id?: string; id?: string; screen_name?: string; name?: string },
 					];
-					userList.forEach((user) => {
+					userList.forEach(user => {
 						const user_id = user?.user_id ?? user.id;
 						if (!user_id) {
 							throw new Error(
@@ -51,15 +51,15 @@ function importSafelist(target: HTMLInputElement) {
 					let headers: Array<string>;
 					payload
 						.split('\n')
-						.map((i) => i.trim())
-						.forEach((line) => {
+						.map(i => i.trim())
+						.forEach(line => {
 							if (line.match(/"'/)) {
 								throw new Error(
 									'failed to read file, csv must not include quotes.',
 								);
 							}
 							if (headers === undefined) {
-								headers = line.split(',').map((i) => i.trim());
+								headers = line.split(',').map(i => i.trim());
 								if (!headers.includes('user_id') && !headers.includes('id')) {
 									throw new Error(
 										'failed to read file, expected at least one of: {user_id, id}.',
@@ -75,7 +75,7 @@ function importSafelist(target: HTMLInputElement) {
 								name?: string;
 							} = {};
 							line.split(',')
-								.map((i) => i.trim())
+								.map(i => i.trim())
 								// @ts-ignore just ignore this monstrosity, it makes it easier afterwards
 								.forEach((value, index) => (user[headers[index]] = value));
 							const user_id = user?.user_id ?? (user.id as string);
@@ -111,14 +111,14 @@ function importSafelist(target: HTMLInputElement) {
 			.then(() => {
 				const msg = `loaded ${commafy(loaded)} users into safelist`;
 				console.log(logstr, msg);
-				document.getElementsByName('safelist-status').forEach((s) => {
+				document.getElementsByName('safelist-status').forEach(s => {
 					s.innerText = msg;
 				});
 			})
-			.catch((e) =>
+			.catch(e =>
 				document
 					.getElementsByName('safelist-status')
-					.forEach((s) => (s.innerText = e.message)),
+					.forEach(s => (s.innerText = e.message)),
 			);
 	});
 	for (const i of target.files) {
@@ -127,13 +127,13 @@ function importSafelist(target: HTMLInputElement) {
 }
 
 function exportSafelist() {
-	api.storage.sync.get({ unblocked: {} }).then((items) => {
+	api.storage.sync.get({ unblocked: {} }).then(items => {
 		// the unblocked list needs to be put into a different format for export
 		const safelist = items.unblocked as { [k: string]: string | undefined };
 		const content =
 			'user_id,screen_name\n' +
 			Object.entries(safelist)
-				.map((i) => i[0] + ',' + (i[1] ?? "this user's @ is not stored"))
+				.map(i => i[0] + ',' + (i[1] ?? "this user's @ is not stored"))
 				.join('\n');
 		const e = document.createElement('a');
 		e.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(content);
@@ -146,18 +146,18 @@ function exportSafelist() {
 document.addEventListener('DOMContentLoaded', () => {
 	const safelistInput = document.getElementById('import-safelist') as HTMLInputElement;
 	// safelist logic
-	safelistInput.addEventListener('input', (e) => importSafelist(e.target as HTMLInputElement));
+	safelistInput.addEventListener('input', e => importSafelist(e.target as HTMLInputElement));
 	document
 		.getElementsByName('export-safelist')
-		.forEach((e) => e.addEventListener('click', exportSafelist));
-	document.getElementsByName('clear-safelist').forEach((e) => {
+		.forEach(e => e.addEventListener('click', exportSafelist));
+	document.getElementsByName('clear-safelist').forEach(e => {
 		e.addEventListener('click', () =>
 			api.storage.sync
 				.set({ unblocked: {} })
 				.then(() =>
 					document
 						.getElementsByName('safelist-status')
-						.forEach((s) => (s.innerText = 'cleared safelist.')),
+						.forEach(s => (s.innerText = 'cleared safelist.')),
 				),
 		);
 	});

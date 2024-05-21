@@ -20,7 +20,7 @@ const refid = RefId();
 blockCounter
 	.getCriticalPoint(refid)
 	.then(ConnectDb)
-	.then((db) => {
+	.then(db => {
 		return new Promise<BlockedUser[]>((resolve, reject) => {
 			const transaction = db.transaction([historyDbStore], 'readonly');
 			transaction.onabort = transaction.onerror = reject;
@@ -33,14 +33,14 @@ blockCounter
 				const users = req.result as BlockedUser[];
 				resolve(users);
 			};
-		}).then((users) => {
+		}).then(users => {
 			const queueDiv = document.getElementById('block-history') as HTMLElement;
 
 			queueDiv.innerHTML = '';
 			let blockedCount: number = 0;
 
 			const reasons: { [r: number]: number } = {};
-			users.reverse().forEach((item) => {
+			users.reverse().forEach(item => {
 				if (!reasons.hasOwnProperty(item.reason)) {
 					reasons[item.reason] = 0;
 				}
@@ -103,13 +103,13 @@ blockCounter
 
 			document
 				.getElementsByName('blocked-users-count')
-				.forEach((e) => (e.innerText = commafy(blockedCount)));
+				.forEach(e => (e.innerText = commafy(blockedCount)));
 
 			blockCounter
 				.getCriticalPoint(refid)
 				.then(() => blockCounter.storage.get({ BlockCounter: 0 }))
-				.then((items) => items.BlockCounter as number)
-				.then((count) => {
+				.then(items => items.BlockCounter as number)
+				.then(count => {
 					if (blockedCount === count) {
 						return;
 					}
@@ -150,7 +150,7 @@ blockCounter
 			detailedCounts.innerText =
 				'(' +
 				Object.entries(reasons)
-					.map((item) => reasonMap[parseInt(item[0])] + ': ' + commafy(item[1]))
+					.map(item => reasonMap[parseInt(item[0])] + ': ' + commafy(item[1]))
 					.join(', ') +
 				')';
 		});

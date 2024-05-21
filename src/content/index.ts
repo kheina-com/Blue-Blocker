@@ -32,7 +32,7 @@ function compileConfig(config: Config): CompiledConfig {
 				? null
 				: new RegExp(
 						config.disallowedWords
-							.map((word) =>
+							.map(word =>
 								word.match(emojiRegExp)
 									? word
 									: `(?:^|\\s)${escapeRegExp(word)}(?:$|\\s)`,
@@ -51,7 +51,7 @@ document.addEventListener('blue-blocker-event', function (e: CustomEvent<BlueBlo
 		return;
 	}
 
-	api.storage.sync.get(DefaultOptions).then((_config) => {
+	api.storage.sync.get(DefaultOptions).then(_config => {
 		const config = _config as Config;
 		const body_str = e.detail.body;
 		try {

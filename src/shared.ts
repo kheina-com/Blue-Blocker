@@ -45,7 +45,7 @@ const blockCache: Set<string> = new Set();
 export const UnblockCache: Set<string> = new Set();
 
 export function SetHeaders(headers: { [k: string]: string }) {
-	api.storage.local.get({ headers: {} }).then((items) => {
+	api.storage.local.get({ headers: {} }).then(items => {
 		// so basically we want to only update items that have values
 		for (const [header, value] of Object.entries(headers)) {
 			items.headers[header.toLowerCase()] = value;
@@ -67,7 +67,7 @@ function unblockUser(
 	attempt: number = 1,
 ) {
 	UnblockCache.add(user_id);
-	api.storage.sync.get({ unblocked: {} }).then((items) => {
+	api.storage.sync.get({ unblocked: {} }).then(items => {
 		items.unblocked[String(user_id)] = user.screen_name;
 		api.storage.sync.set(items);
 	});
@@ -87,7 +87,7 @@ function unblockUser(
 		url = `${root}/i/api/1.1/`;
 	}
 
-	api.storage.sync.get(DefaultOptions).then((_config) => {
+	api.storage.sync.get(DefaultOptions).then(_config => {
 		const config = _config as Config;
 		if (config.mute) {
 			url += 'mutes/users/destroy.json';
@@ -97,7 +97,7 @@ function unblockUser(
 
 		api.storage.local
 			.get({ headers: null })
-			.then((items) => items.headers as { [k: string]: string })
+			.then(items => items.headers as { [k: string]: string })
 			.then((req_headers: { [k: string]: string }) => {
 				const body = `user_id=${user_id}`;
 				const headers: { [k: string]: string } = {
@@ -132,7 +132,7 @@ function unblockUser(
 					credentials: 'include',
 				};
 				fetch(url, options)
-					.then((response) => {
+					.then(response => {
 						if (response.status === 403) {
 							// user has been logged out, we need to stop queue and re-add
 							MakeToast(
@@ -178,7 +178,7 @@ function unblockUser(
 								response,
 							);
 						} else {
-							RemoveUserBlockHistory(user_id).catch((e) => console.error(logstr, e));
+							RemoveUserBlockHistory(user_id).catch(e => console.error(logstr, e));
 							console.log(
 								logstr,
 								`un${config.mute ? 'mut' : 'block'}ed ${FormatLegacyName(user)}`,
@@ -191,7 +191,7 @@ function unblockUser(
 							);
 						}
 					})
-					.catch((error) => {
+					.catch(error => {
 						if (attempt < 3) {
 							unblockUser(user, user_id, reason, attempt + 1);
 						} else {
@@ -211,7 +211,7 @@ function unblockUser(
 
 const UserBlockedEvent = 'UserBlockedEvent';
 const UserLogoutEvent = 'UserLogoutEvent';
-api.storage.local.onChanged.addListener((items) => {
+api.storage.local.onChanged.addListener(items => {
 	// we're using local storage as a really dirty event driver
 	// TODO: replace this with chrome.tabs.sendmessage at some point. (requires adding tabs permission)
 
@@ -221,7 +221,7 @@ api.storage.local.onChanged.addListener((items) => {
 	const e = items[EventKey].newValue;
 	console.debug(logstr, 'received multi-tab event:', e);
 
-	api.storage.sync.get(DefaultOptions).then((options) => {
+	api.storage.sync.get(DefaultOptions).then(options => {
 		const config = options as Config;
 		switch (e.type) {
 			case MessageEvent:
@@ -313,7 +313,7 @@ function queueBlockUser(
 	}
 
 	QueuePush(blockUser);
-	api.storage.sync.get(DefaultOptions).then((_config) => {
+	api.storage.sync.get(DefaultOptions).then(_config => {
 		const config = _config as Config;
 		console.log(
 			logstr,
@@ -329,14 +329,14 @@ function queueBlockUser(
 function checkBlockQueue(): Promise<void> {
 	return new Promise<void>((resolve, reject) => {
 		QueuePop()
-			.then((item) => {
+			.then(item => {
 				if (!item) {
 					return reject();
 				}
 				blockUser(item);
 				resolve();
 			})
-			.catch((error) => {
+			.catch(error => {
 				console.error(
 					logstr,
 					'unexpected error occurred while processing block queue',
@@ -350,7 +350,7 @@ function checkBlockQueue(): Promise<void> {
 							detail: { error, event: null },
 						},
 					})
-					.catch((error) => {
+					.catch(error => {
 						console.error(
 							logstr,
 							'unexpected error occurred while processing block queue',
@@ -393,7 +393,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 		url = `${root}/i/api/1.1/`;
 	}
 
-	api.storage.sync.get(DefaultOptions).then((_config) => {
+	api.storage.sync.get(DefaultOptions).then(_config => {
 		const config = _config as Config;
 		if (config.mute) {
 			url += 'mutes/users/create.json';
@@ -403,8 +403,8 @@ function blockUser(user: BlockUser, attempt = 1) {
 
 		api.storage.local
 			.get({ headers: null })
-			.then((items) => items.headers as { [k: string]: string })
-			.then((req_headers) => {
+			.then(items => items.headers as { [k: string]: string })
+			.then(req_headers => {
 				const body = `user_id=${user.user_id}`;
 				const headers: { [k: string]: string } = {
 					'content-length': body.length.toString(),
@@ -439,7 +439,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 				};
 
 				fetch(url, options)
-					.then((response) => {
+					.then(response => {
 						console.debug(logstr, 'block response:', response);
 
 						if (response.status === 403 || response.status === 401) {
@@ -452,7 +452,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 								'user is logged out, queue consumer has been halted.',
 							);
 						} else if (response.status === 404) {
-							AddUserBlockHistory(user, HistoryStateGone).catch((e) =>
+							AddUserBlockHistory(user, HistoryStateGone).catch(e =>
 								console.error(logstr, e),
 							);
 							console.log(
@@ -473,7 +473,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 							);
 						} else {
 							blockCounter.increment();
-							AddUserBlockHistory(user).catch((e) => console.error(logstr, e));
+							AddUserBlockHistory(user).catch(e => console.error(logstr, e));
 							console.log(
 								logstr,
 								`blocked ${FormatLegacyName(user.user)} due to ${
@@ -485,7 +485,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 							});
 						}
 					})
-					.catch((error) => {
+					.catch(error => {
 						if (attempt < 3) {
 							blockUser(user, attempt + 1);
 						} else {
@@ -511,7 +511,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 						};
 
 						fetch(url, options)
-							.then((response) => {
+							.then(response => {
 								console.debug(
 									logstr,
 									`${config.mute ? 'mute' : 'block'} response:`,
@@ -530,7 +530,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 										'user is logged out, queue consumer has been halted.',
 									);
 								} else if (response.status === 404) {
-									AddUserBlockHistory(user, HistoryStateGone).catch((e) =>
+									AddUserBlockHistory(user, HistoryStateGone).catch(e =>
 										console.error(logstr, e),
 									);
 									console.log(
@@ -553,9 +553,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 									);
 								} else {
 									blockCounter.increment();
-									AddUserBlockHistory(user).catch((e) =>
-										console.error(logstr, e),
-									);
+									AddUserBlockHistory(user).catch(e => console.error(logstr, e));
 									console.log(
 										logstr,
 										`${config.mute ? 'mut' : 'block'}ed ${FormatLegacyName(
@@ -567,7 +565,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 									});
 								}
 							})
-							.catch((error) => {
+							.catch(error => {
 								if (attempt < 3) {
 									blockUser(user, attempt + 1);
 								} else {
@@ -645,7 +643,10 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 			}
 
 			// since we can be fairly certain all user objects will be the same, break this into a separate function
-			if (user.legacy?.verified_type && !blockableVerifiedTypes.has(user.legacy.verified_type)) {
+			if (
+				user.legacy?.verified_type &&
+				!blockableVerifiedTypes.has(user.legacy.verified_type)
+			) {
 				return false;
 			}
 			if (user.legacy?.blocking || (config.mute && user.legacy?.muting)) {
@@ -656,11 +657,8 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 				'could not access the legacy verified database, skip legacy has been disabled.';
 			// step 1: is user verified
 			if (
-				!config.skipBlueCheckmark && (
-					user.is_blue_verified ||
-					hasBlockableVerifiedTypes ||
-					hasBlockableAffiliateLabels
-				)
+				!config.skipBlueCheckmark &&
+				(user.is_blue_verified || hasBlockableVerifiedTypes || hasBlockableAffiliateLabels)
 			) {
 				if (
 					// group for skip-verified option
@@ -720,7 +718,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 				if (config.blockForUse && user.used_blue) {
 					queueBlockUser(user, String(user.rest_id), ReasonUsingBlueFeatures);
 					return true;
-				} 
+				}
 			}
 		} catch (e) {
 			console.error(logstr, e);
@@ -782,8 +780,8 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 	let updateIntegrations = false;
 	api.storage.local
 		.get({ integrations: {} })
-		.then((items) => items.integrations as { [id: string]: { name: string; state: number } })
-		.then(async (integrations) => {
+		.then(items => items.integrations as { [id: string]: { name: string; state: number } })
+		.then(async integrations => {
 			for (const [extensionId, integration] of Object.entries(integrations)) {
 				if (
 					!extensionId ||
@@ -850,7 +848,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 				api.storage.local.set({ integrations });
 			}
 		})
-		.catch((e) =>
+		.catch(e =>
 			// this error should basically be unreachable
 			console.error(logstr, 'an unexpected error occurred while processing integrations:', e),
 		);

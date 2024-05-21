@@ -20,7 +20,7 @@ function checkHandler(
 
 	target.checked = value;
 	const ele = [...document.getElementsByName(target.id)] as HTMLInputElement[];
-	ele.forEach((label) => {
+	ele.forEach(label => {
 		if (value) {
 			label.classList.add('checked');
 		} else {
@@ -28,9 +28,9 @@ function checkHandler(
 		}
 	});
 
-	document.getElementsByName(optionName).forEach((e) => (e.style.display = value ? '' : 'none'));
+	document.getElementsByName(optionName).forEach(e => (e.style.display = value ? '' : 'none'));
 
-	target.addEventListener('input', (e) => {
+	target.addEventListener('input', e => {
 		const target = e.target as HTMLInputElement;
 		api.storage.sync
 			.set({
@@ -41,19 +41,19 @@ function checkHandler(
 				(
 					options.callback ??
 					(() => {
-						document.getElementsByName(target.id + '-status').forEach((status) => {
+						document.getElementsByName(target.id + '-status').forEach(status => {
 							status.textContent = statusText;
 							setTimeout(() => (status.textContent = null), 1000);
 						});
 						document
 							.getElementsByName(optionName)
-							.forEach((e) => (e.style.display = target.checked ? '' : 'none'));
+							.forEach(e => (e.style.display = target.checked ? '' : 'none'));
 					})
 				)(target),
 			)
 			.then(() => {
 				// update the checkmark last so that it can be used as the saved status indicator
-				ele.forEach((label) => {
+				ele.forEach(label => {
 					if (target.checked) {
 						label.classList.add('checked');
 					} else {
@@ -70,7 +70,7 @@ function checkHandlerArrayToString(target: HTMLInputElement, config: Config, key
 	target.value = value.join(', ');
 
 	let timeout: number | null = null;
-	target.addEventListener('input', (e) => {
+	target.addEventListener('input', e => {
 		if (timeout) {
 			clearTimeout(timeout);
 		}
@@ -85,12 +85,12 @@ function inputMirror(
 	onInputEvent: keyof HTMLElementEventMap = 'input',
 ) {
 	const ele = [...document.getElementsByName(name)] as HTMLInputElement[];
-	ele.forEach((input) => {
+	ele.forEach(input => {
 		input.value = value;
 		input.addEventListener(onInputEvent, onInput);
-		input.addEventListener(onInputEvent === 'input' ? 'change' : 'input', (_e) => {
+		input.addEventListener(onInputEvent === 'input' ? 'change' : 'input', _e => {
 			const e = _e.target as HTMLInputElement;
-			ele.filter((i) => i !== e).forEach((i) => (i.value = e.value));
+			ele.filter(i => i !== e).forEach(i => (i.value = e.value));
 		});
 	});
 }
@@ -107,36 +107,38 @@ function sliderMirror(
 		options?.onInput ??
 		((_e: Event) => {
 			const target = _e.target as HTMLInputElement;
-			ele.forEach((i) => (i.value = target.value));
+			ele.forEach(i => (i.value = target.value));
 			document
 				.getElementsByName(target.name + '-value')
-				.forEach((v) => (v.textContent = target.value.toString() + 's'));
+				.forEach(v => (v.textContent = target.value.toString() + 's'));
 		});
 	onInput({ target: ele[0] } as unknown as Event, ele);
-	ele.forEach((input) => {
+	ele.forEach(input => {
 		const value = config[key].toString();
 		input.value = value;
-		input.addEventListener('input', (e) =>
+		input.addEventListener('input', e =>
 			onInput(
 				e,
-				ele.filter((i) => i !== e.target),
+				ele.filter(i => i !== e.target),
 			),
 		);
-		input.addEventListener('change', (e) => {
+		input.addEventListener('change', e => {
 			const target = e.target as HTMLInputElement;
 			const targetValue = parseInt(target.value);
 			const textValue = targetValue.toString() + 's';
 			document
 				.getElementsByName(target.name + '-value')
-				.forEach((e) => (e.innerText = textValue));
+				.forEach(e => (e.innerText = textValue));
 			api.storage.sync
 				.set({
 					[key]: targetValue,
 				})
-				.then(() => console.debug(logstr, 'saved value', targetValue, 'in', `config.${key}`))
+				.then(() =>
+					console.debug(logstr, 'saved value', targetValue, 'in', `config.${key}`),
+				)
 				.then(() => {
 					// Update status to let user know options were saved.
-					document.getElementsByName(target.name + '-status').forEach((status) => {
+					document.getElementsByName(target.name + '-status').forEach(status => {
 						status.textContent = 'saved';
 						setTimeout(() => (status.textContent = null), 1000);
 					});
@@ -146,13 +148,13 @@ function sliderMirror(
 }
 
 function exportSafelist() {
-	api.storage.sync.get({ unblocked: {} }).then((items) => {
+	api.storage.sync.get({ unblocked: {} }).then(items => {
 		// the unblocked list needs to be put into a different format for export
 		const safelist = items.unblocked as { [k: string]: string | undefined };
 		const content =
 			'user_id,screen_name\n' +
 			Object.entries(safelist)
-				.map((i) => i[0] + ',' + (i[1] ?? "this user's @ is not stored"))
+				.map(i => i[0] + ',' + (i[1] ?? "this user's @ is not stored"))
 				.join('\n');
 		const e = document.createElement('a');
 		e.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(content);
@@ -166,23 +168,24 @@ function updateDisallowedWordsInUsernames(changeEvent: Event) {
 	const target = changeEvent.target as HTMLInputElement;
 	let wordList = target.value.split(',');
 	wordList = wordList
-		.map((word) =>
+		.map(word =>
 			// trim white space
 			word
 				.trim()
 				//remove double spaces
 				.replace(/ {2,}/g, ' '),
 		)
-		.filter((w) => w);
-	api.storage.sync.set({ disallowedWords: wordList })
-	.then(() => console.debug(logstr, 'saved value', wordList, 'in config.disallowedWords'))
-	.then(() => {
-		// Update status to let user know options were saved.
-		document.getElementsByName('blockstrings-status').forEach((status) => {
-			status.textContent = 'saved';
-			setTimeout(() => (status.textContent = null), 1000);
+		.filter(w => w);
+	api.storage.sync
+		.set({ disallowedWords: wordList })
+		.then(() => console.debug(logstr, 'saved value', wordList, 'in config.disallowedWords'))
+		.then(() => {
+			// Update status to let user know options were saved.
+			document.getElementsByName('blockstrings-status').forEach(status => {
+				status.textContent = 'saved';
+				setTimeout(() => (status.textContent = null), 1000);
+			});
 		});
-	});
 }
 
 // start this immediately so that it's ready when the document loads
@@ -234,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-	popupPromise.then((items) => selectTab(items.popupActiveTab));
+	popupPromise.then(items => selectTab(items.popupActiveTab));
 	quickTabButton.addEventListener('click', () => selectTab('quick'));
 	advancedTabButton.addEventListener('click', () => selectTab('advanced'));
 
@@ -260,11 +263,11 @@ document.addEventListener('DOMContentLoaded', () => {
 	const disallowedWordsCheckmark = document.getElementById('blockstrings') as HTMLInputElement;
 	const disallowedWordsInput = document.getElementById('blockstrings-input') as HTMLInputElement;
 
-	api.storage.sync.get(DefaultOptions).then((_config) => {
+	api.storage.sync.get(DefaultOptions).then(_config => {
 		const config = _config as Config;
 		checkHandler(suspendBlockCollection, config, 'suspendedBlockCollection', {
 			callback(target) {
-				document.getElementsByName(target.id + '-status').forEach((status) => {
+				document.getElementsByName(target.id + '-status').forEach(status => {
 					status.textContent = target.checked ? 'paused' : 'resumed';
 					setTimeout(() => (status.textContent = null), 1000);
 				});
@@ -293,38 +296,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		document
 			.getElementsByName('skip-follower-count-value')
-			.forEach((e) => (e.innerText = abbreviate(config.skipFollowerCount)));
-		inputMirror('skip-follower-count', config.skipFollowerCount, (e) => {
+			.forEach(e => (e.innerText = abbreviate(config.skipFollowerCount)));
+		inputMirror('skip-follower-count', config.skipFollowerCount, e => {
 			const target = e.target as HTMLInputElement;
 			const value = parseInt(target.value);
 			const textValue = abbreviate(value);
 			document
 				.getElementsByName('skip-follower-count-value')
-				.forEach((e) => (e.innerText = textValue));
+				.forEach(e => (e.innerText = textValue));
 			api.storage.sync
 				.set({
 					skipFollowerCount: value,
 				})
-				.then(() => console.debug(logstr, 'saved value', value, 'in config.skipFollowerCount'))
+				.then(() =>
+					console.debug(logstr, 'saved value', value, 'in config.skipFollowerCount'),
+				)
 				.then(() => {
 					// Update status to let user know options were saved.
-					document.getElementsByName(target.name + '-status').forEach((status) => {
+					document.getElementsByName(target.name + '-status').forEach(status => {
 						status.textContent = 'saved';
 						setTimeout(() => (status.textContent = null), 1000);
 					});
 				});
 		});
 
-		inputMirror('toasts-location', config.toastsLocation, (e) => {
+		inputMirror('toasts-location', config.toastsLocation, e => {
 			const target = e.target as HTMLInputElement;
 			api.storage.sync
 				.set({
 					toastsLocation: target.value,
 				})
-				.then(() => console.debug(logstr, 'saved value', target.value, 'in config.toastsLocation'))
+				.then(() =>
+					console.debug(logstr, 'saved value', target.value, 'in config.toastsLocation'),
+				)
 				.then(() => {
 					// Update status to let user know options were saved.
-					document.getElementsByName(target.name + '-status').forEach((status) => {
+					document.getElementsByName(target.name + '-status').forEach(status => {
 						status.textContent = 'saved';
 						setTimeout(() => (status.textContent = null), 1000);
 					});
@@ -336,13 +343,13 @@ document.addEventListener('DOMContentLoaded', () => {
 			onInput(e, ele) {
 				const target = e.target as HTMLInputElement;
 				const targetValue = parseInt(target.value);
-				ele.forEach((i) => (i.value = target.value));
+				ele.forEach(i => (i.value = target.value));
 				document
 					.getElementsByName('variance')
-					.forEach((e) => (e.innerText = '±' + (targetValue / 10).toFixed(1) + 's'));
+					.forEach(e => (e.innerText = '±' + (targetValue / 10).toFixed(1) + 's'));
 				document
 					.getElementsByName(target.name + '-value')
-					.forEach((v) => (v.textContent = target.value.toString() + 's'));
+					.forEach(v => (v.textContent = target.value.toString() + 's'));
 			},
 		});
 
@@ -350,15 +357,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		// import cannot be done here, only on a standalone page
 		document
 			.getElementsByName('export-safelist')
-			.forEach((e) => e.addEventListener('click', exportSafelist));
-		document.getElementsByName('clear-safelist').forEach((e) => {
+			.forEach(e => e.addEventListener('click', exportSafelist));
+		document.getElementsByName('clear-safelist').forEach(e => {
 			e.addEventListener('click', () =>
 				api.storage.sync
 					.set({ unblocked: {} })
 					.then(() =>
 						document
 							.getElementsByName('safelist-status')
-							.forEach((s) => (s.innerText = 'cleared safelist.')),
+							.forEach(s => (s.innerText = 'cleared safelist.')),
 					),
 			);
 		});
@@ -366,31 +373,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	// @ts-ignore
 	api.runtime
-	.sendMessage(SoupcanExtensionId, { action: 'check_twitter_user', screen_name: 'elonmusk' })
-	.then((r: any) => {
-		// we could check if response is the expected shape here, if we really wanted
-		if (!r) {
-			throw new Error('extension not enabled');
-		}
-		document
-			.getElementsByName('soupcan-integration-option')
-			.forEach((e) => (e.style.display = 'flex'));
-	})
-	.catch((e: Error) => {
-		console.debug(logstr, 'soupcan response for @elonmusk:', e);
-		document
-			.getElementsByName('soupcan-integration-option')
-			.forEach((ele) => (ele.style.display = 'none'));
-	});
+		.sendMessage(SoupcanExtensionId, { action: 'check_twitter_user', screen_name: 'elonmusk' })
+		.then((r: any) => {
+			// we could check if response is the expected shape here, if we really wanted
+			if (!r) {
+				throw new Error('extension not enabled');
+			}
+			document
+				.getElementsByName('soupcan-integration-option')
+				.forEach(e => (e.style.display = 'flex'));
+		})
+		.catch((e: Error) => {
+			console.debug(logstr, 'soupcan response for @elonmusk:', e);
+			document
+				.getElementsByName('soupcan-integration-option')
+				.forEach(ele => (ele.style.display = 'none'));
+		});
 
 	// set the block value immediately
-	api.storage.local.get({ BlockCounter: 0 }).then((items) => {
+	api.storage.local.get({ BlockCounter: 0 }).then(items => {
 		blockedUsersCount.textContent = commafy(items.BlockCounter);
 	});
-	api.storage.local.onChanged.addListener((items) => {
+	api.storage.local.onChanged.addListener(items => {
 		if (items.hasOwnProperty('BlockCounter')) {
 			blockedUsersCount.textContent = commafy(items.BlockCounter.newValue);
-			QueueLength().then((count) => {
+			QueueLength().then(count => {
 				blockedUserQueueLength.textContent = commafy(count);
 			});
 		}
@@ -400,7 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		// if we want to add other values, add them here
 	});
 
-	QueueLength().then((count) => {
+	QueueLength().then(count => {
 		blockedUserQueueLength.textContent = commafy(count);
 	});
 });
