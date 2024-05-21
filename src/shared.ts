@@ -714,11 +714,11 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 					queueBlockUser(user, String(user.rest_id), reason);
 					return true;
 				}
+			}
 
-				if (config.blockForUse && user.used_blue) {
-					queueBlockUser(user, String(user.rest_id), ReasonUsingBlueFeatures);
-					return true;
-				}
+			if (config.blockForUse && user.used_blue) {
+				queueBlockUser(user, String(user.rest_id), ReasonUsingBlueFeatures);
+				return true;
 			}
 		} catch (e) {
 			console.error(logstr, e);
