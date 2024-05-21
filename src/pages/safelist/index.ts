@@ -74,9 +74,9 @@ function importSafelist(target: HTMLInputElement) {
 								screen_name?: string;
 								name?: string;
 							} = {};
-							// @ts-ignore just ignore this monstrosity, it makes it easier afterwards
 							line.split(',')
 								.map((i) => i.trim())
+								// @ts-ignore just ignore this monstrosity, it makes it easier afterwards
 								.forEach((value, index) => (user[headers[index]] = value));
 							const user_id = user?.user_id ?? (user.id as string);
 							success = true;
