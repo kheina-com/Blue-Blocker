@@ -640,6 +640,8 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 			) {
 				console.debug(logstr, `skipped user ${formattedUserName} because they follow you.`);
 				return true;
+			} else if (user.legacy?.blocking || (config.mute && user.legacy?.muting)) {
+				return true;
 			}
 
 			// since we can be fairly certain all user objects will be the same, break this into a separate function
@@ -647,9 +649,6 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 				user.legacy?.verified_type &&
 				!blockableVerifiedTypes.has(user.legacy.verified_type)
 			) {
-				return false;
-			}
-			if (user.legacy?.blocking || (config.mute && user.legacy?.muting)) {
 				return false;
 			}
 
@@ -715,11 +714,6 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 					return true;
 				}
 			}
-
-			if (config.blockForUse && user.used_blue) {
-				queueBlockUser(user, String(user.rest_id), ReasonUsingBlueFeatures);
-				return true;
-			}
 		} catch (e) {
 			console.error(logstr, e);
 		}
@@ -728,6 +722,11 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 	})();
 
 	if (done) {
+		return;
+	}
+
+	if (config.blockForUse && user.used_blue) {
+		queueBlockUser(user, String(user.rest_id), ReasonUsingBlueFeatures);
 		return;
 	}
 
