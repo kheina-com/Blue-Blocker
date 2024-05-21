@@ -1,4 +1,4 @@
-import { api, DefaultOptions } from '../constants.js';
+import { api, DefaultOptions, logstr, SoupcanExtensionId } from '../constants.js';
 import { abbreviate, commafy } from '../utilities.js';
 import { QueueLength } from '../background/db.js';
 import './style.css';
@@ -36,10 +36,11 @@ function checkHandler(
 			.set({
 				[key]: target.checked,
 			})
+			.then(() => console.debug(logstr, 'saved value', target.checked, 'in', `config.${key}`))
 			.then(() =>
 				(
 					options.callback ??
-					((_) => {
+					(() => {
 						document.getElementsByName(target.id + '-status').forEach((status) => {
 							status.textContent = statusText;
 							setTimeout(() => (status.textContent = null), 1000);
@@ -68,7 +69,13 @@ function checkHandlerArrayToString(target: HTMLInputElement, config: Config, key
 	const value: string[] = config[key];
 	target.value = value.join(', ');
 
-	target.addEventListener('input', updateDisallowedWordsInUsernames);
+	let timeout: number | null = null;
+	target.addEventListener('input', (e) => {
+		if (timeout) {
+			clearTimeout(timeout);
+		}
+		timeout = setTimeout(() => updateDisallowedWordsInUsernames(e), 1000);
+	});
 }
 
 function inputMirror(
@@ -126,6 +133,7 @@ function sliderMirror(
 				.set({
 					[key]: targetValue,
 				})
+				.then(() => console.debug(logstr, 'saved value', targetValue, 'in', `config.${key}`))
 				.then(() => {
 					// Update status to let user know options were saved.
 					document.getElementsByName(target.name + '-status').forEach((status) => {
@@ -166,9 +174,11 @@ function updateDisallowedWordsInUsernames(changeEvent: Event) {
 				.replace(/ {2,}/g, ' '),
 		)
 		.filter((w) => w);
-	api.storage.sync.set({ disallowedWords: wordList }).then(() => {
+	api.storage.sync.set({ disallowedWords: wordList })
+	.then(() => console.debug(logstr, 'saved value', wordList, 'in config.disallowedWords'))
+	.then(() => {
 		// Update status to let user know options were saved.
-		document.getElementsByName(target.name + '-status').forEach((status) => {
+		document.getElementsByName('blockstrings-status').forEach((status) => {
 			status.textContent = 'saved';
 			setTimeout(() => (status.textContent = null), 1000);
 		});
@@ -247,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const blockForUse = document.getElementById('block-for-use') as HTMLInputElement;
 	const skipCheckmark = document.getElementById('skip-checkmark') as HTMLInputElement;
 	const soupcanIntegration = document.getElementById('soupcan-integration') as HTMLInputElement;
+	const disallowedWordsCheckmark = document.getElementById('blockstrings') as HTMLInputElement;
 	const disallowedWordsInput = document.getElementById('blockstrings-input') as HTMLInputElement;
 
 	api.storage.sync.get(DefaultOptions).then((_config) => {
@@ -277,6 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		checkHandler(soupcanIntegration, config, 'soupcanIntegration', {
 			optionName: '', // integration isn't controlled by the toggle, so unset
 		});
+		checkHandler(disallowedWordsCheckmark, config, 'blockDisallowedWords');
 		checkHandlerArrayToString(disallowedWordsInput, config, 'disallowedWords');
 
 		document
@@ -293,6 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				.set({
 					skipFollowerCount: value,
 				})
+				.then(() => console.debug(logstr, 'saved value', value, 'in config.skipFollowerCount'))
 				.then(() => {
 					// Update status to let user know options were saved.
 					document.getElementsByName(target.name + '-status').forEach((status) => {
@@ -308,6 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				.set({
 					toastsLocation: target.value,
 				})
+				.then(() => console.debug(logstr, 'saved value', target.value, 'in config.toastsLocation'))
 				.then(() => {
 					// Update status to let user know options were saved.
 					document.getElementsByName(target.name + '-status').forEach((status) => {
@@ -348,6 +362,25 @@ document.addEventListener('DOMContentLoaded', () => {
 					),
 			);
 		});
+	});
+
+	// @ts-ignore
+	api.runtime
+	.sendMessage(SoupcanExtensionId, { action: 'check_twitter_user', screen_name: 'elonmusk' })
+	.then((r: any) => {
+		// we could check if response is the expected shape here, if we really wanted
+		if (!r) {
+			throw new Error('extension not enabled');
+		}
+		document
+			.getElementsByName('soupcan-integration-option')
+			.forEach((e) => (e.style.display = 'flex'));
+	})
+	.catch((e: Error) => {
+		console.debug(logstr, 'soupcan response for @elonmusk:', e);
+		document
+			.getElementsByName('soupcan-integration-option')
+			.forEach((ele) => (ele.style.display = 'none'));
 	});
 
 	// set the block value immediately

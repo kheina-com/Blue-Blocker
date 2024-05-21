@@ -248,7 +248,8 @@ label.checked div.checkmark div {
 
 .skip-follower-count.option,
 .block-promoted-tweets.option,
-.toasts-location.option {
+.toasts-location.option,
+.block-for-use.option {
 	margin-left: 0.5em;
 	margin-top: -0.5em;
 }
@@ -269,6 +270,7 @@ input[type='number'],
 select,
 textarea {
 	top: -0.1em;
+	resize: vertical;
 	position: relative;
 	display: inline-block;
 	padding: 0.5em 1em;
@@ -284,13 +286,17 @@ textarea {
 }
 input[type='number']:hover,
 select:hover,
-textarea:hover {
+textarea:hover,
+input[type='number']:focus,
+select:focus,
+textarea:focus {
 	color: var(--interact);
 	border-color: var(--borderhover);
 	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
 }
 input[type='number']:focus,
-select:focus {
+select:focus,
+textarea:focus {
 	color: var(--textcolor);
 }
 
@@ -298,13 +304,17 @@ textarea {
 	text-align: left;
 	min-height: 1.5em;
 	min-width: 20em;
+	width: calc(100% - 2em);
 }
 
 .blockstrings-option {
-	margin-left: 1em;
+	margin-left: 0.5em;
+	margin-top: -0.5em;
+	position: relative;
 }
-.blockstrings-option > .option {
-	margin-top: 0.1em;
+
+.blockstrings-option p {
+	margin: 0;
 }
 
 .gold-check {

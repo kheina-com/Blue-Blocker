@@ -41,6 +41,7 @@
 		<input type="checkbox" id="block-promoted-tweets" />
 		<input type="checkbox" id="soupcan-integration" />
 		<input type="checkbox" id="block-for-use">
+		<input type="checkbox" id="blockstrings">
 		<div class="tab" id="quick" style="display: block">
 			<div class="option">
 				<label for="suspend-block-collection" name="suspend-block-collection">
@@ -232,8 +233,7 @@
 										fill="#d18800"
 									></path>
 								</g>
-							</g></svg>
-						>)
+							</g></svg>)
 					</p>
 				</label>
 				<span name="skip-affiliated-status"></span>
@@ -274,9 +274,31 @@
 					<div class="checkmark">
 						<div></div>
 					</div>
-					<p>block legacy verified users that use blue features</p>
+					<p>block users that use blue features</p>
 				</label>
 				<span name="block-for-use-status"></span>
+			</div>
+			<div class="block-for-use option" name="block-for-use-option">
+				<p>
+					∟ this option blocks legacy verified users!
+					<img src="/icon/warn.png" alt="⚠️" class="emoji" />
+				</p>
+			</div>
+			<div class="blockstrings option">
+				<label for="blockstrings" name="blockstrings">
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>block users with words in their name</p>
+				</label>
+				<span name="blockstrings-status"></span>
+			</div>
+			<div class="blockstrings-option" name="blockstrings-option">
+				<textarea name="blockstrings-input" placeholder="Comma separated, Emojis allowed." id="blockstrings-input"></textarea>
+				<p>
+					∟ this option blocks legacy verified users!
+					<img src="/icon/warn.png" alt="⚠️" class="emoji" />
+				</p>
 			</div>
 			<div class="integration option" name="soupcan-integration-option">
 				<label for="soupcan-integration" name="soupcan-integration">
@@ -316,17 +338,6 @@
 					<input type="range" min="5" max="60" value="15" name="popup-timer" />
 					<span name="popup-timer-value"></span>
 				</div>
-			</div>
-			<div class="blockstrings">
-					<p>Block users with these words in their display name or username:</p>
-					<div class="blockstrings-option">
-						<textarea name="blockstrings-input" placeholder="Comma separated, Emojis allowed." id="blockstrings-input"></textarea>
-						<div class="option">
-							<p>This option may block non-blue users. <img src="/icon/warn.png" alt="⚠️" class="emoji" /></p>
-							<span name="blockstrings-input-status"></span>
-						</div>	
-					</div>
-					
 			</div>
 			<div class="safelist">
 				<p name="safelist-status">
