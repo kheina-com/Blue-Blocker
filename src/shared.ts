@@ -20,6 +20,7 @@ import {
 	IntegrationStateDisabled,
 	IntegrationStateReceiveOnly,
 	ReasonDisallowedWordsOrEmojis,
+	ReasonUsingBlueFeatures,
 } from './constants';
 
 import {
@@ -594,85 +595,76 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 		return;
 	}
 
-	try {
-		if (
-			user?.rest_id === undefined ||
-			user?.legacy?.name === undefined ||
-			user?.legacy?.screen_name === undefined
-		) {
-			throw new Error('invalid user object passed to BlockBlueVerified');
-		}
+	const formattedUserName = FormatLegacyName(user.legacy);
 
-		const formattedUserName = FormatLegacyName(user.legacy);
-		const hasBlockableVerifiedTypes = blockableVerifiedTypes.has(
-			user.legacy?.verified_type || '',
-		);
-		const hasBlockableAffiliateLabels = blockableAffiliateLabels.has(
-			user.affiliates_highlighted_label?.label?.userLabelType || '',
-		);
-
-		// since we can be fairly certain all user objects will be the same, break this into a separate function
-		if (user.legacy?.verified_type && !blockableVerifiedTypes.has(user.legacy.verified_type)) {
-			return;
-		}
-		if (user.legacy?.blocking || (config.mute && user.legacy?.muting)) {
-			return;
-		}
-
-		// some unified logic so it's not copied in a bunch of places. log everything as debug because it'll be noisy
-		if (
-			// group for if the user has unblocked them previously
-			// you cannot store sets in sync memory, so this will be a janky object
-			config.unblocked.hasOwnProperty(String(user.rest_id))
-		) {
-			console.debug(
-				logstr,
-				`skipped user ${formattedUserName} because you un${
-					config.mute ? 'mut' : 'block'
-				}ed them previously.`,
-			);
-			return;
-		} else if (
-			// group for block-following option
-			!config.blockFollowing &&
-			(user.legacy?.following || user.super_following)
-		) {
-			console.debug(logstr, `skipped user ${formattedUserName} because you follow them.`);
-			return;
-		} else if (
-			// group for block-followers option
-			!config.blockFollowers &&
-			user.legacy?.followed_by
-		) {
-			console.debug(logstr, `skipped user ${formattedUserName} because they follow you.`);
-			return;
-		}
-
-		// Step 0: Check for disallowed words or emojis in usernames.
-		if (config.disallowedWords?.test(user.legacy.name.replace(/\s{2,}/g, ' '))) {
-			queueBlockUser(user, user.rest_id, ReasonDisallowedWordsOrEmojis);
-			console.log(
-				logstr,
-				`${
-					config.mute ? 'muted' : 'blocked'
-				} ${formattedUserName} for having disallowed words/emojis in their username.`,
-			);
-		}
-
-		const legacyDbRejectMessage =
-			'could not access the legacy verified database, skip legacy has been disabled.';
-		// step 1: is user verified
-		if (
-			(!config.skipBlueCheckmark && user.is_blue_verified) ||
-			hasBlockableVerifiedTypes ||
-			hasBlockableAffiliateLabels
-		) {
+	// set up this funky little function so that we can return to exit early from verified block but continue with other steps
+	const done: boolean = await (async (): Promise<boolean> => {
+		try {
 			if (
-				// group for skip-verified option
-				config.skipVerified &&
-				// if the user used blue features and the config says to, we can skip loading and checking the legacy database
-				((config.blockForUse && !user.used_blue) ||
-					// ok so they didn't use blue features, load the DB and check
+				user?.rest_id === undefined ||
+				user?.legacy?.name === undefined ||
+				user?.legacy?.screen_name === undefined
+			) {
+				throw new Error('invalid user object passed to BlockBlueVerified');
+			}
+
+			const hasBlockableVerifiedTypes = blockableVerifiedTypes.has(
+				user.legacy?.verified_type || '',
+			);
+			const hasBlockableAffiliateLabels = blockableAffiliateLabels.has(
+				user.affiliates_highlighted_label?.label?.userLabelType || '',
+			);
+
+			// some unified logic so it's not copied in a bunch of places. log everything as debug because it'll be noisy
+			if (
+				// group for if the user has unblocked them previously
+				// you cannot store sets in sync memory, so this will be a janky object
+				config.unblocked.hasOwnProperty(String(user.rest_id))
+			) {
+				console.debug(
+					logstr,
+					`skipped user ${formattedUserName} because you un${
+						config.mute ? 'mut' : 'block'
+					}ed them previously.`,
+				);
+				return true;
+			} else if (
+				// group for block-following option
+				!config.blockFollowing &&
+				(user.legacy?.following || user.super_following)
+			) {
+				console.debug(logstr, `skipped user ${formattedUserName} because you follow them.`);
+				return true;
+			} else if (
+				// group for block-followers option
+				!config.blockFollowers &&
+				user.legacy?.followed_by
+			) {
+				console.debug(logstr, `skipped user ${formattedUserName} because they follow you.`);
+				return true;
+			}
+
+			// since we can be fairly certain all user objects will be the same, break this into a separate function
+			if (user.legacy?.verified_type && !blockableVerifiedTypes.has(user.legacy.verified_type)) {
+				return false;
+			}
+			if (user.legacy?.blocking || (config.mute && user.legacy?.muting)) {
+				return false;
+			}
+
+			const legacyDbRejectMessage =
+				'could not access the legacy verified database, skip legacy has been disabled.';
+			// step 1: is user verified
+			if (
+				!config.skipBlueCheckmark && (
+					user.is_blue_verified ||
+					hasBlockableVerifiedTypes ||
+					hasBlockableAffiliateLabels
+				)
+			) {
+				if (
+					// group for skip-verified option
+					config.skipVerified &&
 					(await new Promise((resolve, reject) => {
 						// basically, we're wrapping a promise around a promise to set a timeout on it
 						// in case the user's device was unable to set up the legacy db
@@ -685,54 +677,81 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 							.then(resolve)
 							.catch(disableSkipLegacy)
 							.finally(() => clearTimeout(timeout));
-					})))
-			) {
-				console.log(
-					logstr,
-					`did not ${
-						config.mute ? 'mute' : 'block'
-					} Twitter Blue verified user ${formattedUserName} because they are legacy verified.`,
-				);
-			} else if (
-				// verified via an affiliated organization instead of blue
-				config.skipAffiliated &&
-				(hasBlockableAffiliateLabels || hasBlockableVerifiedTypes)
-			) {
-				console.log(
-					logstr,
-					`did not ${
-						config.mute ? 'mute' : 'block'
-					} Twitter Blue verified user ${formattedUserName} because they are verified through an affiliated organization.`,
-				);
-			} else if (
-				// verified by follower count
-				config.skip1Mplus &&
-				user.legacy?.followers_count > config.skipFollowerCount
-			) {
-				console.log(
-					logstr,
-					`did not ${
-						config.mute ? 'mute' : 'block'
-					} Twitter Blue verified user ${formattedUserName} because they have over ${commafy(
-						config.skipFollowerCount,
-					)} followers and Elon is an idiot.`,
-				);
-			} else {
-				const reason = hasBlockableVerifiedTypes
-					? ReasonBusinessVerified
-					: ReasonBlueVerified;
-				queueBlockUser(user, String(user.rest_id), reason);
-				return;
+					}))
+				) {
+					console.log(
+						logstr,
+						`did not ${
+							config.mute ? 'mute' : 'block'
+						} Twitter Blue verified user ${formattedUserName} because they are legacy verified.`,
+					);
+				} else if (
+					// verified via an affiliated organization instead of blue
+					config.skipAffiliated &&
+					(hasBlockableAffiliateLabels || hasBlockableVerifiedTypes)
+				) {
+					console.log(
+						logstr,
+						`did not ${
+							config.mute ? 'mute' : 'block'
+						} Twitter Blue verified user ${formattedUserName} because they are verified through an affiliated organization.`,
+					);
+				} else if (
+					// verified by follower count
+					config.skip1Mplus &&
+					user.legacy?.followers_count > config.skipFollowerCount
+				) {
+					console.log(
+						logstr,
+						`did not ${
+							config.mute ? 'mute' : 'block'
+						} Twitter Blue verified user ${formattedUserName} because they have over ${commafy(
+							config.skipFollowerCount,
+						)} followers and Elon is an idiot.`,
+					);
+				} else {
+					const reason = hasBlockableVerifiedTypes
+						? ReasonBusinessVerified
+						: ReasonBlueVerified;
+					queueBlockUser(user, String(user.rest_id), reason);
+					return true;
+				}
+
+				if (config.blockForUse && user.used_blue) {
+					queueBlockUser(user, String(user.rest_id), ReasonUsingBlueFeatures);
+					return true;
+				} 
 			}
+		} catch (e) {
+			console.error(logstr, e);
 		}
 
-		// step 2: promoted tweets
-		if (config.blockPromoted && user.promoted_tweet) {
-			queueBlockUser(user, String(user.rest_id), ReasonPromoted);
-			return;
-		}
-	} catch (e) {
-		console.error(logstr, e);
+		return false;
+	})();
+
+	if (done) {
+		return;
+	}
+
+	// Step 1.5: Check for disallowed words or emojis in usernames.
+	if (
+		config.blockDisallowedWords &&
+		config.disallowedWords?.test(user.legacy.name.replace(/\s{2,}/g, ' '))
+	) {
+		queueBlockUser(user, user.rest_id, ReasonDisallowedWordsOrEmojis);
+		console.log(
+			logstr,
+			`${
+				config.mute ? 'muted' : 'blocked'
+			} ${formattedUserName} for having disallowed words/emojis in their username.`,
+		);
+		return true;
+	}
+
+	// step 2: promoted tweets
+	if (config.blockPromoted && user.promoted_tweet) {
+		queueBlockUser(user, String(user.rest_id), ReasonPromoted);
+		return;
 	}
 
 	// external integrations always come last and have their own error handling

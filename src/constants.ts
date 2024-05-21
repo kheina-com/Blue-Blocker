@@ -33,6 +33,7 @@ export const DefaultOptions: Config = {
 	skipFollowerCount: 1e6,
 	soupcanIntegration: false,
 	blockPromoted: false,
+	blockDisallowedWords: false,
 	disallowedWords: [],
 
 	// this isn"t set, but is used
@@ -76,6 +77,7 @@ export const ReasonBusinessVerified: number = 2;
 export const ReasonTransphobia: number = 3;
 export const ReasonPromoted: number = 4;
 export const ReasonDisallowedWordsOrEmojis: number = 5;
+export const ReasonUsingBlueFeatures: number = 6;
 export const ReasonMap = {
 	[ReasonBlueVerified]: 'Twitter Blue verified',
 	[ReasonNftAvatar]: 'NFT avatar',
@@ -83,9 +85,10 @@ export const ReasonMap = {
 	[ReasonTransphobia]: 'transphobia',
 	[ReasonPromoted]: 'promoting tweets',
 	[ReasonDisallowedWordsOrEmojis]: 'disallowed words or emojis',
+	[ReasonUsingBlueFeatures]: 'using Twitter Blue features',
 };
 
-export const emojiRegExp = RegExp(/[\p{Emoji_Presentation}\u200d]+/, 'gu');
+export const emojiRegExp = RegExp(/^[\p{Emoji_Presentation}\u200d]+$/, 'u');
 
 export const LegacyVerifiedUrl: string =
 	'https://gist.githubusercontent.com/travisbrown/b50d6745298cccd6b1f4697e4ec22103/raw/012009351630dc351e3a763b49bf24fa50ca3eb7/legacy-verified.csv';
