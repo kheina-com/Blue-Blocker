@@ -7,13 +7,13 @@ html {
 	--bg2color: #151416;
 	--bg3color: var(--bordercolor);
 	--blockquote: var(--bordercolor);
-	--textcolor: #DDD;
-	--bordercolor: #2D333A;
+	--textcolor: #ddd;
+	--bordercolor: #2d333a;
 	--linecolor: var(--bordercolor);
 	--borderhover: var(--interact);
-	--subtle: #EEEEEE80;
+	--subtle: #eeeeee80;
 	--shadowcolor: #00000080;
-	--activeshadowcolor: #000000B3;
+	--activeshadowcolor: #000000b3;
 	--screen-cover: #00000080;
 	--border-size: 1px;
 	--border-radius: 3px;
@@ -26,7 +26,8 @@ script {
 html * {
 	font-family: Bitstream Vera Sans, DejaVu Sans, Arial, Helvetica, sans-serif;
 }
-html, body {
+html,
+body {
 	background: var(--bg2color);
 	color: var(--textcolor);
 	overflow-x: hidden;
@@ -37,7 +38,10 @@ body {
 	font-size: 1.1rem;
 }
 
-a, input, label, textarea {
+a,
+input,
+label,
+textarea {
 	cursor: pointer;
 	pointer-events: all;
 	text-decoration: none;
@@ -46,8 +50,10 @@ a, input, label, textarea {
 	-o-transition: var(--transition) var(--fadetime);
 	transition: var(--transition) var(--fadetime);
 }
-a:link, a:visited
-{ color: var(--textcolor); }
+a:link,
+a:visited {
+	color: var(--textcolor);
+}
 a:hover {
 	color: var(--interact) !important;
 	opacity: 1 !important;
@@ -55,13 +61,13 @@ a:hover {
 
 ::-webkit-scrollbar {
 	width: 12px;
-	height:12px;
+	height: 12px;
 }
 ::-webkit-scrollbar-track {
 	background: var(--bg2color);
 }
 ::-webkit-scrollbar-thumb {
-	background: #4D535A;
+	background: #4d535a;
 	border-radius: 4px;
 	border: 2px solid var(--bg2color);
 }
@@ -139,7 +145,8 @@ h2 img {
 .tab > div {
 	margin-bottom: 1em;
 }
-.tab > div:last-child, .last {
+.tab > div:last-child,
+.last {
 	margin-bottom: 0;
 }
 .tab#quick {
@@ -179,8 +186,8 @@ h2 img {
 	justify-content: center;
 }
 
-input[type="checkbox"],
-input[type="file"] {
+input[type='checkbox'],
+input[type='file'] {
 	position: absolute;
 	display: none;
 	top: -100vh;
@@ -251,14 +258,16 @@ input::-webkit-inner-spin-button {
 	-webkit-appearance: none;
 	margin: 0;
 }
-input[type=number] {
+input[type='number'] {
 	-moz-appearance: textfield;
 	appearance: textfield;
 	text-align: right;
 	width: 7em;
 	height: 1em;
 }
-input[type=number], select, textarea {
+input[type='number'],
+select,
+textarea {
 	top: -0.1em;
 	position: relative;
 	display: inline-block;
@@ -273,12 +282,15 @@ input[type=number], select, textarea {
 	-o-transition: var(--transition) var(--fadetime);
 	transition: var(--transition) var(--fadetime);
 }
-input[type=number]:hover, select:hover, textarea:hover {
+input[type='number']:hover,
+select:hover,
+textarea:hover {
 	color: var(--interact);
 	border-color: var(--borderhover);
 	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
 }
-input[type=number]:focus, select:focus {
+input[type='number']:focus,
+select:focus {
 	color: var(--textcolor);
 }
 
@@ -292,7 +304,7 @@ textarea {
 	margin-left: 1em;
 }
 .blockstrings-option > .option {
-	margin-top: .1em;
+	margin-top: 0.1em;
 }
 
 .gold-check {

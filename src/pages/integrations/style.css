@@ -1,4 +1,5 @@
-input, select {
+input,
+select {
 	cursor: pointer;
 	margin: 0;
 	padding: 0.5em 1em;
@@ -17,12 +18,15 @@ input, select {
 	-o-transition: var(--transition) var(--fadetime);
 	transition: var(--transition) var(--fadetime);
 }
-input:hover, select:hover, select:active {
+input:hover,
+select:hover,
+select:active {
 	color: var(--interact);
 	border-color: var(--borderhover);
 	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
 }
-input:hover, input:focus {
+input:hover,
+input:focus {
 	border-color: var(--borderhover);
 }
 
@@ -32,7 +36,8 @@ input:hover, input:focus {
 	margin: 0 auto;
 	margin-bottom: 1.5em;
 }
-#integrations input, #integrations select {
+#integrations input,
+#integrations select {
 	margin-right: 1.5em;
 }
 #integrations input {
@@ -55,7 +60,8 @@ input:hover, input:focus {
 }
 
 @media only screen and (max-width: 1200px) {
-	#integrations > div, .buttons {
+	#integrations > div,
+	.buttons {
 		width: auto;
 	}
 }

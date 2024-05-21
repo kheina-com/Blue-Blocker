@@ -7,7 +7,7 @@ interface Config {
 	mute: boolean;
 	blockFollowing: boolean;
 	blockFollowers: boolean;
-	skipBlueCheckmark : boolean;
+	skipBlueCheckmark: boolean;
 	skipVerified: boolean;
 	skipAffiliated: boolean;
 	skip1Mplus: boolean;
@@ -28,7 +28,7 @@ interface CompiledConfig {
 	mute: boolean;
 	blockFollowing: boolean;
 	blockFollowers: boolean;
-	skipBlueCheckmark : boolean;
+	skipBlueCheckmark: boolean;
 	skipVerified: boolean;
 	skipAffiliated: boolean;
 	skip1Mplus: boolean;
@@ -66,15 +66,15 @@ interface BlueBlockerUser {
 		protected: boolean;
 		can_dm: boolean;
 		can_media_tag: boolean;
-		created_at: string,
+		created_at: string;
 		default_profile: boolean;
 		default_profile_image: boolean;
 		description: string;
 		entities: {
 			description: {
 				urls: string[];
-			}
-		}
+			};
+		};
 		fast_followers_count: number;
 		favourites_count: number;
 		friends_count: number;
@@ -94,7 +94,9 @@ interface BlueBlockerUser {
 		want_retweets: boolean;
 		withheld_in_countries: string[];
 	};
-	tipjar_settings: {/* TODO: figure out what gets put here */}
+	tipjar_settings: {
+		/* TODO: figure out what gets put here */
+	};
 	super_following?: boolean;
 	has_graduated_access: boolean;
 	profile_image_shape: string;
@@ -113,7 +115,7 @@ interface RuntimeMessage {
 }
 
 interface RegisterRequest {
-	action: "register";
+	action: 'register';
 	name: string;
 }
 
@@ -132,8 +134,8 @@ interface ErrorResponse {
 }
 
 interface ExternalBlockResponse {
-	block: boolean,
-	reason?: string,
+	block: boolean;
+	reason?: string;
 }
 
 interface BlueBlockerEvent {
@@ -182,6 +184,6 @@ interface BlockedUser {
 }
 
 interface Integration {
-	name: string,
-	state: number,
+	name: string;
+	state: number;
 }

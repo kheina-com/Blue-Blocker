@@ -31,7 +31,7 @@ npm run dev
 
 1. run `npm run dev` or `npm run build`
 2. Visit the [chrome extentions page](chrome://extensions/)
-   1. (or enter `chrome://extensions/` in the Chrome url bar)
+    1. (or enter `chrome://extensions/` in the Chrome url bar)
 3. Enable `Developer mode` in the top right
 4. Click `Load unpacked` in the top left and select `blue-blocker/build` folder
 
@@ -40,7 +40,7 @@ npm run dev
 1. Run `npm run build`
 2. Run `make firefox`
 3. Visit the [firefox addon debugging page](about:debugging#/runtime/this-firefox)
-   1. (or enter `about:debugging#/runtime/this-firefox` in the Firefox url bar)
+    1. (or enter `about:debugging#/runtime/this-firefox` in the Firefox url bar)
 4. Click `Load Temporary Add-on` in the top right and select `manifest.json` in the `blue-blocker/build` folder
 
 ## License

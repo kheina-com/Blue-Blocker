@@ -3,6 +3,7 @@ This is a long-lived branch, intended to aggregate all changes planned for versi
 Pull requests should be made against this branch. Merges to this branch should be done via a merge commit. When ready, this branch should be merged to main via a squash commit.
 
 ## Changelog
+
 ```txt
 Summary
 	1. document grouping follow 'SemVer2.0' protocol
@@ -13,6 +14,7 @@ Summary
 ```
 
 ## Deployment Checklist
+
 1. [ ] merge all pull requests to llb
 2. [ ] ensure `src/manifest.ts` and `package.json` have the correct version number
 3. [ ] use makefile to generate zips (`make chrome`, `make firefox`)

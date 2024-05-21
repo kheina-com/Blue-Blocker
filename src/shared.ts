@@ -649,22 +649,29 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 		}
 
 		// Step 0: Check for disallowed words or emojis in usernames.
-		if (config.disallowedWords?.test((user.legacy.name).replace(/\s{2,}/g, ' '))) {
+		if (config.disallowedWords?.test(user.legacy.name.replace(/\s{2,}/g, ' '))) {
 			queueBlockUser(user, user.rest_id, ReasonDisallowedWordsOrEmojis);
-			console.log(logstr, `${config.mute ? 'muted' : 'blocked'} ${formattedUserName} for having disallowed words/emojis in their username.`);
+			console.log(
+				logstr,
+				`${
+					config.mute ? 'muted' : 'blocked'
+				} ${formattedUserName} for having disallowed words/emojis in their username.`,
+			);
 		}
 
 		const legacyDbRejectMessage =
 			'could not access the legacy verified database, skip legacy has been disabled.';
 		// step 1: is user verified
-		if ((!config.skipBlueCheckmark && user.is_blue_verified) || hasBlockableVerifiedTypes || hasBlockableAffiliateLabels) {
+		if (
+			(!config.skipBlueCheckmark && user.is_blue_verified) ||
+			hasBlockableVerifiedTypes ||
+			hasBlockableAffiliateLabels
+		) {
 			if (
 				// group for skip-verified option
 				config.skipVerified &&
-				(
-					// if the user used blue features and the config says to, we can skip loading and checking the legacy database
-					(config.blockForUse &&
-					!user.used_blue) ||
+				// if the user used blue features and the config says to, we can skip loading and checking the legacy database
+				((config.blockForUse && !user.used_blue) ||
 					// ok so they didn't use blue features, load the DB and check
 					(await new Promise((resolve, reject) => {
 						// basically, we're wrapping a promise around a promise to set a timeout on it
@@ -678,7 +685,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 							.then(resolve)
 							.catch(disableSkipLegacy)
 							.finally(() => clearTimeout(timeout));
-				})))
+					})))
 			) {
 				console.log(
 					logstr,

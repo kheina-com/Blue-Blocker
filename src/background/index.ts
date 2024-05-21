@@ -15,7 +15,7 @@ import {
 	IntegrationStateDisabled,
 	IntegrationStateSendOnly,
 	EventKey,
-	MessageEvent
+	MessageEvent,
 } from '../constants';
 import { abbreviate, RefId } from '../utilities';
 import {
@@ -167,7 +167,11 @@ api.runtime.onMessageExternal.addListener((m, s, r) => {
 					integrations,
 					[EventKey]: {
 						type: MessageEvent,
-						message: `<p>The extension <b>${reg_request.name}</b> would like to integrate with BlueBlocker.<br>Visit the <a href="${api.runtime.getURL("/src/pages/integrations/index.html")}" target="_blank">integrations page</a> to complete set up.</p>`,
+						message: `<p>The extension <b>${
+							reg_request.name
+						}</b> would like to integrate with BlueBlocker.<br>Visit the <a href="${api.runtime.getURL(
+							'/src/pages/integrations/index.html',
+						)}" target="_blank">integrations page</a> to complete set up.</p>`,
 						options: { html: true },
 					},
 				});

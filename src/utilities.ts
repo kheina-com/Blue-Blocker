@@ -1,18 +1,34 @@
-import { api, logstr, AddToHistoryAction, IsVerifiedAction, RemoveFromHistoryAction, SuccessStatus, PopFromQueueAction, AddToQueueAction, HistoryStateBlocked } from "./constants";
+import {
+	api,
+	logstr,
+	AddToHistoryAction,
+	IsVerifiedAction,
+	RemoveFromHistoryAction,
+	SuccessStatus,
+	PopFromQueueAction,
+	AddToQueueAction,
+	HistoryStateBlocked,
+} from './constants';
 
 export function abbreviate(value: number): string {
-	if (value >= 995e7)
-	{ return `${Math.round(value / 1e9)}B`; }
-	if (value >= 9995e5)
-	{ return `${(value / 1e9).toFixed(1)}B`; }
-	if (value >= 995e4)
-	{ return `${Math.round(value / 1e6)}M`; }
-	if (value >= 9995e2)
-	{ return `${(value / 1e6).toFixed(1)}M`; }
-	if (value >= 9950)
-	{ return `${Math.round(value / 1e3)}K`; }
-	if (value >= 1e3)
-	{ return `${(value / 1e3).toFixed(1)}K`; }
+	if (value >= 995e7) {
+		return `${Math.round(value / 1e9)}B`;
+	}
+	if (value >= 9995e5) {
+		return `${(value / 1e9).toFixed(1)}B`;
+	}
+	if (value >= 995e4) {
+		return `${Math.round(value / 1e6)}M`;
+	}
+	if (value >= 9995e2) {
+		return `${(value / 1e6).toFixed(1)}M`;
+	}
+	if (value >= 9950) {
+		return `${Math.round(value / 1e3)}K`;
+	}
+	if (value >= 1e3) {
+		return `${(value / 1e3).toFixed(1)}K`;
+	}
 	return `${value}`;
 }
 
@@ -28,26 +44,28 @@ export function commafy(x: number): string {
 const MaxId: number = Number.MAX_SAFE_INTEGER;
 export const RefId = (): number => Math.round(Math.random() * MaxId);
 const epoch: number = 2500000000000;
-export const QueueId = (time: Date | null = null): number => epoch - ((time ?? new Date()).valueOf() + Math.random() * 1000);
+export const QueueId = (time: Date | null = null): number =>
+	epoch - ((time ?? new Date()).valueOf() + Math.random() * 1000);
 
 export async function IsUserLegacyVerified(user_id: string, handle: string): Promise<boolean> {
 	interface LegacyVerifiedResponse {
-		status: "SUCCESS",
-		result: boolean,
+		status: 'SUCCESS';
+		result: boolean;
 	}
 
 	let response: LegacyVerifiedResponse | MessageResponse | null = null;
 	for (let i = 0; i < 5; i++) {
-		response = await api.runtime.sendMessage<RuntimeMessage, MessageResponse>(
-			{ action: IsVerifiedAction, data: { user_id, handle } },
-		) as LegacyVerifiedResponse;
+		response = (await api.runtime.sendMessage<RuntimeMessage, MessageResponse>({
+			action: IsVerifiedAction,
+			data: { user_id, handle },
+		})) as LegacyVerifiedResponse;
 		if (response.status === SuccessStatus) {
 			return (response as LegacyVerifiedResponse).result;
 		}
 	}
 
 	if (response?.status !== SuccessStatus) {
-		const message = "legacy verified db returned non-success status";
+		const message = 'legacy verified db returned non-success status';
 		console.error(logstr, message, response);
 		throw new Error(message);
 	}
@@ -55,7 +73,10 @@ export async function IsUserLegacyVerified(user_id: string, handle: string): Pro
 	return (response as LegacyVerifiedResponse).result;
 }
 
-export async function AddUserBlockHistory(user: BlockUser, state: number = HistoryStateBlocked): Promise<void> {
+export async function AddUserBlockHistory(
+	user: BlockUser,
+	state: number = HistoryStateBlocked,
+): Promise<void> {
 	// we are explicitly redefining this in case there are extraneous fields included in user
 	const data: BlockedUser = {
 		user_id: user.user_id,
@@ -74,15 +95,15 @@ export async function AddUserBlockHistory(user: BlockUser, state: number = Histo
 
 	let response: MessageResponse | null = null;
 	for (let i = 0; i < 5; i++) {
-		const d = { action: AddToHistoryAction, data }
-		response = await api.runtime.sendMessage(d) as MessageResponse;
+		const d = { action: AddToHistoryAction, data };
+		response = (await api.runtime.sendMessage(d)) as MessageResponse;
 		if (response.status === SuccessStatus) {
 			return;
 		}
 	}
 
 	if (response?.status !== SuccessStatus) {
-		const message = "unable to add user to block history";
+		const message = 'unable to add user to block history';
 		console.error(logstr, message, response);
 		throw new Error(message);
 	}
@@ -91,39 +112,51 @@ export async function AddUserBlockHistory(user: BlockUser, state: number = Histo
 export async function RemoveUserBlockHistory(user_id: string): Promise<void> {
 	let response: MessageResponse | null = null;
 	for (let i = 0; i < 5; i++) {
-		response = await api.runtime.sendMessage({ action: RemoveFromHistoryAction, data: { user_id } }) as MessageResponse;
+		response = (await api.runtime.sendMessage({
+			action: RemoveFromHistoryAction,
+			data: { user_id },
+		})) as MessageResponse;
 		if (response.status === SuccessStatus) {
 			return;
 		}
 	}
 
 	if (response?.status !== SuccessStatus) {
-		const message = "unable to remove user from block history";
+		const message = 'unable to remove user from block history';
 		console.error(logstr, message, response);
 		throw new Error(message);
 	}
 }
 
-export function FormatLegacyName(user: { name: string, screen_name: string }) {
+export function FormatLegacyName(user: { name: string; screen_name: string }) {
 	const legacyName = user?.name;
 	const screenName = user?.screen_name;
 	return `${legacyName} (@${screenName})`;
 }
 
-export function MakeToast(content: string, config: Config, options: { html?: boolean, warn?: boolean, error?: boolean, elements?: Array<HTMLElement> } = { }) {
-	const ele = document.getElementById("injected-blue-block-toasts");
+export function MakeToast(
+	content: string,
+	config: Config,
+	options: {
+		html?: boolean;
+		warn?: boolean;
+		error?: boolean;
+		elements?: Array<HTMLElement>;
+	} = {},
+) {
+	const ele = document.getElementById('injected-blue-block-toasts');
 	if (!ele) {
-		throw new Error("blue blocker was unable to create or find toasts div.");
+		throw new Error('blue blocker was unable to create or find toasts div.');
 	}
 
-	const t = document.createElement("div");
+	const t = document.createElement('div');
 	let popupTimer: number = 60e3;
 	if (options?.error) {
-		t.className = "toast error";
+		t.className = 'toast error';
 	} else if (options?.warn) {
-		t.className = "toast warn";
+		t.className = 'toast warn';
 	} else {
-		t.className = "toast";
+		t.className = 'toast';
 		popupTimer = config.popupTimer * 1000;
 	}
 	if (options?.html) {
@@ -133,11 +166,11 @@ export function MakeToast(content: string, config: Config, options: { html?: boo
 	}
 
 	if (options?.elements) {
-		options.elements.forEach(e => t.appendChild(e));
+		options.elements.forEach((e) => t.appendChild(e));
 	}
-	const close = document.createElement("a");
-	close.innerText = "✕";
-	close.className = "close";
+	const close = document.createElement('a');
+	close.innerText = '✕';
+	close.className = 'close';
 
 	const timeout = setTimeout(() => ele.removeChild(t), popupTimer);
 	close.onclick = () => {
@@ -151,7 +184,7 @@ export function MakeToast(content: string, config: Config, options: { html?: boo
 
 export function escapeRegExp(text: string) {
 	// stolen straight from MDN, o7
-	return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 export function EscapeHtml(text: string): string {
@@ -160,20 +193,22 @@ export function EscapeHtml(text: string): string {
 
 export async function QueuePop(): Promise<BlockUser | null> {
 	interface PopFromQueueResponse {
-		status: "SUCCESS",
-		result: BlockUser | null,
+		status: 'SUCCESS';
+		result: BlockUser | null;
 	}
 
 	let response: PopFromQueueResponse | MessageResponse | null = null;
 	for (let i = 0; i < 5; i++) {
-		response = await api.runtime.sendMessage({ action: PopFromQueueAction }) as PopFromQueueResponse;
+		response = (await api.runtime.sendMessage({
+			action: PopFromQueueAction,
+		})) as PopFromQueueResponse;
 		if (response.status === SuccessStatus) {
 			return (response as PopFromQueueResponse).result;
 		}
 	}
 
 	if (response?.status !== SuccessStatus) {
-		const message = "unable to pop user from queue";
+		const message = 'unable to pop user from queue';
 		console.error(logstr, message, response);
 		throw new Error(message);
 	}
@@ -184,14 +219,17 @@ export async function QueuePop(): Promise<BlockUser | null> {
 export async function QueuePush(user: BlockUser): Promise<void> {
 	let response: MessageResponse | null = null;
 	for (let i = 0; i < 5; i++) {
-		response = await api.runtime.sendMessage({ action: AddToQueueAction, data: user }) as MessageResponse;
+		response = (await api.runtime.sendMessage({
+			action: AddToQueueAction,
+			data: user,
+		})) as MessageResponse;
 		if (response.status === SuccessStatus) {
 			return;
 		}
 	}
 
 	if (response?.status !== SuccessStatus) {
-		const message = "unable to pust user to queue";
+		const message = 'unable to pust user to queue';
 		console.error(logstr, message, response);
 		throw new Error(message);
 	}

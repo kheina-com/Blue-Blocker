@@ -35,13 +35,13 @@ const PromotedStrings = new Set(['suggest_promoted', 'Promoted', 'promoted']);
 function handleUserObject(obj: any, config: CompiledConfig, from_blue: boolean) {
 	let userObj = obj.user_results.result;
 
-	if (userObj.__typename === "UserUnavailable") {
-		console.log(logstr, "user is unavailable", userObj);
+	if (userObj.__typename === 'UserUnavailable') {
+		console.log(logstr, 'user is unavailable', userObj);
 		return;
 	}
 
-	if (userObj.__typename !== "User") {
-		console.error(logstr, "could not parse user object", userObj);
+	if (userObj.__typename !== 'User') {
+		console.error(logstr, 'could not parse user object', userObj);
 		return;
 	}
 
@@ -191,7 +191,7 @@ export function HandleInstructionsResponse(
 				if (tweet.content.itemContent?.itemType == 'TimelineTweet') {
 					ParseTimelineTweet(tweet.content, config);
 				} else if (tweet.content.itemContent?.itemType == 'TimelineUser') {
-					const from_blue = (e.detail.parsedUrl[1] == "BlueVerifiedFollowers");
+					const from_blue = e.detail.parsedUrl[1] == 'BlueVerifiedFollowers';
 					ParseTimelineUser(tweet.content.itemContent, config, from_blue);
 				}
 				break;

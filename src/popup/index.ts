@@ -1,9 +1,6 @@
-import {
-	api,
-	DefaultOptions,
-} from '../constants.js';
+import { api, DefaultOptions } from '../constants.js';
 import { abbreviate, commafy } from '../utilities.js';
-import { QueueLength } from "../background/db.js";
+import { QueueLength } from '../background/db.js';
 import './style.css';
 
 function checkHandler(
@@ -157,20 +154,23 @@ function exportSafelist() {
 	});
 }
 
-function updateDisallowedWordsInUsernames(changeEvent : Event){
+function updateDisallowedWordsInUsernames(changeEvent: Event) {
 	const target = changeEvent.target as HTMLInputElement;
 	let wordList = target.value.split(',');
-	wordList = wordList.map(word =>
-		// trim white space
-		word.trim()
-			//remove double spaces
-			.replace(/ {2,}/g, ' ')
-	).filter(w => w);
-	api.storage.sync.set({ disallowedWords: wordList}).then(() => {
+	wordList = wordList
+		.map((word) =>
+			// trim white space
+			word
+				.trim()
+				//remove double spaces
+				.replace(/ {2,}/g, ' '),
+		)
+		.filter((w) => w);
+	api.storage.sync.set({ disallowedWords: wordList }).then(() => {
 		// Update status to let user know options were saved.
 		document.getElementsByName(target.name + '-status').forEach((status) => {
-		status.textContent = 'saved';
-		setTimeout(() => (status.textContent = null), 1000);
+			status.textContent = 'saved';
+			setTimeout(() => (status.textContent = null), 1000);
 		});
 	});
 }
@@ -351,13 +351,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 
 	// set the block value immediately
-	api.storage.local.get({ BlockCounter: 0 }).then(items => {
+	api.storage.local.get({ BlockCounter: 0 }).then((items) => {
 		blockedUsersCount.textContent = commafy(items.BlockCounter);
 	});
 	api.storage.local.onChanged.addListener((items) => {
 		if (items.hasOwnProperty('BlockCounter')) {
 			blockedUsersCount.textContent = commafy(items.BlockCounter.newValue);
-			QueueLength().then(count => {
+			QueueLength().then((count) => {
 				blockedUserQueueLength.textContent = commafy(count);
 			});
 		}
@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		// if we want to add other values, add them here
 	});
 
-	QueueLength().then(count => {
+	QueueLength().then((count) => {
 		blockedUserQueueLength.textContent = commafy(count);
 	});
 });

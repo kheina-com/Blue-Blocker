@@ -1,20 +1,13 @@
-import { SetHeaders } from "../shared";
-import {
-	api,
-	logstr,
-	DefaultOptions,
-	emojiRegExp,
-	ErrorEvent,
-	EventKey,
-} from "../constants";
-import { escapeRegExp } from "../utilities";
-import { HandleInstructionsResponse } from "../parsers/instructions";
-import { HandleForYou } from "../parsers/timeline";
-import { HandleTypeahead } from "../parsers/search";
-import { HandleUnblock } from "../parsers/unblock";
-import "./startup.ts";
+import { SetHeaders } from '../shared';
+import { api, logstr, DefaultOptions, emojiRegExp, ErrorEvent, EventKey } from '../constants';
+import { escapeRegExp } from '../utilities';
+import { HandleInstructionsResponse } from '../parsers/instructions';
+import { HandleForYou } from '../parsers/timeline';
+import { HandleTypeahead } from '../parsers/search';
+import { HandleUnblock } from '../parsers/unblock';
+import './startup.ts';
 
-function compileConfig (config: Config): CompiledConfig {
+function compileConfig(config: Config): CompiledConfig {
 	return {
 		suspendedBlockCollection: config.suspendedBlockCollection,
 		showBlockPopups: config.showBlockPopups,
@@ -22,7 +15,7 @@ function compileConfig (config: Config): CompiledConfig {
 		mute: config.mute,
 		blockFollowing: config.blockFollowing,
 		blockFollowers: config.blockFollowers,
-		skipBlueCheckmark : config.skipBlueCheckmark,
+		skipBlueCheckmark: config.skipBlueCheckmark,
 		skipVerified: config.skipVerified,
 		skipAffiliated: config.skipAffiliated,
 		skip1Mplus: config.skip1Mplus,
@@ -33,11 +26,23 @@ function compileConfig (config: Config): CompiledConfig {
 		soupcanIntegration: config.blockFollowers,
 		blockPromoted: config.blockPromoted,
 		blockForUse: config.blockForUse,
-		disallowedWords: (config.disallowedWords.length === 0) ? null : new RegExp(config.disallowedWords.map(word => word.match(emojiRegExp) ? word : `(?:^|\\s)${escapeRegExp(word)}(?:$|\\s)`).join("|"), 'i'),
+		disallowedWords:
+			config.disallowedWords.length === 0
+				? null
+				: new RegExp(
+						config.disallowedWords
+							.map((word) =>
+								word.match(emojiRegExp)
+									? word
+									: `(?:^|\\s)${escapeRegExp(word)}(?:$|\\s)`,
+							)
+							.join('|'),
+						'i',
+				  ),
 	} as CompiledConfig;
 }
 
-document.addEventListener("blue-blocker-event", function (e: CustomEvent<BlueBlockerEvent>) {
+document.addEventListener('blue-blocker-event', function (e: CustomEvent<BlueBlockerEvent>) {
 	if (e.detail.status < 300) {
 		SetHeaders(e.detail.request.headers);
 	} else {
@@ -45,39 +50,49 @@ document.addEventListener("blue-blocker-event", function (e: CustomEvent<BlueBlo
 		return;
 	}
 
-	api.storage.sync.get(DefaultOptions).then(_config => {
+	api.storage.sync.get(DefaultOptions).then((_config) => {
 		const config = _config as Config;
 		const body_str = e.detail.body;
 		try {
 			const parsed_body = JSON.parse(body_str);
 			if (parsed_body?.error || parsed_body?.errors) {
 				// another error response, this time returned as a 200!
-				console.debug(logstr, "skipped", e.detail.parsedUrl[1], "response because it contained an error key:", { event: e, body_str });
+				console.debug(
+					logstr,
+					'skipped',
+					e.detail.parsedUrl[1],
+					'response because it contained an error key:',
+					{ event: e, body_str },
+				);
 				return;
 			}
 
 			switch (e.detail.parsedUrl[1]) {
-				case "blocks/destroy.json":
-				case "mutes/users/destroy.json":
+				case 'blocks/destroy.json':
+				case 'mutes/users/destroy.json':
 					return HandleUnblock(e, parsed_body, config);
-				case "HomeLatestTimeline":
-				case "HomeTimeline":
-				case "SearchTimeline":
-				case "UserTweets":
-				case "TweetDetail":
-				case "Following":
-				case "Followers":
-				case "UserCreatorSubscriptions":
-				case "FollowersYouKnow":
-				case "BlueVerifiedFollowers":
+				case 'HomeLatestTimeline':
+				case 'HomeTimeline':
+				case 'SearchTimeline':
+				case 'UserTweets':
+				case 'TweetDetail':
+				case 'Following':
+				case 'Followers':
+				case 'UserCreatorSubscriptions':
+				case 'FollowersYouKnow':
+				case 'BlueVerifiedFollowers':
 					return HandleInstructionsResponse(e, parsed_body, compileConfig(config));
-				case "timeline/home.json":
-				case "search/adaptive.json":
+				case 'timeline/home.json':
+				case 'search/adaptive.json':
 					return HandleForYou(e, parsed_body, compileConfig(config));
-				case "search/typeahead.json":
+				case 'search/typeahead.json':
 					return HandleTypeahead(e, parsed_body, compileConfig(config));
 				default:
-					console.error(logstr, "found an unexpected url that we don't know how to handle", e);
+					console.error(
+						logstr,
+						"found an unexpected url that we don't know how to handle",
+						e,
+					);
 					api.storage.local.set({
 						[EventKey]: {
 							type: ErrorEvent,
@@ -85,7 +100,11 @@ document.addEventListener("blue-blocker-event", function (e: CustomEvent<BlueBlo
 					});
 			}
 		} catch (error) {
-			console.error(logstr, "unexpected error occurred while parsing request body", { error, body_str, event: e });
+			console.error(logstr, 'unexpected error occurred while parsing request body', {
+				error,
+				body_str,
+				event: e,
+			});
 			api.storage.local.set({
 				[EventKey]: {
 					type: ErrorEvent,

@@ -85,7 +85,7 @@ export const ReasonMap = {
 	[ReasonDisallowedWordsOrEmojis]: 'disallowed words or emojis',
 };
 
-export const emojiRegExp = RegExp(/[\p{Emoji_Presentation}\u200d]+/, 'gu')
+export const emojiRegExp = RegExp(/[\p{Emoji_Presentation}\u200d]+/, 'gu');
 
 export const LegacyVerifiedUrl: string =
 	'https://gist.githubusercontent.com/travisbrown/b50d6745298cccd6b1f4697e4ec22103/raw/012009351630dc351e3a763b49bf24fa50ca3eb7/legacy-verified.csv';
@@ -97,11 +97,18 @@ export const SoupcanExtensionId =
 	Browser === 'chrome' ? 'hcneafegcikghlbibfmlgadahjfckonj' : 'soupcan@beth.lgbt';
 
 // internal message actions
-export const [IsVerifiedAction, AddToHistoryAction, RemoveFromHistoryAction, AddToQueueAction, PopFromQueueAction] = [
+export const [
+	IsVerifiedAction,
+	AddToHistoryAction,
+	RemoveFromHistoryAction,
+	AddToQueueAction,
+	PopFromQueueAction,
+] = [
 	'is_verified',
 	'add_user_to_history',
 	'remove_user_from_history',
-  'add_user_to_queue', 'pop_user_from_queue'
+	'add_user_to_queue',
+	'pop_user_from_queue',
 ];
 export const SuccessStatus: SuccessStatus = 'SUCCESS';
 export const ErrorStatus: ErrorStatus = 'ERROR';
@@ -112,6 +119,6 @@ export const ErrorEvent = 'ErrorEvent';
 export const MessageEvent = 'MessageEvent';
 
 export const IntegrationStateDisabled = 0;
-export const IntegrationStateReceiveOnly= 1;
+export const IntegrationStateReceiveOnly = 1;
 export const IntegrationStateSendAndReceive = 2;
 export const IntegrationStateSendOnly = 3;

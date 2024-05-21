@@ -1,7 +1,11 @@
 import { BlockBlueVerified } from '../shared';
 // This file handles requests made pertaining to search results.
 
-export function HandleTypeahead(e: CustomEvent<BlueBlockerEvent>, body: Body, config: CompiledConfig) {
+export function HandleTypeahead(
+	e: CustomEvent<BlueBlockerEvent>,
+	body: Body,
+	config: CompiledConfig,
+) {
 	// This endpoints appears to be extra/miscellaneous response data returned
 	// when doing a search. it has a user list in it, so run it through the gamut!
 	if (!body?.users?.length) {
