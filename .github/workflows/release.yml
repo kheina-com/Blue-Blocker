@@ -12,6 +12,10 @@ jobs:
       sourcefile: ${{ steps.src.outputs.sourcefile }}
     steps:
     - uses: actions/checkout@v4
+    - name: debug output github event
+      run: |
+        echo "${{ github.event }}"
+        echo "${{ github }}"
     - name: Set up Node.js
       uses: actions/setup-node@v4.0.2
       with:
