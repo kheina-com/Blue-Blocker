@@ -39,7 +39,7 @@ jobs:
         source-path: "${{ steps.src.outputs.sourcefile }}"
         approval-note: "The extension can be built and tested locally using `make firefox`. Simply navigate to twitter.com and you should see users being queued and blocked fairly quickly."
         release-note: "{\"en-US\": ${{ toJSON(toJSON(github.event.body)) }}}" # this should be the content of the release, make sure to include changelog. also yes the double use of tojson is intentional
-        compatibility-firefox-min: 48.0
+        compatibility-firefox-min: "48.0"
         license: MPL-2.0
         auth-api-issuer: ${{ secrets.MOZILLA_ADDONS_JWT_ISSUER }}
         auth-api-secret: ${{ secrets.MOZILLA_ADDONS_JWT_SECRET }}
