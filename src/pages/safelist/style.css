@@ -13,7 +13,7 @@ main {
 	margin: 0;
 }
 
-input[type="file"] {
+input[type='file'] {
 	position: absolute;
 	display: none;
 	top: -100vh;

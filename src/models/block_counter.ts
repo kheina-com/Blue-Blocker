@@ -28,11 +28,12 @@ export class BlockCounter {
 				await this.storage.set({
 					[criticalPointKey]: { refId, time: new Date().valueOf() + interval * 1.5 },
 				});
-				await new Promise((r) => setTimeout(r, 10)); // wait a second to make sure any other sets have resolved
-				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey]?.refId;
+				await new Promise(r => setTimeout(r, 10)); // wait a second to make sure any other sets have resolved
+				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey]
+					?.refId;
 			} else {
 				// sleep for a little bit to let the other tab(s) release the critical point
-				await new Promise((r) => setTimeout(r, sleep));
+				await new Promise(r => setTimeout(r, sleep));
 				sleep = Math.min(sleep ** 2, interval);
 			}
 		} while (cpRefId !== refId);

@@ -7,13 +7,13 @@ html {
 	--bg2color: #151416;
 	--bg3color: var(--bordercolor);
 	--blockquote: var(--bordercolor);
-	--textcolor: #DDD;
-	--bordercolor: #2D333A;
+	--textcolor: #ddd;
+	--bordercolor: #2d333a;
 	--linecolor: var(--bordercolor);
 	--borderhover: var(--interact);
-	--subtle: #EEEEEE80;
+	--subtle: #eeeeee80;
 	--shadowcolor: #00000080;
-	--activeshadowcolor: #000000B3;
+	--activeshadowcolor: #000000b3;
 	--screen-cover: #00000080;
 	--border-size: 1px;
 	--border-radius: 3px;
@@ -29,11 +29,16 @@ body {
 	width: 100%;
 	background: var(--bg1color);
 }
-html, body, h1, p {
+html,
+body,
+h1,
+p {
 	margin: 0;
 }
 
-a, a:active, a:focus {
+a,
+a:active,
+a:focus {
 	color: var(--textcolor);
 	text-shadow: 0 2px 3px 1px var(--shadowcolor);
 	-webkit-transition: var(--transition) var(--fadetime);
@@ -47,8 +52,12 @@ a:hover {
 	color: var(--interact);
 }
 
- button,  button:active,  button:focus,
-.button, .button:active, .button:focus {
+button,
+button:active,
+button:focus,
+.button,
+.button:active,
+.button:focus {
 	font-size: 1em;
 	padding: 0.5em 1em;
 	color: var(--textcolor);
@@ -62,13 +71,15 @@ a:hover {
 	transition: var(--transition) var(--fadetime);
 	cursor: pointer;
 }
-button:hover, .button:hover {
+button:hover,
+.button:hover {
 	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
 	border-color: var(--interact);
 	color: var(--interact);
 }
 
-pre, code {
+pre,
+code {
 	font-family: Hack, DejaVu Sans Mono, Inconsolata, monospace !important;
 	background: var(--bg2color);
 	border-radius: var(--border-radius);
@@ -83,13 +94,13 @@ pre {
 
 ::-webkit-scrollbar {
 	width: 12px;
-	height:12px;
+	height: 12px;
 }
 ::-webkit-scrollbar-track {
 	background: var(--bg2color);
 }
 ::-webkit-scrollbar-thumb {
-	background: #4D535A;
+	background: #4d535a;
 	border-radius: 4px;
 	border: 2px solid var(--bg2color);
 }

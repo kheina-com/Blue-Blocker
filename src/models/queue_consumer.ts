@@ -7,7 +7,9 @@ const criticalPointKey = 'QueueConsumerCriticalPoint';
 export class QueueConsumer {
 	storage: typeof chrome.storage.local | typeof browser.storage.local;
 	func: () => Promise<void>;
-	interval: (storage: typeof chrome.storage.local | typeof browser.storage.local) => Promise<number>;
+	interval: (
+		storage: typeof chrome.storage.local | typeof browser.storage.local,
+	) => Promise<number>;
 	private _timeout: number | null;
 	private _interval: number;
 	private _func_timeout: number | null;
@@ -20,7 +22,9 @@ export class QueueConsumer {
 	constructor(
 		storage: typeof chrome.storage.local | typeof browser.storage.local,
 		func: () => Promise<any>,
-		interval_func: (storage: typeof chrome.storage.local | typeof browser.storage.local) => Promise<number>,
+		interval_func: (
+			storage: typeof chrome.storage.local | typeof browser.storage.local,
+		) => Promise<number>,
 	) {
 		// idk
 		this.storage = storage;
@@ -29,7 +33,7 @@ export class QueueConsumer {
 		this._timeout = null;
 		this._interval = 100;
 		this._func_timeout = null;
-		this._refId = RefId();  // consumer is assigned to a tab, so keep it in the class
+		this._refId = RefId(); // consumer is assigned to a tab, so keep it in the class
 	}
 	async getCriticalPoint(): Promise<boolean> {
 		// console.debug(logstr, this._refId, "attempting to obtain critical point");
@@ -50,8 +54,9 @@ export class QueueConsumer {
 						time: new Date().valueOf() + (this._interval || 0) * 1.5,
 					},
 				});
-				await new Promise((r) => setTimeout(r, 10)); // wait a second to make sure any other sets have resolved
-				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey]?.refId;
+				await new Promise(r => setTimeout(r, 10)); // wait a second to make sure any other sets have resolved
+				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey]
+					?.refId;
 			} else {
 				// console.debug(logstr, this._refId, "failed to obtain critical point");
 				return false;
@@ -69,7 +74,7 @@ export class QueueConsumer {
 		}
 	}
 	entropy(): number {
-		const variance = this._interval * 0.1;  // 0.1 = 10% entropy
+		const variance = this._interval * 0.1; // 0.1 = 10% entropy
 		return Math.random() * variance * 2 - variance;
 	}
 	async sync() {
@@ -79,9 +84,18 @@ export class QueueConsumer {
 			// if we just got it, func will be null and we can schedule it
 			// if we already had it, it already finished or its waiting on queue
 			if (this._func_timeout === null) {
-				this._func_timeout = setTimeout(() => this.func().then(() => { this._func_timeout = null; this.sync(); }).catch(() => this.stop()), this._interval + this.entropy());
+				this._func_timeout = setTimeout(
+					() =>
+						this.func()
+							.then(() => {
+								this._func_timeout = null;
+								this.sync();
+							})
+							.catch(() => this.stop()),
+					this._interval + this.entropy(),
+				);
 			}
-			this._timeout = null;  // set timeout to null, just for the running check in start
+			this._timeout = null; // set timeout to null, just for the running check in start
 		} else {
 			// we couldn't get the critical point, so cancel func if its scheduled, then set timeout to check again
 			if (this._func_timeout) {
@@ -97,7 +111,7 @@ export class QueueConsumer {
 			// we're already running
 			return;
 		}
-		console.debug(logstr, "queue consumer started");
+		console.debug(logstr, 'queue consumer started');
 		this.sync();
 	}
 	stop() {
@@ -110,6 +124,6 @@ export class QueueConsumer {
 			this._func_timeout = null;
 		}
 		this.releaseCriticalPoint();
-		console.debug(logstr, "queue consumer stopped");
+		console.debug(logstr, 'queue consumer stopped');
 	}
 }

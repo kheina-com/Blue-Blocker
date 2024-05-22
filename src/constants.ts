@@ -6,11 +6,7 @@ let _api: {
 try {
 	_api = {
 		// @ts-ignore
-		runtime: {
-			...browser.runtime,
-			OnInstalledReason: chrome.runtime.OnInstalledReason,
-			restartAfterDelay: chrome.runtime.restartAfterDelay,
-		},
+		runtime: browser.runtime,
 		storage: browser.storage,
 		action: browser.browserAction,
 	};
@@ -28,6 +24,7 @@ export const DefaultOptions: Config = {
 	mute: false,
 	blockFollowing: false,
 	blockFollowers: false,
+	skipBlueCheckmark: false,
 	skipVerified: true,
 	skipAffiliated: true,
 	skip1Mplus: true,
@@ -36,6 +33,8 @@ export const DefaultOptions: Config = {
 	skipFollowerCount: 1e6,
 	soupcanIntegration: false,
 	blockPromoted: false,
+	blockDisallowedWords: false,
+	disallowedWords: [],
 
 	// this isn"t set, but is used
 	// TODO: when migrating to firefox manifest v3, check to see if sets can be stored yet
@@ -77,13 +76,19 @@ export const ReasonNftAvatar: number = 1;
 export const ReasonBusinessVerified: number = 2;
 export const ReasonTransphobia: number = 3;
 export const ReasonPromoted: number = 4;
+export const ReasonDisallowedWordsOrEmojis: number = 5;
+export const ReasonUsingBlueFeatures: number = 6;
 export const ReasonMap = {
 	[ReasonBlueVerified]: 'Twitter Blue verified',
 	[ReasonNftAvatar]: 'NFT avatar',
 	[ReasonBusinessVerified]: 'Twitter Business verified',
 	[ReasonTransphobia]: 'transphobia',
 	[ReasonPromoted]: 'promoting tweets',
+	[ReasonDisallowedWordsOrEmojis]: 'disallowed words or emojis',
+	[ReasonUsingBlueFeatures]: 'using Twitter Blue features',
 };
+
+export const emojiRegExp = RegExp(/^[\p{Emoji_Presentation}\u200d]+$/, 'u');
 
 export const LegacyVerifiedUrl: string =
 	'https://gist.githubusercontent.com/travisbrown/b50d6745298cccd6b1f4697e4ec22103/raw/012009351630dc351e3a763b49bf24fa50ca3eb7/legacy-verified.csv';
@@ -95,11 +100,18 @@ export const SoupcanExtensionId =
 	Browser === 'chrome' ? 'hcneafegcikghlbibfmlgadahjfckonj' : 'soupcan@beth.lgbt';
 
 // internal message actions
-export const [IsVerifiedAction, AddToHistoryAction, RemoveFromHistoryAction, AddToQueueAction, PopFromQueueAction] = [
+export const [
+	IsVerifiedAction,
+	AddToHistoryAction,
+	RemoveFromHistoryAction,
+	AddToQueueAction,
+	PopFromQueueAction,
+] = [
 	'is_verified',
 	'add_user_to_history',
 	'remove_user_from_history',
-  'add_user_to_queue', 'pop_user_from_queue'
+	'add_user_to_queue',
+	'pop_user_from_queue',
 ];
 export const SuccessStatus: SuccessStatus = 'SUCCESS';
 export const ErrorStatus: ErrorStatus = 'ERROR';
@@ -110,6 +122,6 @@ export const ErrorEvent = 'ErrorEvent';
 export const MessageEvent = 'MessageEvent';
 
 export const IntegrationStateDisabled = 0;
-export const IntegrationStateReceiveOnly= 1;
+export const IntegrationStateReceiveOnly = 1;
 export const IntegrationStateSendAndReceive = 2;
 export const IntegrationStateSendOnly = 3;

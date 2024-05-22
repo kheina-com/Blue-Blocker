@@ -19,6 +19,8 @@ import {
 	ReasonExternal,
 	IntegrationStateDisabled,
 	IntegrationStateReceiveOnly,
+	ReasonDisallowedWordsOrEmojis,
+	ReasonUsingBlueFeatures,
 } from './constants';
 
 import {
@@ -43,7 +45,7 @@ const blockCache: Set<string> = new Set();
 export const UnblockCache: Set<string> = new Set();
 
 export function SetHeaders(headers: { [k: string]: string }) {
-	api.storage.local.get({ headers: {} }).then((items) => {
+	api.storage.local.get({ headers: {} }).then(items => {
 		// so basically we want to only update items that have values
 		for (const [header, value] of Object.entries(headers)) {
 			items.headers[header.toLowerCase()] = value;
@@ -56,6 +58,8 @@ setInterval(blockCache.clear, 10 * 60e3); // clear the cache every 10 minutes
 // this is just here so we don't double add users unnecessarily (and also overwrite name)
 setInterval(UnblockCache.clear, 10 * 60e3);
 
+const twitterWindowRegex = /^https?:\/\/(?:\w+\.)?(?:twitter|x)\.com(?=$|\/)/;
+
 function unblockUser(
 	user: { name: string; screen_name: string },
 	user_id: string,
@@ -63,12 +67,12 @@ function unblockUser(
 	attempt: number = 1,
 ) {
 	UnblockCache.add(user_id);
-	api.storage.sync.get({ unblocked: {} }).then((items) => {
+	api.storage.sync.get({ unblocked: {} }).then(items => {
 		items.unblocked[String(user_id)] = user.screen_name;
 		api.storage.sync.set(items);
 	});
 
-	const match = window.location.href.match(/^https?:\/\/(?:\w+\.)?twitter.com(?=$|\/)/);
+	const match = window.location.href.match(twitterWindowRegex);
 
 	if (!match) {
 		throw new Error('unexpected or incorrectly formatted url');
@@ -78,12 +82,12 @@ function unblockUser(
 	let url: string = '';
 
 	if (root.includes('tweetdeck')) {
-		url = 'https://api.twitter.com/1.1/';
+		url = 'https://api.x.com/1.1/';
 	} else {
 		url = `${root}/i/api/1.1/`;
 	}
 
-	api.storage.sync.get(DefaultOptions).then((_config) => {
+	api.storage.sync.get(DefaultOptions).then(_config => {
 		const config = _config as Config;
 		if (config.mute) {
 			url += 'mutes/users/destroy.json';
@@ -93,7 +97,7 @@ function unblockUser(
 
 		api.storage.local
 			.get({ headers: null })
-			.then((items) => items.headers as { [k: string]: string })
+			.then(items => items.headers as { [k: string]: string })
 			.then((req_headers: { [k: string]: string }) => {
 				const body = `user_id=${user_id}`;
 				const headers: { [k: string]: string } = {
@@ -128,7 +132,7 @@ function unblockUser(
 					credentials: 'include',
 				};
 				fetch(url, options)
-					.then((response) => {
+					.then(response => {
 						if (response.status === 403) {
 							// user has been logged out, we need to stop queue and re-add
 							MakeToast(
@@ -174,7 +178,7 @@ function unblockUser(
 								response,
 							);
 						} else {
-							RemoveUserBlockHistory(user_id).catch((e) => console.error(logstr, e));
+							RemoveUserBlockHistory(user_id).catch(e => console.error(logstr, e));
 							console.log(
 								logstr,
 								`un${config.mute ? 'mut' : 'block'}ed ${FormatLegacyName(user)}`,
@@ -187,7 +191,7 @@ function unblockUser(
 							);
 						}
 					})
-					.catch((error) => {
+					.catch(error => {
 						if (attempt < 3) {
 							unblockUser(user, user_id, reason, attempt + 1);
 						} else {
@@ -207,7 +211,7 @@ function unblockUser(
 
 const UserBlockedEvent = 'UserBlockedEvent';
 const UserLogoutEvent = 'UserLogoutEvent';
-api.storage.local.onChanged.addListener((items) => {
+api.storage.local.onChanged.addListener(items => {
 	// we're using local storage as a really dirty event driver
 	// TODO: replace this with chrome.tabs.sendmessage at some point. (requires adding tabs permission)
 
@@ -217,12 +221,12 @@ api.storage.local.onChanged.addListener((items) => {
 	const e = items[EventKey].newValue;
 	console.debug(logstr, 'received multi-tab event:', e);
 
-	api.storage.sync.get(DefaultOptions).then((options) => {
+	api.storage.sync.get(DefaultOptions).then(options => {
 		const config = options as Config;
 		switch (e.type) {
 			case MessageEvent:
 				if (config.showBlockPopups) {
-					MakeToast(e.message, config);
+					MakeToast(e.message, config, e.options);
 				}
 				break;
 
@@ -309,7 +313,7 @@ function queueBlockUser(
 	}
 
 	QueuePush(blockUser);
-	api.storage.sync.get(DefaultOptions).then((_config) => {
+	api.storage.sync.get(DefaultOptions).then(_config => {
 		const config = _config as Config;
 		console.log(
 			logstr,
@@ -325,14 +329,14 @@ function queueBlockUser(
 function checkBlockQueue(): Promise<void> {
 	return new Promise<void>((resolve, reject) => {
 		QueuePop()
-			.then((item) => {
+			.then(item => {
 				if (!item) {
 					return reject();
 				}
 				blockUser(item);
 				resolve();
 			})
-			.catch((error) => {
+			.catch(error => {
 				console.error(
 					logstr,
 					'unexpected error occurred while processing block queue',
@@ -346,7 +350,7 @@ function checkBlockQueue(): Promise<void> {
 							detail: { error, event: null },
 						},
 					})
-					.catch((error) => {
+					.catch(error => {
 						console.error(
 							logstr,
 							'unexpected error occurred while processing block queue',
@@ -374,7 +378,7 @@ consumer.start();
 const CsrfTokenRegex = /ct0=\s*(\w+);/;
 
 function blockUser(user: BlockUser, attempt = 1) {
-	const match = window.location.href.match(/^https?:\/\/(?:\w+\.)?twitter.com(?=$|\/)/);
+	const match = window.location.href.match(twitterWindowRegex);
 
 	if (!match) {
 		throw new Error('unexpected or incorrectly formatted url');
@@ -389,7 +393,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 		url = `${root}/i/api/1.1/`;
 	}
 
-	api.storage.sync.get(DefaultOptions).then((_config) => {
+	api.storage.sync.get(DefaultOptions).then(_config => {
 		const config = _config as Config;
 		if (config.mute) {
 			url += 'mutes/users/create.json';
@@ -399,8 +403,8 @@ function blockUser(user: BlockUser, attempt = 1) {
 
 		api.storage.local
 			.get({ headers: null })
-			.then((items) => items.headers as { [k: string]: string })
-			.then((req_headers) => {
+			.then(items => items.headers as { [k: string]: string })
+			.then(req_headers => {
 				const body = `user_id=${user.user_id}`;
 				const headers: { [k: string]: string } = {
 					'content-length': body.length.toString(),
@@ -435,7 +439,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 				};
 
 				fetch(url, options)
-					.then((response) => {
+					.then(response => {
 						console.debug(logstr, 'block response:', response);
 
 						if (response.status === 403 || response.status === 401) {
@@ -448,7 +452,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 								'user is logged out, queue consumer has been halted.',
 							);
 						} else if (response.status === 404) {
-							AddUserBlockHistory(user, HistoryStateGone).catch((e) =>
+							AddUserBlockHistory(user, HistoryStateGone).catch(e =>
 								console.error(logstr, e),
 							);
 							console.log(
@@ -469,7 +473,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 							);
 						} else {
 							blockCounter.increment();
-							AddUserBlockHistory(user).catch((e) => console.error(logstr, e));
+							AddUserBlockHistory(user).catch(e => console.error(logstr, e));
 							console.log(
 								logstr,
 								`blocked ${FormatLegacyName(user.user)} due to ${
@@ -481,7 +485,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 							});
 						}
 					})
-					.catch((error) => {
+					.catch(error => {
 						if (attempt < 3) {
 							blockUser(user, attempt + 1);
 						} else {
@@ -507,7 +511,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 						};
 
 						fetch(url, options)
-							.then((response) => {
+							.then(response => {
 								console.debug(
 									logstr,
 									`${config.mute ? 'mute' : 'block'} response:`,
@@ -526,7 +530,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 										'user is logged out, queue consumer has been halted.',
 									);
 								} else if (response.status === 404) {
-									AddUserBlockHistory(user, HistoryStateGone).catch((e) =>
+									AddUserBlockHistory(user, HistoryStateGone).catch(e =>
 										console.error(logstr, e),
 									);
 									console.log(
@@ -549,9 +553,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 									);
 								} else {
 									blockCounter.increment();
-									AddUserBlockHistory(user).catch((e) =>
-										console.error(logstr, e),
-									);
+									AddUserBlockHistory(user).catch(e => console.error(logstr, e));
 									console.log(
 										logstr,
 										`${config.mute ? 'mut' : 'block'}ed ${FormatLegacyName(
@@ -563,7 +565,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 									});
 								}
 							})
-							.catch((error) => {
+							.catch(error => {
 								if (attempt < 3) {
 									blockUser(user, attempt + 1);
 								} else {
@@ -585,76 +587,81 @@ function blockUser(user: BlockUser, attempt = 1) {
 
 const blockableAffiliateLabels: Set<string> = new Set([]);
 const blockableVerifiedTypes: Set<string> = new Set(['Business']);
-export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
+export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledConfig) {
 	// We're not currently adding anything to the queue so give up.
 	if (config.suspendedBlockCollection) {
 		return;
 	}
 
-	try {
-		if (
-			user?.rest_id === undefined ||
-			user?.legacy?.name === undefined ||
-			user?.legacy?.screen_name === undefined
-		) {
-			throw new Error('invalid user object passed to BlockBlueVerified');
-		}
+	const formattedUserName = FormatLegacyName(user.legacy);
 
-		const formattedUserName = FormatLegacyName(user.legacy);
-		const hasBlockableVerifiedTypes = blockableVerifiedTypes.has(
-			user.legacy?.verified_type || '',
-		);
-		const hasBlockableAffiliateLabels = blockableAffiliateLabels.has(
-			user.affiliates_highlighted_label?.label?.userLabelType || '',
-		);
-
-		// since we can be fairly certain all user objects will be the same, break this into a separate function
-		if (user.legacy?.verified_type && !blockableVerifiedTypes.has(user.legacy.verified_type)) {
-			return;
-		}
-		if (user.legacy?.blocking || (config.mute && user.legacy?.muting)) {
-			return;
-		}
-
-		// some unified logic so it's not copied in a bunch of places. log everything as debug because it'll be noisy
-		if (
-			// group for if the user has unblocked them previously
-			// you cannot store sets in sync memory, so this will be a janky object
-			config.unblocked.hasOwnProperty(String(user.rest_id))
-		) {
-			console.debug(
-				logstr,
-				`skipped user ${formattedUserName} because you un${
-					config.mute ? 'mut' : 'block'
-				}ed them previously.`,
-			);
-			return;
-		} else if (
-			// group for block-following option
-			!config.blockFollowing &&
-			(user.legacy?.following || user.super_following)
-		) {
-			console.debug(logstr, `skipped user ${formattedUserName} because you follow them.`);
-			return;
-		} else if (
-			// group for block-followers option
-			!config.blockFollowers &&
-			user.legacy?.followed_by
-		) {
-			console.debug(logstr, `skipped user ${formattedUserName} because they follow you.`);
-			return;
-		}
-
-		const legacyDbRejectMessage =
-			'could not access the legacy verified database, skip legacy has been disabled.';
-		// step 1: is user verified
-		if (user.is_blue_verified || hasBlockableVerifiedTypes || hasBlockableAffiliateLabels) {
+	// set up this funky little function so that we can return to exit early from verified block but continue with other steps
+	const done: boolean = await (async (): Promise<boolean> => {
+		try {
 			if (
-				// skip checking for legacy if the config says to
-				// if the option is disabled, non-legacy verified blue users will still get caught by the last else block
-				(config.blockForUse && user.used_blue) ||
-				// group for skip-verified option
-				(config.skipVerified &&
+				user?.rest_id === undefined ||
+				user?.legacy?.name === undefined ||
+				user?.legacy?.screen_name === undefined
+			) {
+				throw new Error('invalid user object passed to BlockBlueVerified');
+			}
+
+			const hasBlockableVerifiedTypes = blockableVerifiedTypes.has(
+				user.legacy?.verified_type || '',
+			);
+			const hasBlockableAffiliateLabels = blockableAffiliateLabels.has(
+				user.affiliates_highlighted_label?.label?.userLabelType || '',
+			);
+
+			// some unified logic so it's not copied in a bunch of places. log everything as debug because it'll be noisy
+			if (
+				// group for if the user has unblocked them previously
+				// you cannot store sets in sync memory, so this will be a janky object
+				config.unblocked.hasOwnProperty(String(user.rest_id))
+			) {
+				console.debug(
+					logstr,
+					`skipped user ${formattedUserName} because you un${
+						config.mute ? 'mut' : 'block'
+					}ed them previously.`,
+				);
+				return true;
+			} else if (
+				// group for block-following option
+				!config.blockFollowing &&
+				(user.legacy?.following || user.super_following)
+			) {
+				console.debug(logstr, `skipped user ${formattedUserName} because you follow them.`);
+				return true;
+			} else if (
+				// group for block-followers option
+				!config.blockFollowers &&
+				user.legacy?.followed_by
+			) {
+				console.debug(logstr, `skipped user ${formattedUserName} because they follow you.`);
+				return true;
+			} else if (user.legacy?.blocking || (config.mute && user.legacy?.muting)) {
+				return true;
+			}
+
+			// since we can be fairly certain all user objects will be the same, break this into a separate function
+			if (
+				user.legacy?.verified_type &&
+				!blockableVerifiedTypes.has(user.legacy.verified_type)
+			) {
+				return false;
+			}
+
+			const legacyDbRejectMessage =
+				'could not access the legacy verified database, skip legacy has been disabled.';
+			// step 1: is user verified
+			if (
+				!config.skipBlueCheckmark &&
+				(user.is_blue_verified || hasBlockableVerifiedTypes || hasBlockableAffiliateLabels)
+			) {
+				if (
+					// group for skip-verified option
+					config.skipVerified &&
 					(await new Promise((resolve, reject) => {
 						// basically, we're wrapping a promise around a promise to set a timeout on it
 						// in case the user's device was unable to set up the legacy db
@@ -667,52 +674,81 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 							.then(resolve)
 							.catch(disableSkipLegacy)
 							.finally(() => clearTimeout(timeout));
-					})))
-			) {
-				console.log(
-					logstr,
-					`did not ${
-						config.mute ? 'mute' : 'block'
-					} Twitter Blue verified user ${formattedUserName} because they are legacy verified.`,
-				);
-			} else if (
-				// verified via an affiliated organization instead of blue
-				config.skipAffiliated &&
-				(hasBlockableAffiliateLabels || hasBlockableVerifiedTypes)
-			) {
-				console.log(
-					logstr,
-					`did not ${
-						config.mute ? 'mute' : 'block'
-					} Twitter Blue verified user ${formattedUserName} because they are verified through an affiliated organization.`,
-				);
-			} else if (
-				// verified by follower count
-				config.skip1Mplus &&
-				user.legacy?.followers_count > config.skipFollowerCount
-			) {
-				console.log(
-					logstr,
-					`did not ${
-						config.mute ? 'mute' : 'block'
-					} Twitter Blue verified user ${formattedUserName} because they have over ${commafy(
-						config.skipFollowerCount,
-					)} followers and Elon is an idiot.`,
-				);
-			} else {
-				const reason = (hasBlockableVerifiedTypes) ? ReasonBusinessVerified : ReasonBlueVerified;
-				queueBlockUser(user, String(user.rest_id), reason);
-				return;
+					}))
+				) {
+					console.log(
+						logstr,
+						`did not ${
+							config.mute ? 'mute' : 'block'
+						} Twitter Blue verified user ${formattedUserName} because they are legacy verified.`,
+					);
+				} else if (
+					// verified via an affiliated organization instead of blue
+					config.skipAffiliated &&
+					(hasBlockableAffiliateLabels || hasBlockableVerifiedTypes)
+				) {
+					console.log(
+						logstr,
+						`did not ${
+							config.mute ? 'mute' : 'block'
+						} Twitter Blue verified user ${formattedUserName} because they are verified through an affiliated organization.`,
+					);
+				} else if (
+					// verified by follower count
+					config.skip1Mplus &&
+					user.legacy?.followers_count > config.skipFollowerCount
+				) {
+					console.log(
+						logstr,
+						`did not ${
+							config.mute ? 'mute' : 'block'
+						} Twitter Blue verified user ${formattedUserName} because they have over ${commafy(
+							config.skipFollowerCount,
+						)} followers and Elon is an idiot.`,
+					);
+				} else {
+					const reason = hasBlockableVerifiedTypes
+						? ReasonBusinessVerified
+						: ReasonBlueVerified;
+					queueBlockUser(user, String(user.rest_id), reason);
+					return true;
+				}
 			}
+		} catch (e) {
+			console.error(logstr, e);
 		}
 
-		// step 2: promoted tweets
-		if (config.blockPromoted && user.promoted_tweet) {
-			queueBlockUser(user, String(user.rest_id), ReasonPromoted);
-			return;
-		}
-	} catch (e) {
-		console.error(logstr, e);
+		return false;
+	})();
+
+	if (done) {
+		return;
+	}
+
+	if (config.blockForUse && user.used_blue) {
+		queueBlockUser(user, String(user.rest_id), ReasonUsingBlueFeatures);
+		return;
+	}
+
+	// Step 1.5: Check for disallowed words or emojis in usernames.
+	if (
+		config.blockDisallowedWords &&
+		config.disallowedWords?.test(user.legacy.name.replace(/\s{2,}/g, ' '))
+	) {
+		queueBlockUser(user, user.rest_id, ReasonDisallowedWordsOrEmojis);
+		console.log(
+			logstr,
+			`${
+				config.mute ? 'muted' : 'blocked'
+			} ${formattedUserName} for having disallowed words/emojis in their username.`,
+		);
+		return true;
+	}
+
+	// step 2: promoted tweets
+	if (config.blockPromoted && user.promoted_tweet) {
+		queueBlockUser(user, String(user.rest_id), ReasonPromoted);
+		return;
 	}
 
 	// external integrations always come last and have their own error handling
@@ -742,9 +778,9 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 
 	let updateIntegrations = false;
 	api.storage.local
-		.get({ integrations: [] })
-		.then((items) => items.integrations as { [id: string]: { name: string; state: number } })
-		.then(async (integrations) => {
+		.get({ integrations: {} })
+		.then(items => items.integrations as { [id: string]: { name: string; state: number } })
+		.then(async integrations => {
 			for (const [extensionId, integration] of Object.entries(integrations)) {
 				if (
 					!extensionId ||
@@ -811,7 +847,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: Config) {
 				api.storage.local.set({ integrations });
 			}
 		})
-		.catch((e) =>
+		.catch(e =>
 			// this error should basically be unreachable
 			console.error(logstr, 'an unexpected error occurred while processing integrations:', e),
 		);

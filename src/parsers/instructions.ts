@@ -29,19 +29,19 @@ const UserObjectPath: string[] = [
 	'user_results',
 	'result',
 ];
-const IgnoreTweetTypes = new Set(['TimelineTimelineCursor', 'TweetTombstone']);
+const IgnoreTweetTypes = new Set(['TimelineTimelineCursor']);
 const PromotedStrings = new Set(['suggest_promoted', 'Promoted', 'promoted']);
 
-function handleUserObject(obj: any, config: Config, from_blue: boolean) {
+function handleUserObject(obj: any, config: CompiledConfig, from_blue: boolean) {
 	let userObj = obj.user_results.result;
 
-	if (userObj.__typename === "UserUnavailable") {
-		console.log(logstr, "user is unavailable", userObj);
+	if (userObj.__typename === 'UserUnavailable') {
+		console.log(logstr, 'user is unavailable', userObj);
 		return;
 	}
 
-	if (userObj.__typename !== "User") {
-		console.error(logstr, "could not parse user object", userObj);
+	if (userObj.__typename !== 'User') {
+		console.error(logstr, 'could not parse user object', userObj);
 		return;
 	}
 
@@ -52,17 +52,18 @@ function handleUserObject(obj: any, config: Config, from_blue: boolean) {
 	BlockBlueVerified(obj.user_results.result, config);
 }
 
-export function ParseTimelineUser(obj: any, config: Config, from_blue: boolean) {
+export function ParseTimelineUser(obj: any, config: CompiledConfig, from_blue: boolean) {
 	handleUserObject(obj, config, from_blue);
 }
 
-function handleTweetObject(obj: any, config: Config, promoted: boolean) {
+function handleTweetObject(obj: any, config: CompiledConfig, promoted: boolean) {
 	let ptr = obj,
 		uses_blue_feats = false;
-	if (ptr.__typename == 'TweetTombstone') {
-		return;
-	}
 	for (const key of UserObjectPath) {
+		if (ptr.__typename == 'TweetTombstone') {
+			// If we hit a deleted tweet, we bail
+			return;
+		}
 		if (ptr.hasOwnProperty(key)) {
 			ptr = ptr[key];
 			if (
@@ -84,7 +85,7 @@ function handleTweetObject(obj: any, config: Config, promoted: boolean) {
 	BlockBlueVerified(ptr as BlueBlockerUser, config);
 }
 
-export function ParseTimelineTweet(tweet: any, config: Config) {
+export function ParseTimelineTweet(tweet: any, config: CompiledConfig) {
 	if (IgnoreTweetTypes.has(tweet.itemContent.itemType)) {
 		return;
 	}
@@ -131,7 +132,7 @@ export function ParseTimelineTweet(tweet: any, config: Config) {
 export function HandleInstructionsResponse(
 	e: CustomEvent<BlueBlockerEvent>,
 	body: Body,
-	config: Config,
+	config: CompiledConfig,
 ) {
 	// pull the "instructions" object from the tweet
 	let _instructions = body;
@@ -190,7 +191,7 @@ export function HandleInstructionsResponse(
 				if (tweet.content.itemContent?.itemType == 'TimelineTweet') {
 					ParseTimelineTweet(tweet.content, config);
 				} else if (tweet.content.itemContent?.itemType == 'TimelineUser') {
-					const from_blue = (e.detail.parsedUrl[1] == "BlueVerifiedFollowers");
+					const from_blue = e.detail.parsedUrl[1] == 'BlueVerifiedFollowers';
 					ParseTimelineUser(tweet.content.itemContent, config, from_blue);
 				}
 				break;

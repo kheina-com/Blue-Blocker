@@ -3,7 +3,7 @@ import { BlockBlueVerified } from '../shared';
 // including the "For You" page as well as the "Following" page. it also
 // seems to work for the "adaptive.json" response from search results
 
-export function HandleForYou(e: CustomEvent<BlueBlockerEvent>, body: Body, config: Config) {
+export function HandleForYou(e: CustomEvent<BlueBlockerEvent>, body: Body, config: CompiledConfig) {
 	// This API endpoint currently does not deliver information required for
 	// block filters (in particular, it's missing affiliates_highlighted_label).
 	// The above doesn't seem completely true. it's missing affiliates specifically

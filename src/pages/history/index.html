@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<meta charset="utf-8"/>
+		<meta charset="utf-8" />
 		<title>Blue Blocker History</title>
-		<link href="./style.css" rel="stylesheet">
-		<link href="/icon/icon-128.png" rel="icon" type="image/png" sizes="128x128">
+		<link href="./style.css" rel="stylesheet" />
+		<link href="/icon/icon-128.png" rel="icon" type="image/png" sizes="128x128" />
 		<script src="./index.ts" type="module"></script>
 	</head>
 	<!-- ♀ -->
@@ -12,12 +12,16 @@
 		<main>
 			<h1>Block History</h1>
 			<p class="subtitle">Users may be blocked while this page is open, refresh to update</p>
-			<p class="blocked-users-count">blocked <span name="blocked-users-count"></span> users so far!</p>
+			<p class="blocked-users-count">
+				blocked <span name="blocked-users-count"></span> users so far!
+			</p>
 			<p id="detailed-counts" class="subtitle"></p>
-			<p id="reset-counter">it looks like the block counter may have gotten desynced.<button>click here</button>to reset the counter to <span name="blocked-users-count"></span> (currently <span id="block-counter-current-value"></span>)</p>
-			<div id="block-history" class="toasts">
-				loading...
-			</div>
+			<p id="reset-counter">
+				it looks like the block counter may have gotten desynced.<button>click here</button
+				>to reset the counter to <span name="blocked-users-count"></span> (currently
+				<span id="block-counter-current-value"></span>)
+			</p>
+			<div id="block-history" class="toasts">loading...</div>
 		</main>
 	</body>
 </html>

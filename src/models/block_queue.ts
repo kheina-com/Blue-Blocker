@@ -28,13 +28,14 @@ export class BlockQueue {
 				await this.storage.set({
 					[criticalPointKey]: { refId, time: new Date().valueOf() + interval * 1.5 },
 				});
-				await new Promise((r) => setTimeout(r, 10)); // wait a second to make sure any other sets have resolved
-				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey]?.refId;
+				await new Promise(r => setTimeout(r, 10)); // wait a second to make sure any other sets have resolved
+				cpRefId = (await this.storage.get({ [criticalPointKey]: null }))[criticalPointKey]
+					?.refId;
 			} else {
 				// rather than continually try to obtain the critical point, exit
 				// if the consumer only queues the next run after successfully finishing the last, this can go back to only sleeping
 				// console.debug(logstr, refId, "failed to obtain critical point, sleeping");
-				await new Promise((r) => setTimeout(r, sleep));
+				await new Promise(r => setTimeout(r, sleep));
 				sleep = Math.min(sleep ** 2, interval);
 			}
 		} while (cpRefId !== refId);
@@ -51,9 +52,9 @@ export class BlockQueue {
 	}
 	async sync() {
 		const refId = RefId();
-		if (!await this.getCriticalPoint(refId)) {
+		if (!(await this.getCriticalPoint(refId))) {
 			// we failed to obtain the critical point, so we can't continue
-			throw new Error("failed to obtain critical point");
+			throw new Error('failed to obtain critical point');
 		}
 		// sync simply adds the in-memory queue to the stored queue
 		const oldQueue = (await this.storage.get({ BlockQueue: [] })).BlockQueue;
@@ -76,9 +77,9 @@ export class BlockQueue {
 	}
 	async shift() {
 		const refId = RefId();
-		if (!await this.getCriticalPoint(refId)) {
+		if (!(await this.getCriticalPoint(refId))) {
 			// we failed to obtain the critical point, so we can't continue
-			throw new Error("failed to obtain critical point");
+			throw new Error('failed to obtain critical point');
 		}
 		const items = await this.storage.get({ BlockQueue: [] });
 		const item = items.BlockQueue.shift();
@@ -90,9 +91,9 @@ export class BlockQueue {
 	}
 	async clear() {
 		const refId = RefId();
-		if (!await this.getCriticalPoint(refId)) {
+		if (!(await this.getCriticalPoint(refId))) {
 			// we failed to obtain the critical point, so we can't continue
-			throw new Error("failed to obtain critical point");
+			throw new Error('failed to obtain critical point');
 		}
 		const items = await this.storage.get({ BlockQueue: [] });
 		if (!items.BlockQueue || items.BlockQueue.length === 0) {
