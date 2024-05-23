@@ -47,22 +47,18 @@ const epoch: number = 2500000000000;
 export const QueueId = (time: Date | null = null): number =>
 	epoch - ((time ?? new Date()).valueOf() + Math.random() * 1000);
 
-export async function IsUserLegacyVerified(user_id: string, handle: string): Promise<boolean> {
-	interface LegacyVerifiedResponse {
-		status: 'SUCCESS';
-		result: boolean;
-	}
-
-	let response: MessageResponse | null = null;
+async function sendMessage<T extends MessageResponse>(
+	message: RuntimeMessage,
+	err: string,
+): Promise<T> {
 	const maxAttempts = 5;
 	let attempt: number = 0;
+	let response: MessageResponse | null = null;
+
 	for (;;) {
-		response = await api.runtime.sendMessage<RuntimeMessage, MessageResponse>({
-			action: IsVerifiedAction,
-			data: { user_id, handle },
-		});
+		response = await api.runtime.sendMessage<RuntimeMessage, MessageResponse>(message);
 		if (response.status === SuccessStatus) {
-			return (response as LegacyVerifiedResponse).result;
+			return response as T;
 		}
 		if (attempt < maxAttempts) {
 			await new Promise(r => setTimeout(r, attempt ** 2 * 1000));
@@ -72,9 +68,24 @@ export async function IsUserLegacyVerified(user_id: string, handle: string): Pro
 		}
 	}
 
-	const message = 'legacy verified db returned non-success status';
-	console.error(logstr, message, response);
-	throw new Error(message);
+	console.error(logstr, err, response);
+	throw new Error(err);
+}
+
+export async function IsUserLegacyVerified(user_id: string, handle: string): Promise<boolean> {
+	interface LegacyVerifiedResponse {
+		status: SuccessStatus;
+		result: boolean;
+	}
+
+	const response = await sendMessage<LegacyVerifiedResponse>(
+		{
+			action: IsVerifiedAction,
+			data: { user_id, handle },
+		},
+		'legacy verified db returned non-success status',
+	);
+	return response.result;
 }
 
 export async function AddUserBlockHistory(
@@ -97,53 +108,23 @@ export async function AddUserBlockHistory(
 		data.external_reason = user.external_reason;
 	}
 
-	let response: MessageResponse | null = null;
-	const maxAttempts = 5;
-	let attempt: number = 0;
-	for (;;) {
-		response = await api.runtime.sendMessage<RuntimeMessage, MessageResponse>({
+	await sendMessage(
+		{
 			action: AddToHistoryAction,
 			data,
-		});
-		if (response.status === SuccessStatus) {
-			return;
-		}
-		if (attempt < maxAttempts) {
-			await new Promise(r => setTimeout(r, attempt ** 2 * 1000));
-			attempt++;
-		} else {
-			break;
-		}
-	}
-
-	const message = 'unable to add user to block history';
-	console.error(logstr, message, response);
-	throw new Error(message);
+		},
+		'unable to add user to block history',
+	);
 }
 
 export async function RemoveUserBlockHistory(user_id: string): Promise<void> {
-	let response: MessageResponse | null = null;
-	const maxAttempts = 5;
-	let attempt: number = 0;
-	for (;;) {
-		response = await api.runtime.sendMessage<RuntimeMessage, MessageResponse>({
+	await sendMessage(
+		{
 			action: RemoveFromHistoryAction,
 			data: { user_id },
-		});
-		if (response.status === SuccessStatus) {
-			return;
-		}
-		if (attempt < maxAttempts) {
-			await new Promise(r => setTimeout(r, attempt ** 2 * 1000));
-			attempt++;
-		} else {
-			break;
-		}
-	}
-
-	const message = 'unable to remove user from block history';
-	console.error(logstr, message, response);
-	throw new Error(message);
+		},
+		'unable to remove user from block history',
+	);
 }
 
 export function FormatLegacyName(user: { name: string; screen_name: string }) {
@@ -211,55 +192,26 @@ export function EscapeHtml(text: string): string {
 
 export async function QueuePop(): Promise<BlockUser | null> {
 	interface PopFromQueueResponse {
-		status: 'SUCCESS';
+		status: SuccessStatus;
 		result: BlockUser | null;
 	}
 
-	let response: MessageResponse | null = null;
-	const maxAttempts = 5;
-	let attempt: number = 0;
-	for (;;) {
-		response = await api.runtime.sendMessage<RuntimeMessage, MessageResponse>({
+	const response = await sendMessage<PopFromQueueResponse>(
+		{
 			action: PopFromQueueAction,
 			data: null,
-		});
-		if (response.status === SuccessStatus) {
-			return (response as PopFromQueueResponse).result;
-		}
-		if (attempt < maxAttempts) {
-			await new Promise(r => setTimeout(r, attempt ** 2 * 1000));
-			attempt++;
-		} else {
-			break;
-		}
-	}
-
-	const message = 'unable to pop user from queue';
-	console.error(logstr, message, response);
-	throw new Error(message);
+		},
+		'unable to pop user from queue',
+	);
+	return response.result;
 }
 
 export async function QueuePush(user: BlockUser): Promise<void> {
-	let response: MessageResponse | null = null;
-	const maxAttempts = 5;
-	let attempt: number = 0;
-	for (;;) {
-		response = await api.runtime.sendMessage<RuntimeMessage, MessageResponse>({
+	await sendMessage(
+		{
 			action: AddToQueueAction,
 			data: user,
-		});
-		if (response.status === SuccessStatus) {
-			return;
-		}
-		if (attempt < maxAttempts) {
-			await new Promise(r => setTimeout(r, attempt ** 2 * 1000));
-			attempt++;
-		} else {
-			break;
-		}
-	}
-
-	const message = 'unable to push user to queue';
-	console.error(logstr, message, response);
-	throw new Error(message);
+		},
+		'unable to push user to queue',
+	);
 }
