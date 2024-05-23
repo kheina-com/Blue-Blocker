@@ -11,6 +11,7 @@ const InstructionsPaths: { [key: string]: string[] } = {
 	HomeLatestTimeline: ['data', 'home', 'home_timeline_urt', 'instructions'],
 	HomeTimeline: ['data', 'home', 'home_timeline_urt', 'instructions'],
 	SearchTimeline: ['data', 'search_by_raw_query', 'search_timeline', 'timeline', 'instructions'],
+	Favoriters: ['data', 'favoriters_timeline', 'timeline', 'instructions'],
 	UserTweets: ['data', 'user', 'result', 'timeline_v2', 'timeline', 'instructions'],
 	Followers: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
 	Following: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
