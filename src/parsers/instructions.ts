@@ -34,7 +34,11 @@ const IgnoreTweetTypes = new Set(['TimelineTimelineCursor']);
 const PromotedStrings = new Set(['suggest_promoted', 'Promoted', 'promoted']);
 
 function handleUserObject(obj: any, config: CompiledConfig, from_blue: boolean) {
-	let userObj = obj.user_results.result;
+	let userObj = obj.user_results?.result;
+	if (!userObj) {
+		console.log(logstr, 'empty user result');
+		return;
+	}
 
 	if (userObj.__typename === 'UserUnavailable') {
 		console.log(logstr, 'user is unavailable', userObj);
