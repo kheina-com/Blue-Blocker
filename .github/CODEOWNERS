@@ -1,1 +1,24 @@
-*		@kheina @jaredkotoff @MrAwesome @cooljeanius @rougetimelord
+.github/workflows/codeql.yml @cooljeanius
+.github/workflows/njsscan.yml @cooljeanius
+.github/workflows/release.yml @kheina @rougetimelord
+.github/CODEOWNERS @kheina @cooljeanius
+.github/dependabot.yml @cooljeanius
+.github/pull_request_template.md @kheina
+assets/* @kheina @jaredkotoff
+public/icon/* @kheina @jaredkotoff
+src/* @kheina @jaredkotoff @cooljeanius @rougetimelord
+.editorconfig @kheina @jaredkotoff
+.gitignore @kheina @jaredkotoff @cooljeanius
+.npmignore @kheina @jaredkotoff @cooljeanius
+.nvmrc @kheina @jaredkotoff
+.prettierignore @kheina @jaredkotoff
+.prettierrc @kheina @jaredkotoff
+CHANGELOG.md @kheina @rougetimelord
+LICENSE @kheina
+makefile @kheina @cooljeanius
+package-lock.json @kheina @jaredkotoff @cooljeanius @rougetimelord
+package.json @kheina @jaredkotoff @cooljeanius @rougetimelord
+readme.md @kheina @jaredkotoff @cooljeanius @rougetimelord
+tsconfig.json @kheina @jaredkotoff
+tsconfig.node.json @kheina @jaredkotoff
+vite.config.ts @kheina @jaredkotoff @cooljeanius @rougetimelord
