@@ -1,6 +1,6 @@
 # Blue Blocker Privacy Policy
 
-This privacy policy ("policy") will help you understand how Blue Blocker collects, uses, and protexts the data you provide when you use the Blue Blocker extension/addon (herein: "the Extension").
+This privacy policy ("policy") will help you understand how Blue Blocker collects, uses, and protects the data you provide when you use the Blue Blocker extension/addon (herein: "the Extension").
 
 We reserve the right to change this policy at any given time, and will do our best to promptly update you on changes. If you want to make sure that you are up to date with the latest changes, we advise you to visit the version of this policy hosted on [GitHub](https://github.com/kheina-com/Blue-Blocker/blob/main/privacy.md).
 
@@ -24,7 +24,7 @@ We reserve the right to change this policy at any given time, and will do our be
 
 ## What User Data is Stored by the Extension
 
-We are comitted to safeguarding all data that you provide to the Extension. We have done everything in our power to prevent data theft, unauthorized access, and disclosure by storing as much data locally as is feasible, and only using well understood browser APIs to store your data.
+We are committed to safeguarding all data that you provide to the Extension. We have done everything in our power to prevent data theft, unauthorized access, and disclosure by storing as much data locally as is feasible, and only using well understood browser APIs to store your data.
 
 Session cookies and CSRF tokens are stored locally by the Extension.
 
