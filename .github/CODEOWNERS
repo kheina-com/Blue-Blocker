@@ -4,8 +4,8 @@
 .github/CODEOWNERS @kheina @cooljeanius
 .github/dependabot.yml @cooljeanius
 .github/pull_request_template.md @kheina
-assets/* @kheina @jaredcat
-public/icon/* @kheina @jaredcat
+assets/* @kheina
+public/icon/* @kheina
 src/* @kheina @jaredcat @cooljeanius @rougetimelord
 .editorconfig @kheina @jaredcat
 .gitignore @kheina @jaredcat @cooljeanius
@@ -16,7 +16,7 @@ src/* @kheina @jaredcat @cooljeanius @rougetimelord
 CHANGELOG.md @kheina @rougetimelord
 LICENSE @kheina
 makefile @kheina @cooljeanius
-package-lock.json @kheina @jaredcat @cooljeanius @rougetimelord
+package-lock.json @kheina @cooljeanius @rougetimelord
 package.json @kheina @jaredcat @cooljeanius @rougetimelord
 readme.md @kheina @jaredcat @cooljeanius @rougetimelord
 tsconfig.json @kheina @jaredcat
