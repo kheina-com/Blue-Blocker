@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { crx } from '@crxjs/vite-plugin';
+import { minifyHtml } from './vite-plugins';
 
 import manifest from './src/manifest';
 
@@ -25,6 +26,6 @@ export default defineConfig(() => {
 		optimizeDeps: {
 			include: ['./src/injected/inject.ts'],
 		},
-		plugins: [crx({ manifest })],
+		plugins: [crx({ manifest }), minifyHtml()],
 	};
 });

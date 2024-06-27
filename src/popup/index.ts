@@ -9,7 +9,7 @@ function checkHandler(
 	key: string,
 	options: {
 		optionName?: string;
-		callback?: (t: HTMLInputElement) => void;
+		callback?: (t: HTMLInputElement, startup: boolean) => void;
 		statusText?: string;
 	} = {},
 ) {
@@ -28,7 +28,23 @@ function checkHandler(
 		}
 	});
 
-	document.getElementsByName(optionName).forEach(e => (e.style.display = value ? '' : 'none'));
+	(
+		options.callback ??
+		(() => {
+			document
+				.getElementsByName(optionName)
+				.forEach(e => (e.style.display = value ? '' : 'none'));
+		})
+	)(target, true);
+
+	const callback =
+		options.callback ??
+		(() => {
+			updateSavedStatus(target.id + '-status');
+			document
+				.getElementsByName(optionName)
+				.forEach(e => (e.style.display = target.checked ? '' : 'none'));
+		});
 
 	target.addEventListener('input', e => {
 		const target = e.target as HTMLInputElement;
@@ -37,22 +53,9 @@ function checkHandler(
 				[key]: target.checked,
 			})
 			.then(() => console.debug(logstr, 'saved value', target.checked, 'in', `config.${key}`))
-			.then(() =>
-				(
-					options.callback ??
-					(() => {
-						document.getElementsByName(target.id + '-status').forEach(status => {
-							status.textContent = statusText;
-							setTimeout(() => (status.textContent = null), 1000);
-						});
-						document
-							.getElementsByName(optionName)
-							.forEach(e => (e.style.display = target.checked ? '' : 'none'));
-					})
-				)(target),
-			)
+			.then(() => callback(target, false))
 			.then(() => {
-				// update the checkmark last so that it can be used as the saved status indicator
+				// update the checkmark last so that it can be used as the saved status indicator as well
 				ele.forEach(label => {
 					if (target.checked) {
 						label.classList.add('checked');
@@ -136,13 +139,7 @@ function sliderMirror(
 				.then(() =>
 					console.debug(logstr, 'saved value', targetValue, 'in', `config.${key}`),
 				)
-				.then(() => {
-					// Update status to let user know options were saved.
-					document.getElementsByName(target.name + '-status').forEach(status => {
-						status.textContent = 'saved';
-						setTimeout(() => (status.textContent = null), 1000);
-					});
-				});
+				.then(() => updateSavedStatus(target.name + '-status'));
 		});
 	});
 }
@@ -179,56 +176,66 @@ function updateDisallowedWordsInUsernames(changeEvent: Event) {
 	api.storage.sync
 		.set({ disallowedWords: wordList })
 		.then(() => console.debug(logstr, 'saved value', wordList, 'in config.disallowedWords'))
-		.then(() => {
-			// Update status to let user know options were saved.
-			document.getElementsByName('blockstrings-status').forEach(status => {
-				status.textContent = 'saved';
-				setTimeout(() => (status.textContent = null), 1000);
-			});
-		});
+		.then(() => updateSavedStatus('blockstrings-status'));
 }
 
 // start this immediately so that it's ready when the document loads
-const popupPromise = api.storage.local.get({ popupActiveTab: 'quick' });
+const popupPromise = api.storage.local.get({ popupActiveTab: 'general' });
+
+function updateSavedStatus(name: string, savedText = 'saved') {
+	// Update status to let user know options were saved.
+	document.getElementsByName(name).forEach(status => {
+		status.textContent = savedText;
+		setTimeout(() => (status.textContent = null), 1000);
+	});
+}
 
 // restore state from storage
 document.addEventListener('DOMContentLoaded', () => {
 	const version = document.getElementById('version') as HTMLElement;
 	version.textContent = 'v' + api.runtime.getManifest().version;
 
-	const quickTabButton = document.getElementById('button-quick') as HTMLElement;
-	const advancedTabButton = document.getElementById('button-advanced') as HTMLElement;
-
-	const quickTabContent = document.getElementById('quick') as HTMLElement;
-	const advancedTabContent = document.getElementById('advanced') as HTMLElement;
+	const tabs: {
+		[k: string]: { button: HTMLAnchorElement; content: HTMLDivElement; scroll: boolean };
+	} = {};
 
 	let popupActiveTab: string;
 
 	function selectTab(tab: string) {
-		const quickTabButtonBorder = quickTabButton.lastChild as HTMLElement;
-		const advancedTabButtonBorder = advancedTabButton.lastChild as HTMLElement;
+		if (tab === popupActiveTab) {
+			return;
+		}
 
-		switch (tab) {
-			case 'quick':
-				document.body.style.overflowY = 'hidden';
-				quickTabButtonBorder.style.borderBottomWidth = '5px';
-				advancedTabButtonBorder.style.borderBottomWidth = '0';
+		if (!tabs.hasOwnProperty(tab)) {
+			throw new Error(
+				'invalid tab value. must be one of: ' +
+					Object.values(tabs)
+						.map(x => `'${x}'`)
+						.join(', ') +
+					'.',
+			);
+		}
 
-				quickTabContent.style.display = 'block';
-				advancedTabContent.style.display = 'none';
-				break;
+		tabs[tab].content.style.display = 'block';
+		tabs[tab].button.style.flexGrow = '1000';
 
-			case 'advanced':
-				document.body.style.overflowY = '';
-				quickTabButtonBorder.style.borderBottomWidth = '0';
-				advancedTabButtonBorder.style.borderBottomWidth = '5px';
+		const tabButtonBorder = tabs[tab].button.getElementsByTagName('div')[0] as HTMLElement;
+		tabButtonBorder.style.borderBottomWidth = '5px';
 
-				quickTabContent.style.display = 'none';
-				advancedTabContent.style.display = 'block';
-				break;
+		if (tabs[tab].scroll) {
+			document.body.style.overflowY = '';
+		} else {
+			document.body.style.overflowY = 'hidden';
+		}
 
-			default:
-				throw new Error("invalid tab value. must be one of: 'quick', 'advanced'.");
+		if (popupActiveTab) {
+			tabs[popupActiveTab].content.style.display = 'none';
+			tabs[popupActiveTab].button.style.flexGrow = '';
+
+			const tabButtonBorder = tabs[popupActiveTab].button.getElementsByTagName(
+				'div',
+			)[0] as HTMLElement;
+			tabButtonBorder.style.borderBottomWidth = '0';
 		}
 
 		popupActiveTab = tab;
@@ -237,9 +244,33 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-	popupPromise.then(items => selectTab(items.popupActiveTab));
-	quickTabButton.addEventListener('click', () => selectTab('quick'));
-	advancedTabButton.addEventListener('click', () => selectTab('advanced'));
+	function registerTab(tab: string, options: { buttonId?: string; scroll?: boolean } = {}) {
+		const button = document.getElementById(
+			options.buttonId ?? 'button-' + tab,
+		) as HTMLAnchorElement;
+
+		const content = document.getElementById(tab) as HTMLDivElement;
+		content.style.display = 'none';
+		tabs[tab] = {
+			button,
+			content,
+			scroll: options.scroll ?? false,
+		};
+
+		button.addEventListener('click', () => selectTab(tab));
+		console.debug(logstr, 'registered tab', tab, tabs[tab]);
+	}
+
+	registerTab('general');
+	registerTab('verified');
+	registerTab('moderation');
+	registerTab('appearance');
+	popupPromise
+		.then(items =>
+			// change old installation tabs to general tab on first startup
+			tabs.hasOwnProperty(items.popupActiveTab) ? items : { popupActiveTab: 'general' },
+		)
+		.then(items => selectTab(items.popupActiveTab));
 
 	// checkboxes
 	const blockedUsersCount = document.getElementById('blocked-users-count') as HTMLElement;
@@ -266,11 +297,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	api.storage.sync.get(DefaultOptions).then(_config => {
 		const config = _config as Config;
 		checkHandler(suspendBlockCollection, config, 'suspendedBlockCollection', {
-			callback(target) {
-				document.getElementsByName(target.id + '-status').forEach(status => {
-					status.textContent = target.checked ? 'paused' : 'resumed';
-					setTimeout(() => (status.textContent = null), 1000);
-				});
+			callback(target: HTMLInputElement, startup: boolean) {
+				if (!startup) {
+					updateSavedStatus(target.id + '-status', target.checked ? 'paused' : 'resumed');
+				}
 				api.action.setIcon({
 					path: target.checked ? '/icon/icon-128-greyscale.png' : '/icon/icon-128.png',
 				});
@@ -287,7 +317,19 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 		checkHandler(blockPromoted, config, 'blockPromoted');
 		checkHandler(blockForUse, config, 'blockForUse');
-		checkHandler(skipCheckmark, config, 'skipBlueCheckmark');
+		checkHandler(skipCheckmark, config, 'skipBlueCheckmark', {
+			callback(target: HTMLInputElement, startup: boolean) {
+				if (!startup) {
+					updateSavedStatus(target.id + '-status');
+				}
+				document
+					.getElementsByName(target.id + '-option')
+					.forEach(e => (e.style.display = target.checked ? '' : 'none'));
+				document
+					.querySelectorAll<HTMLElement>('[data-bb-skip-checkmark]')
+					.forEach(e => (e.style.display = target.checked ? 'none' : ''));
+			},
+		});
 		checkHandler(soupcanIntegration, config, 'soupcanIntegration', {
 			optionName: '', // integration isn't controlled by the toggle, so unset
 		});
@@ -311,13 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				.then(() =>
 					console.debug(logstr, 'saved value', value, 'in config.skipFollowerCount'),
 				)
-				.then(() => {
-					// Update status to let user know options were saved.
-					document.getElementsByName(target.name + '-status').forEach(status => {
-						status.textContent = 'saved';
-						setTimeout(() => (status.textContent = null), 1000);
-					});
-				});
+				.then(() => updateSavedStatus(target.name + '-status'));
 		});
 
 		inputMirror('toasts-location', config.toastsLocation, e => {
@@ -329,13 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				.then(() =>
 					console.debug(logstr, 'saved value', target.value, 'in config.toastsLocation'),
 				)
-				.then(() => {
-					// Update status to let user know options were saved.
-					document.getElementsByName(target.name + '-status').forEach(status => {
-						status.textContent = 'saved';
-						setTimeout(() => (status.textContent = null), 1000);
-					});
-				});
+				.then(() => updateSavedStatus(target.name + '-status'));
 		});
 
 		sliderMirror('popup-timer', 'popupTimer', config);
