@@ -77,6 +77,7 @@ document.addEventListener('blue-blocker-event', function (e: CustomEvent<BlueBlo
 				case 'SearchTimeline':
 				case 'UserTweets':
 				case 'TweetDetail':
+				case 'ModeratedTimeline':
 				case 'Following':
 				case 'Followers':
 				case 'UserCreatorSubscriptions':
