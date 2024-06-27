@@ -121,10 +121,6 @@ interface RegisterRequest {
 	name: string;
 }
 
-interface MessageResponse {
-	status: MessageStatus;
-}
-
 interface SuccessResponse {
 	status: SuccessStatus;
 	result: any;
@@ -134,6 +130,8 @@ interface ErrorResponse {
 	status: ErrorStatus;
 	message: string;
 }
+
+type MessageResponse = SuccessResponse | ErrorResponse;
 
 interface ExternalBlockResponse {
 	block: boolean;
