@@ -200,7 +200,7 @@ export function EscapeHtml(unsafe: string): string {
 	 */
 	const partiallySafe = element.innerHTML;
 	// Step 4, replace single and double quotes with entities so that the string can be added to attributes safely
-	const safe = partiallySafe.replace(/'/g, '&#039;').replace(/"/g, '&quot;').replace(/&/, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	const safe = partiallySafe.replace(/'/g, '&#039;').replace(/"/g, '&quot;').replace(/&(?![#\w]{2,};)/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 	return safe;
 }
