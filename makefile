@@ -1,3 +1,6 @@
+# Note: this makefile expects you to have run `npm install` and `npm run build`
+# first before using it.
+
 _ := $(shell rm -rf build && npm run build)
 VERSION := $(shell cat build/manifest.json | jq .version)
 PKG_VERSION := $(shell jq .version package.json)
