@@ -21,4 +21,4 @@ package.json @kheina @jaredcat @cooljeanius @rougetimelord
 readme.md @kheina @jaredcat @cooljeanius @rougetimelord
 tsconfig.json @kheina @jaredcat
 tsconfig.node.json @kheina @jaredcat
-vite.config.ts @kheina @jaredcat @cooljeanius @rougetimelord
+vite.config.ts @kheina @jaredcat @cooljeanius
