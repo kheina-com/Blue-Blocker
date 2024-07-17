@@ -193,14 +193,14 @@ export function EscapeHtml(unsafe: string): string {
 	// Step 2, safely add text to the element
 	element.textContent = unsafe;
 	/**
-	 * Step 3, let the browser handle turning most HTML characters into entities
-	 * Using innerText here returns a string that doesn't have HTML entities, so we use innerHTML to get entities.
+	 * Step 3, let the browser handle turning "<", ">", and "&" into entities
+	 * Using innerText here returns a string that doesn't use HTML entities, so we use innerHTML to get entities.
 	 *
 	 * If a browser engine cannot do this, it means that setting Element.textContent is unsafe...
 	 */
 	const partiallySafe = element.innerHTML;
 	// Step 4, replace single and double quotes with entities so that the string can be added to attributes safely
-	const safe = partiallySafe.replace(/'/g, '&#039;').replace(/"/g, '&quot;').replace(/&(?![#\w]{2,};)/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	const safe = partiallySafe.replace(/'/g, '&#039;').replace(/"/g, '&quot;');
 
 	return safe;
 }
