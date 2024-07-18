@@ -186,8 +186,22 @@ export function escapeRegExp(text: string) {
 	return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-export function EscapeHtml(text: string): string {
-	return new Option(text).innerHTML;
+export function EscapeHtml(unsafe: string): string {
+	// Step 1, create an element
+	const element = document.createElement('div');
+	// Step 2, safely add text to the element
+	element.textContent = unsafe;
+	/**
+	 * Step 3, let the browser handle turning "<", ">", and "&" into entities
+	 * Using innerText here returns a string that doesn't use HTML entities, so we use innerHTML to get entities.
+	 *
+	 * If a browser engine cannot do this, it means that setting Element.textContent is unsafe...
+	 */
+	const partiallySafe = element.innerHTML;
+	// Step 4, replace single and double quotes with entities so that the string can be added to attributes safely
+	const safe = partiallySafe.replace(/'/g, '&#039;').replace(/"/g, '&quot;');
+
+	return safe;
 }
 
 export async function QueuePop(): Promise<BlockUser | null> {
