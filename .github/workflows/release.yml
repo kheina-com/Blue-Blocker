@@ -35,7 +35,7 @@ jobs:
         make firefox
         echo "filename=blue-blocker-firefox-$(make version).zip" >> "$GITHUB_OUTPUT"
     - name: publish firefox
-      uses: browser-actions/release-firefox-addon@v0.1.3  # https://github.com/marketplace/actions/release-firefox-addon#inputs
+      uses: browser-actions/release-firefox-addon@v0.1.4  # https://github.com/marketplace/actions/release-firefox-addon#inputs
       with:
         addon-id: "{119be3f3-597c-4f6a-9caf-627ee431d374}"
         addon-path: "${{ steps.build.outputs.filename }}"
