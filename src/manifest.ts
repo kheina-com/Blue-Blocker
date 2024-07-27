@@ -10,7 +10,7 @@ export default defineManifest({
 	},
 	action: {
 		default_popup: 'src/popup/index.html',
-		default_icon: 'icon/icon.png',
+		default_icon: 'icon/icon-128.png',
 	},
 	background: {
 		service_worker: 'src/background/index.ts',

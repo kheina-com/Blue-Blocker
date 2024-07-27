@@ -35,7 +35,8 @@ body {
 body {
 	margin: 0;
 	padding: 0;
-	font-size: 1.1rem;
+	font-size: 1rem;
+	width: 27em;
 }
 
 a,
@@ -114,6 +115,7 @@ h2 img {
 	display: flex;
 	border-bottom: solid var(--border-size) var(--bordercolor);
 	z-index: 1000;
+	width: 100%;
 }
 .tabs .separator {
 	background: var(--bordercolor);
@@ -122,8 +124,19 @@ h2 img {
 .tabs a {
 	padding: 1em 1.5em;
 	position: relative;
-	flex: 1;
+	flex: 1.5em;
 	text-align: center;
+	white-space: nowrap;
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+	overflow: hidden;
+}
+.tabs a span {
+	margin-left: 0.5em;
+	text-align: left;
+	width: 100%;
+	overflow: hidden;
 }
 .tabs .border {
 	position: absolute;
@@ -141,13 +154,13 @@ h2 img {
 	background: var(--bg1color);
 	margin: 0;
 	padding: 1em 25px 25px;
+	/* width: inherit; */
 }
 .tab > div {
-	margin-bottom: 1em;
+	margin-top: 1em;
 }
-.tab > div:last-child,
-.last {
-	margin-bottom: 0;
+.tab > div:first-child {
+	margin-top: 0;
 }
 .tab#quick {
 	width: 20em;
@@ -249,9 +262,10 @@ label.checked div.checkmark div {
 .skip-follower-count.option,
 .block-promoted-tweets.option,
 .toasts-location.option,
-.block-for-use.option {
+.block-for-use.option,
+.skip-checkmark.option {
 	margin-left: 0.5em;
-	margin-top: -0.5em;
+	margin-top: 0.5em;
 }
 
 input::-webkit-outer-spin-button,
@@ -307,14 +321,13 @@ textarea {
 	width: calc(100% - 2em);
 }
 
-.blockstrings-option {
+.tab > div.blockstrings-option {
 	margin-left: 0.5em;
-	margin-top: -0.5em;
+	margin-top: 0.5em;
 	position: relative;
-}
-
-.blockstrings-option p {
-	margin: 0;
+	p {
+		margin: 0;
+	}
 }
 
 .gold-check {
@@ -393,4 +406,19 @@ textarea {
 	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
 	border-color: var(--interact);
 	color: var(--interact);
+}
+
+.material-icons {
+	line-height: 1;
+	font-size: 1.5em;
+	display: inline-block;
+	fill: currentColor;
+
+	/* Better Font Rendering */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+
+	min-width: 1em;
+	max-width: 1em;
+	width: 1em;
 }
