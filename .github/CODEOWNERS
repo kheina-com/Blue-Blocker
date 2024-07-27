@@ -1,3 +1,6 @@
+# Global code owners for new files/whatever
+@cooljeanius @kheina @rougetimelord
+# Specific patterns that will take precedence
 .github/workflows/codeql.yml @cooljeanius
 .github/workflows/njsscan.yml @cooljeanius
 .github/workflows/release.yml @kheina @rougetimelord @cooljeanius
@@ -15,6 +18,7 @@ src/* @kheina @jaredcat @cooljeanius @rougetimelord
 .prettierrc @kheina @jaredcat
 CHANGELOG.md @kheina @rougetimelord
 LICENSE @kheina
+privacy.md @kheina @rougetimelord
 makefile @kheina @cooljeanius
 package-lock.json @kheina @cooljeanius @rougetimelord
 package.json @kheina @jaredcat @cooljeanius @rougetimelord
