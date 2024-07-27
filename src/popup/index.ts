@@ -207,13 +207,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		if (!tabs.hasOwnProperty(tab)) {
-			throw new Error(
-				'invalid tab value. must be one of: ' +
-					Object.values(tabs)
-						.map(x => `'${x}'`)
-						.join(', ') +
-					'.',
-			);
+			if(tab != 'quick' && tab != 'advanced'){
+				throw new Error(
+					'invalid tab value. must be one of: ' +
+						Object.values(tabs)
+							.map(x => `'${x}'`)
+							.join(', ') +
+						'.',
+				);
+			}
+			// Gracefully migrate users to new tabs
+			tab = 'general';
 		}
 
 		tabs[tab].content.style.display = 'block';
