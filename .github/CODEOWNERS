@@ -18,7 +18,7 @@ src/* @kheina @jaredcat @cooljeanius @rougetimelord
 .prettierrc @kheina @jaredcat
 CHANGELOG.md @kheina @rougetimelord
 LICENSE @kheina
-privacy.md @kheina @rougetimelord
+privacy.md @kheina @rougetimelord @cooljeanius
 makefile @kheina @cooljeanius
 package-lock.json @kheina @cooljeanius @rougetimelord
 package.json @kheina @jaredcat @cooljeanius @rougetimelord
