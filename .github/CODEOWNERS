@@ -4,7 +4,7 @@
 .github/workflows/codeql.yml @cooljeanius
 .github/workflows/njsscan.yml @cooljeanius
 .github/workflows/release.yml @kheina @rougetimelord @cooljeanius
-.github/CODEOWNERS @kheina @cooljeanius
+.github/CODEOWNERS @kheina @cooljeanius @rougetimelord
 .github/dependabot.yml @cooljeanius
 .github/pull_request_template.md @kheina
 assets/* @kheina
