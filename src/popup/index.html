@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="UTF-8" />
 		<title>Blue Blocker</title>
-		<link rel="icon" href="/icon/icon.ico" />
+		<link href="/icon/icon-128.png" rel="icon" type="image/png" sizes="128x128" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="stylesheet" type="text/css" href="./style.css" />
 		<script type="module" src="./index.ts"></script>
@@ -11,7 +11,7 @@
 	<!-- ♀ -->
 	<body>
 		<span id="version"></span>
-		<h2><img src="/icon/icon.png" alt="🅱️" style="height: 1.2em" />lue Blocker</h2>
+		<h2><img src="/icon/icon-128.png" alt="🅱️" style="height: 1.2em" />lue Blocker</h2>
 		<p class="blocked-users-count">
 			blocked
 			<a id="blocked-users-count" href="/src/pages/history/index.html" target="_blank"></a>
@@ -19,15 +19,48 @@
 			<a href="/src/pages/queue/index.html" target="_blank">view</a>)
 		</p>
 		<div class="tabs">
-			<a id="button-quick"
-				>Quick
-				<div class="border"></div
-			></a>
+			<a id="button-general">
+				<svg viewBox="0 0 24 24" fill="currentColor" class="material-icons">
+					<g>
+						<path d="M0,0h24v24H0V0z" fill="none" />
+						<path
+							d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
+					</g>
+				</svg>
+				<span>General</span>
+				<div class="border"></div>
+			</a>
 			<div class="separator"></div>
-			<a id="button-advanced"
-				>Advanced
-				<div class="border"></div
-			></a>
+			<a id="button-verified">
+				<svg viewBox="0 0 24 24" fill="currentColor" class="material-icons">
+					<g><rect fill="none" /></g>
+					<g>
+						<path
+							d="M23,12l-2.44-2.79l0.34-3.69l-3.61-0.82L15.4,1.5L12,2.96L8.6,1.5L6.71,4.69L3.1,5.5L3.44,9.2L1,12l2.44,2.79l-0.34,3.7 l3.61,0.82L8.6,22.5l3.4-1.47l3.4,1.46l1.89-3.19l3.61-0.82l-0.34-3.69L23,12z M10.09,16.72l-3.8-3.81l1.48-1.48l2.32,2.33 l5.85-5.87l1.48,1.48L10.09,16.72z" />
+					</g>
+				</svg>
+				<span>Twitter Blue</span>
+				<div class="border"></div>
+			</a>
+			<div class="separator"></div>
+			<a id="button-moderation">
+				<svg viewBox="0 0 256 256" fill="currentColor" class="material-icons">
+					<path
+						d="M157.687,230.281a12.728,12.728,0,0,1-18-18L156,196,0,40V0H40L196,156l16.281-16.312a12.728,12.728,0,0,1,18,18L203,185l49.281,49.281a12.728,12.728,0,0,1-18,18L185,203ZM174,178l4-4L27,23H23v4Z" />
+				</svg>
+				<span>Moderation</span>
+				<div class="border"></div>
+			</a>
+			<div class="separator"></div>
+			<a id="button-appearance">
+				<svg viewBox="0 0 24 24" fill="currentColor" class="material-icons">
+					<path d="M0 0h24v24H0z" fill="none" />
+					<path
+						d="M7 14c-1.66 0-3 1.34-3 3 0 1.31-1.16 2-2 2 .92 1.22 2.49 2 4 2 2.21 0 4-1.79 4-4 0-1.66-1.34-3-3-3zm13.71-9.37l-1.34-1.34c-.39-.39-1.02-.39-1.41 0L9 12.25 11.75 15l8.96-8.96c.39-.39.39-1.02 0-1.41z" />
+				</svg>
+				<span>Appearance</span>
+				<div class="border"></div>
+			</a>
 		</div>
 		<input type="checkbox" id="suspend-block-collection" />
 		<input type="checkbox" id="show-block-popups" />
@@ -42,69 +75,7 @@
 		<input type="checkbox" id="soupcan-integration" />
 		<input type="checkbox" id="block-for-use" />
 		<input type="checkbox" id="blockstrings" />
-		<div class="tab" id="quick" style="display: block">
-			<div class="option">
-				<label for="suspend-block-collection" name="suspend-block-collection">
-					<div class="checkmark">
-						<div></div>
-					</div>
-					<p>pause user collection</p>
-				</label>
-				<span name="suspend-block-collection-status"></span>
-			</div>
-			<div class="option">
-				<label for="show-block-popups" name="show-block-popups">
-					<div class="checkmark">
-						<div></div>
-					</div>
-					<p>show a popup for each blocked user</p>
-				</label>
-				<!-- <span name="show-block-popups-status"></span> -->
-			</div>
-			<div class="option">
-				<label for="mute-instead-of-block" name="mute-instead-of-block">
-					<div class="checkmark">
-						<div></div>
-					</div>
-					<p>mute users instead of blocking them</p>
-				</label>
-				<!-- <span name="mute-instead-of-block-status"></span> -->
-			</div>
-			<div class="option">
-				<label for="skip-1mplus" name="skip-1mplus">
-					<div class="checkmark">
-						<div></div>
-					</div>
-					<p>
-						skip users with over
-						<span name="skip-follower-count-value">1M</span> followers
-					</p>
-				</label>
-				<!-- <span name="skip-1mplus-status"></span> -->
-			</div>
-			<div class="skip-follower-count option" name="skip-follower-count-option">
-				<p>∟ threshold: <input type="number" name="skip-follower-count" /> followers</p>
-				<!-- <span name="skip-follower-count-status"></span> -->
-			</div>
-			<div>
-				<div class="option">
-					<p>
-						block interval (<span
-							class="variance"
-							name="variance"
-							title="Blue Blocker varies the interval by this amount so that requests appear less automated"
-							>±</span
-						>)
-					</p>
-					<span name="block-interval-status"></span>
-				</div>
-				<div class="slider">
-					<input type="range" min="5" max="60" value="15" name="block-interval" />
-					<span name="block-interval-value"></span>
-				</div>
-			</div>
-		</div>
-		<div class="tab" id="advanced">
+		<div class="tab" id="general">
 			<div class="option">
 				<label for="suspend-block-collection" name="suspend-block-collection">
 					<div class="checkmark">
@@ -122,18 +93,6 @@
 					<p>show a popup for each blocked user</p>
 				</label>
 				<span name="show-block-popups-status"></span>
-			</div>
-			<div class="toasts-location option" name="show-block-popups-option">
-				<p>
-					∟ popup location:
-					<select name="toasts-location">
-						<option value="top-right">top right</option>
-						<option value="top-left">top left</option>
-						<option value="bottom-left">bottom left</option>
-						<option value="bottom-right">bottom right</option>
-					</select>
-				</p>
-				<span name="toasts-location-status"></span>
 			</div>
 			<div class="option">
 				<label for="mute-instead-of-block" name="mute-instead-of-block">
@@ -162,6 +121,46 @@
 				</label>
 				<span name="block-followers-status"></span>
 			</div>
+			<div>
+				<div class="option">
+					<p>
+						block interval (<span
+							class="variance"
+							name="variance"
+							title="Blue Blocker varies the interval by this amount so that requests appear less automated"
+							>±</span
+						>)
+					</p>
+					<span name="block-interval-status"></span>
+				</div>
+				<div class="slider">
+					<input type="range" min="5" max="60" value="15" name="block-interval" />
+					<span name="block-interval-value"></span>
+				</div>
+			</div>
+			<div class="safelist">
+				<p name="safelist-status">
+					safelist importing must be done on a separate page. click import to be
+					redirected
+				</p>
+				<div class="option">
+					<p>safelist</p>
+					<a href="/src/pages/safelist/index.html" target="_blank" class="button"
+						>import</a
+					>
+					<a name="export-safelist" class="button">export</a>
+					<a name="clear-safelist" class="button">clear</a>
+				</div>
+			</div>
+			<div class="option integrations">
+				<p>
+					<a href="/src/pages/integrations/index.html" target="_blank"
+						>manage integrations</a
+					>
+				</p>
+			</div>
+		</div>
+		<div class="tab" id="verified">
 			<div class="option">
 				<label for="skip-checkmark" name="skip-checkmark">
 					<div class="checkmark">
@@ -171,7 +170,13 @@
 				</label>
 				<span name="skip-checkmark-status"></span>
 			</div>
-			<div class="option">
+			<div class="skip-checkmark option" name="skip-checkmark-option">
+				<p>
+					∟ Twitter Blue users will not be blocked!
+					<img src="/icon/warn.png" alt="⚠️" class="emoji" />
+				</p>
+			</div>
+			<div class="option" data-bb-skip-checkmark="">
 				<label for="skip-verified" name="skip-verified">
 					<div class="checkmark">
 						<div></div>
@@ -180,7 +185,7 @@
 				</label>
 				<span name="skip-verified-status"></span>
 			</div>
-			<div class="option">
+			<div class="option" data-bb-skip-checkmark="">
 				<label for="skip-affiliated" name="skip-affiliated">
 					<div class="checkmark">
 						<div></div>
@@ -234,7 +239,7 @@
 				</label>
 				<span name="skip-affiliated-status"></span>
 			</div>
-			<div class="option">
+			<div class="option" data-bb-skip-checkmark="">
 				<label for="skip-1mplus" name="skip-1mplus">
 					<div class="checkmark">
 						<div></div>
@@ -246,24 +251,12 @@
 				</label>
 				<span name="skip-1mplus-status"></span>
 			</div>
-			<div class="skip-follower-count option" name="skip-follower-count-option">
+			<div
+				class="skip-follower-count option"
+				name="skip-follower-count-option"
+				data-bb-skip-checkmark="">
 				<p>∟ threshold: <input type="number" name="skip-follower-count" /> followers</p>
 				<span name="skip-follower-count-status"></span>
-			</div>
-			<div class="option">
-				<label for="block-promoted-tweets" name="block-promoted-tweets">
-					<div class="checkmark">
-						<div></div>
-					</div>
-					<p>block users that promote tweets</p>
-				</label>
-				<span name="block-promoted-tweets-status"></span>
-			</div>
-			<div class="block-promoted-tweets option" name="block-promoted-tweets-option">
-				<p>
-					∟ this option blocks legacy verified users!
-					<img src="/icon/warn.png" alt="⚠️" class="emoji" />
-				</p>
 			</div>
 			<div class="option">
 				<label for="block-for-use" name="block-for-use">
@@ -275,6 +268,23 @@
 				<span name="block-for-use-status"></span>
 			</div>
 			<div class="block-for-use option" name="block-for-use-option">
+				<p>
+					∟ this option blocks legacy verified users!
+					<img src="/icon/warn.png" alt="⚠️" class="emoji" />
+				</p>
+			</div>
+		</div>
+		<div class="tab" id="moderation">
+			<div class="option">
+				<label for="block-promoted-tweets" name="block-promoted-tweets">
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>block users that promote tweets</p>
+				</label>
+				<span name="block-promoted-tweets-status"></span>
+			</div>
+			<div class="block-promoted-tweets option" name="block-promoted-tweets-option">
 				<p>
 					∟ this option blocks legacy verified users!
 					<img src="/icon/warn.png" alt="⚠️" class="emoji" />
@@ -311,22 +321,28 @@
 				</label>
 				<span name="soupcan-integration-status"></span>
 			</div>
-			<div>
-				<div class="option">
-					<p>
-						block interval (<span
-							class="variance"
-							name="variance"
-							title="Blue Blocker varies the interval by this amount so that requests appear less automated"
-							>±</span
-						>)
-					</p>
-					<span name="block-interval-status"></span>
-				</div>
-				<div class="slider">
-					<input type="range" min="5" max="60" value="15" name="block-interval" />
-					<span name="block-interval-value"></span>
-				</div>
+		</div>
+		<div class="tab" id="appearance">
+			<div class="option">
+				<label for="show-block-popups" name="show-block-popups">
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>show a popup for each blocked user</p>
+				</label>
+				<span name="show-block-popups-status"></span>
+			</div>
+			<div class="toasts-location option" name="show-block-popups-option">
+				<p>
+					∟ popup location:
+					<select name="toasts-location">
+						<option value="top-right">top right</option>
+						<option value="top-left">top left</option>
+						<option value="bottom-left">bottom left</option>
+						<option value="bottom-right">bottom right</option>
+					</select>
+				</p>
+				<span name="toasts-location-status"></span>
 			</div>
 			<div name="show-block-popups-option">
 				<div class="option">
@@ -337,27 +353,6 @@
 					<input type="range" min="5" max="60" value="15" name="popup-timer" />
 					<span name="popup-timer-value"></span>
 				</div>
-			</div>
-			<div class="safelist">
-				<p name="safelist-status">
-					safelist importing must be done on a separate page. click import to be
-					redirected
-				</p>
-				<div class="option">
-					<p>safelist</p>
-					<a href="/src/pages/safelist/index.html" target="_blank" class="button"
-						>import</a
-					>
-					<a name="export-safelist" class="button">export</a>
-					<a name="clear-safelist" class="button">clear</a>
-				</div>
-			</div>
-			<div class="option integrations">
-				<p>
-					<a href="/src/pages/integrations/index.html" target="_blank"
-						>manage integrations</a
-					>
-				</p>
 			</div>
 		</div>
 	</body>

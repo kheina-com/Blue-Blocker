@@ -312,18 +312,18 @@ function queueBlockUser(
 		blockUser.external_reason = external_reason;
 	}
 
-	QueuePush(blockUser);
-	api.storage.sync.get(DefaultOptions).then(_config => {
-		const config = _config as Config;
-		console.log(
-			logstr,
-			`queued ${FormatLegacyName(user.legacy)} for a ${
-				config.mute ? 'mute' : 'block'
-			} due to ${ReasonMap[reason]}.`,
+	QueuePush(blockUser)
+		.then(() => consumer.start()) // arrow func is required to maintain current context, passing the func shifts context and will result in an error
+		.then(() => api.storage.sync.get(DefaultOptions))
+		.then(config => config as Config)
+		.then(config =>
+			console.log(
+				logstr,
+				`queued ${FormatLegacyName(user.legacy)} for a ${
+					config.mute ? 'mute' : 'block'
+				} due to ${ReasonMap[reason]}.`,
+			),
 		);
-	});
-
-	consumer.start();
 }
 
 function checkBlockQueue(): Promise<void> {
@@ -662,19 +662,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 				if (
 					// group for skip-verified option
 					config.skipVerified &&
-					(await new Promise((resolve, reject) => {
-						// basically, we're wrapping a promise around a promise to set a timeout on it
-						// in case the user's device was unable to set up the legacy db
-						function disableSkipLegacy() {
-							api.storage.sync.set({ skipVerified: false });
-							reject(legacyDbRejectMessage);
-						}
-						const timeout = setTimeout(disableSkipLegacy, 1000); // 1 second. indexed db is crazy fast (<10ms), this should be plenty
-						IsUserLegacyVerified(user.rest_id, user.legacy.screen_name)
-							.then(resolve)
-							.catch(disableSkipLegacy)
-							.finally(() => clearTimeout(timeout));
-					}))
+					(await IsUserLegacyVerified(user.rest_id, user.legacy.screen_name))
 				) {
 					console.log(
 						logstr,

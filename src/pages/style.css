@@ -131,7 +131,7 @@ main {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	background: url('/icon/icon.png') var(--bg2color);
+	background: url('/icon/icon-128.png') var(--bg2color);
 	background-repeat: no-repeat;
 	background-size: 2.5em;
 	background-position-x: 1em;

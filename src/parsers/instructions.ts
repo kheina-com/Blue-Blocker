@@ -11,6 +11,7 @@ const InstructionsPaths: { [key: string]: string[] } = {
 	HomeLatestTimeline: ['data', 'home', 'home_timeline_urt', 'instructions'],
 	HomeTimeline: ['data', 'home', 'home_timeline_urt', 'instructions'],
 	SearchTimeline: ['data', 'search_by_raw_query', 'search_timeline', 'timeline', 'instructions'],
+	Favoriters: ['data', 'favoriters_timeline', 'timeline', 'instructions'],
 	UserTweets: ['data', 'user', 'result', 'timeline_v2', 'timeline', 'instructions'],
 	Followers: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
 	Following: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
@@ -18,6 +19,7 @@ const InstructionsPaths: { [key: string]: string[] } = {
 	FollowersYouKnow: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
 	BlueVerifiedFollowers: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
 	TweetDetail: ['data', 'threaded_conversation_with_injections_v2', 'instructions'],
+	ModeratedTimeline: ['data', 'tweet', 'result', 'timeline_response','timeline', 'instructions' ],
 	'search/adaptive.json': ['timeline', 'instructions'],
 };
 // this is the path to retrieve the user object from the individual tweet
@@ -33,7 +35,11 @@ const IgnoreTweetTypes = new Set(['TimelineTimelineCursor']);
 const PromotedStrings = new Set(['suggest_promoted', 'Promoted', 'promoted']);
 
 function handleUserObject(obj: any, config: CompiledConfig, from_blue: boolean) {
-	let userObj = obj.user_results.result;
+	let userObj = obj.user_results?.result;
+	if (!userObj) {
+		console.log(logstr, 'empty user result');
+		return;
+	}
 
 	if (userObj.__typename === 'UserUnavailable') {
 		console.log(logstr, 'user is unavailable', userObj);
