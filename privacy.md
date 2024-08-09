@@ -2,7 +2,7 @@
 
 This privacy policy ("policy") will help you understand how Blue Blocker collects, uses, and protects the data you provide when you use the Blue Blocker extension/addon (herein: "the Extension").
 
-We reserve the right to change this policy at any given time, and will do our best to promptly update you on changes. If you want to make sure that you are up to date with the latest changes, we advise you to visit the version of this policy hosted on [GitHub](https://github.com/kheina-com/Blue-Blocker/blob/main/privacy.md).
+This policy may change from time to time and we will do our best to promptly update you on changes. If you want to make sure that you are up to date with the latest changes, we advise you to visit the version of this policy hosted on [GitHub](https://github.com/kheina-com/Blue-Blocker/blob/main/privacy.md).
 
 ## What User Data the Extension Collects
 
@@ -38,9 +38,9 @@ Usernames, display names, and user IDs of unblocked users is stored within the s
 
 ## What User Data is Shared With Third Parties
 
-The usernames and user IDs of Twitter users that the Extension, or extensions/addons that Twitter data is shared with, determines should be blocked are transmitted to the Twitter API in order to block the user.
+The public user data sent by the Twitter API are parsed by the Extension, or extensions/addons you have opted to integrate with, and determines what user IDs are transmitted back to the Twitter API in order to block the user.
 
-You can optionally configure the Extension to send the Twitter data it collects to other extensions/addons. Data is never shared without your explicit consent, and you may revoke consent at any time. We advise you to refer to the Privacy Policies of the extensions/addons that you enable data sharing with to understand how those extensions collect, store, and use the data you provide to them.
+You can optionally configure the Extension to send the Twitter data it collects to other extensions/addons ("integrations"). Data is never shared without your explicit consent, and you may revoke consent at any time. We advise you to refer to the Privacy Policies of the extensions/addons that you enable data sharing with to understand how those extensions collect, store, and use the data you provide to them.
 
 **No other user data is shared with any outside parties.**
 
@@ -52,6 +52,6 @@ If at any time you wish to no longer allow the Extension to collect, store, or u
 
 ## Data Deletion
 
-You can delete all data related to unblocked users at any time by navigating to the "advanced" tab of the Extension's popup and clicking the "clear" button in the safelist section.
+You can delete all data related to or stored by the Extension at any time by uninstalling the Extension.
 
-You can delete all data stored by the Extension at any time by uninstalling the Extension.
+You can delete all data related to unblocked users at any time by navigating to the "advanced" tab of the Extension's popup and clicking the "clear" button in the safelist section.
