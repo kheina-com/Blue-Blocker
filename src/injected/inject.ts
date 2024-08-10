@@ -3,7 +3,7 @@
 (function (xhr) {
 	// TODO: find a way to make this cleaner
 	const RequestRegex =
-		/^https?:\/\/(?:\w+\.)?(?:twitter|x)\.com\/[\w\/\.\-\_\=]+\/(HomeLatestTimeline|HomeTimeline|Followers|Following|SearchTimeline|UserTweets|UserCreatorSubscriptions|FollowersYouKnow|BlueVerifiedFollowers|SearchTimeline|timeline\/home\.json|TweetDetail|search\/typeahead\.json|search\/adaptive\.json|blocks\/destroy\.json|mutes\/users\/destroy\.json)(?:$|\?)/;
+		/^https?:\/\/(?:\w+\.)?(?:twitter|x)\.com\/[\w\/\.\-\_\=]+\/(HomeLatestTimeline|HomeTimeline|Followers|Following|SearchTimeline|UserTweets|Favoriters|UserCreatorSubscriptions|FollowersYouKnow|BlueVerifiedFollowers|timeline\/home\.json|TweetDetail|ModeratedTimeline|search\/typeahead\.json|search\/adaptive\.json|blocks\/destroy\.json|mutes\/users\/destroy\.json)(?:$|\?)/;
 
 	let XHR = <BlueBlockerXLMRequest>XMLHttpRequest.prototype;
 	let open = XHR.open;
