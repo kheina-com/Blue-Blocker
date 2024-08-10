@@ -12,9 +12,6 @@ jobs:
       sourcefile: ${{ steps.src.outputs.sourcefile }}
     steps:
     - uses: actions/checkout@v4
-    - name: debug
-      run: |
-        echo "github.event:" "${{ toJSON(github.event) }}"
     - name: zip source code
       id: src
       run: |
