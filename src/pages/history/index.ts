@@ -1,4 +1,4 @@
-import { commafy, EscapeHtml, RefId } from '../../utilities.js';
+import { commafy, EscapeHtml, RefId, UsernameElement } from '../../utilities';
 import {
 	api,
 	logstr,
@@ -7,8 +7,8 @@ import {
 	ReasonExternal,
 	HistoryStateUnblocked,
 	HistoryStateGone,
-} from '../../constants.js';
-import { ConnectDb, historyDbStore } from '../../background/db.js';
+} from '../../constants';
+import { ConnectDb, historyDbStore } from '../../background/db';
 import { BlockCounter } from '../../models/block_counter';
 import '../style.css';
 import './style.css';
@@ -36,21 +36,17 @@ blockCounter
 		}).then(users => {
 			const queueDiv = document.getElementById('block-history') as HTMLElement;
 
-			queueDiv.innerHTML = '';
+			queueDiv.innerText = '';
 			let blockedCount: number = 0;
 
-			const reasons: { [r: number]: number } = {};
+			const reasons: { [r: number]: number; } = {};
 			users.reverse().forEach(item => {
 				if (!reasons.hasOwnProperty(item.reason)) {
 					reasons[item.reason] = 0;
 				}
 
 				const div = document.createElement('div');
-				const p = document.createElement('p');
-				const screen_name = EscapeHtml(item.user.screen_name);
-				p.innerHTML = `${EscapeHtml(
-					item.user.name,
-				)} (<a href="https://twitter.com/${screen_name}" target="_blank">@${screen_name}</a>)`;
+				const p = UsernameElement(item.user.name, item.user.screen_name);
 				div.appendChild(p);
 
 				const p2 = document.createElement('p');
@@ -61,24 +57,24 @@ blockCounter
 				const p3 = document.createElement('p');
 				let state: string;
 				switch (item.state) {
-					case HistoryStateBlocked:
-						state = 'blocked';
-						blockedCount++;
-						reasons[item.reason]++;
-						break;
+				case HistoryStateBlocked:
+					state = 'blocked';
+					blockedCount++;
+					reasons[item.reason]++;
+					break;
 
-					case HistoryStateUnblocked:
-						state = 'unblocked';
-						blockedCount++;
-						reasons[item.reason]++;
-						break;
+				case HistoryStateUnblocked:
+					state = 'unblocked';
+					blockedCount++;
+					reasons[item.reason]++;
+					break;
 
-					case HistoryStateGone:
-						state = 'user no longer exists';
-						break;
+				case HistoryStateGone:
+					state = 'user no longer exists';
+					break;
 
-					default:
-						state = 'unreadable state';
+				default:
+					state = 'unreadable state';
 				}
 				p3.innerText = 'current state: ' + state;
 				div.appendChild(p3);
