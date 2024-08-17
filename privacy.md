@@ -20,7 +20,7 @@ This policy may change from time to time and we will do our best to promptly upd
     -   Twitter usernames, display names, and user IDs contained in this data are additionally used to create a history of users that have been blocked by the extension, and generate a list of users to not block in the future.
     -   This data may also be used to allow other extensions or addons to add additional checks in determining if the user should be blocked.
 
-**Your data will never be used for any commercial purposes.**
+**Your data is not sent to any party without your explicit consent, and will never be used for any commercial purpose.**
 
 ## What User Data is Stored by the Extension
 
