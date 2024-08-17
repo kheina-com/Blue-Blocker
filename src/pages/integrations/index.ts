@@ -1,4 +1,4 @@
-import { RefId } from '../../utilities.js';
+import { RefId } from '../../utilities';
 import {
 	api,
 	logstr,
@@ -7,7 +7,7 @@ import {
 	IntegrationStateSendAndReceive,
 	IntegrationStateSendOnly,
 	SoupcanExtensionId,
-} from '../../constants.js';
+} from '../../constants';
 import '../style.css';
 import './style.css';
 
@@ -21,7 +21,7 @@ const [ExtensionStateNone, ExtensionStateDisabled, ExtensionStateEnabled] = [0, 
 
 document.addEventListener('DOMContentLoaded', () => {
 	const integrationsDiv = document.getElementById('integrations') as HTMLElement;
-	const i: { [n: string]: Integration } = {};
+	const i: { [n: string]: Integration; } = {};
 
 	function add(integration: Integration): void {
 		const refid = RefId().toString();
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		integrationsDiv.appendChild(div);
 	}
 
-	integrationsDiv.innerHTML = '';
+	integrationsDiv.innerText = '';
 	let soupcanState: number = ExtensionStateNone;
 
 	// soupcan doesn't work with the new integration system for now
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	api.storage.local
 		.get({ integrations: {} })
-		.then(items => items.integrations as { [id: string]: { name: string; state: number } })
+		.then(items => items.integrations as { [id: string]: { name: string; state: number; }; })
 		.then(integrations => {
 			console.debug(logstr, 'loaded integrations:', integrations);
 			const addButton = document.getElementById('add-button') as HTMLButtonElement;
@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					clearTimeout(saveTimeout);
 				}
 
-				const integrations: { [id: string]: { name: string; state: number } } = {};
+				const integrations: { [id: string]: { name: string; state: number; }; } = {};
 				for (const integration of Object.values(i)) {
 					integrations[integration.id] = {
 						name: integration.name,

@@ -44,7 +44,7 @@ const blockCounter = new BlockCounter(api.storage.local);
 const blockCache: Set<string> = new Set();
 export const UnblockCache: Set<string> = new Set();
 
-export function SetHeaders(headers: { [k: string]: string }) {
+export function SetHeaders(headers: { [k: string]: string; }) {
 	api.storage.local.get({ headers: {} }).then(items => {
 		// so basically we want to only update items that have values
 		for (const [header, value] of Object.entries(headers)) {
@@ -61,7 +61,7 @@ setInterval(UnblockCache.clear, 10 * 60e3);
 const twitterWindowRegex = /^https?:\/\/(?:\w+\.)?(?:twitter|x)\.com(?=$|\/)/;
 
 function unblockUser(
-	user: { name: string; screen_name: string },
+	user: { name: string; screen_name: string; },
 	user_id: string,
 	reason: number,
 	attempt: number = 1,
@@ -97,10 +97,10 @@ function unblockUser(
 
 		api.storage.local
 			.get({ headers: null })
-			.then(items => items.headers as { [k: string]: string })
-			.then((req_headers: { [k: string]: string }) => {
+			.then(items => items.headers as { [k: string]: string; })
+			.then((req_headers: { [k: string]: string; }) => {
 				const body = `user_id=${user_id}`;
-				const headers: { [k: string]: string } = {
+				const headers: { [k: string]: string; } = {
 					'content-length': body.length.toString(),
 					'content-type': 'application/x-www-form-urlencoded',
 				};
@@ -122,7 +122,7 @@ function unblockUser(
 
 				const options: {
 					body: string;
-					headers: { [k: string]: string };
+					headers: { [k: string]: string; };
 					method: string;
 					credentials: RequestCredentials;
 				} = {
@@ -136,23 +136,20 @@ function unblockUser(
 						if (response.status === 403) {
 							// user has been logged out, we need to stop queue and re-add
 							MakeToast(
-								`could not un${config.mute ? 'mute' : 'block'} @${
-									user.screen_name
+								`could not un${config.mute ? 'mute' : 'block'} @${user.screen_name
 								}, you may have been logged out.`,
 								config,
 							);
 							console.log(
 								logstr,
-								`user is logged out, failed to un${
-									config.mute ? 'mute' : 'block'
+								`user is logged out, failed to un${config.mute ? 'mute' : 'block'
 								} user.`,
 							);
 						} else if (response.status === 404) {
 							// notice the wording here is different than the blocked 404. the difference is that if the user
 							// is unbanned, they will still be blocked and we want the user to know about that
 							MakeToast(
-								`could not un${config.mute ? 'mute' : 'block'} @${
-									user.screen_name
+								`could not un${config.mute ? 'mute' : 'block'} @${user.screen_name
 								}, user has been suspended or no longer exists.`,
 								config,
 							);
@@ -164,8 +161,7 @@ function unblockUser(
 							);
 						} else if (response.status >= 300) {
 							MakeToast(
-								`could not un${config.mute ? 'mute' : 'block'} @${
-									user.screen_name
+								`could not un${config.mute ? 'mute' : 'block'} @${user.screen_name
 								}, twitter gave an unfamiliar response code.`,
 								config,
 							);
@@ -184,8 +180,7 @@ function unblockUser(
 								`un${config.mute ? 'mut' : 'block'}ed ${FormatLegacyName(user)}`,
 							);
 							MakeToast(
-								`un${config.mute ? 'mut' : 'block'}ed @${
-									user.screen_name
+								`un${config.mute ? 'mut' : 'block'}ed @${user.screen_name
 								}, they won't be ${config.mute ? 'mut' : 'block'}ed again.`,
 								config,
 							);
@@ -224,66 +219,76 @@ api.storage.local.onChanged.addListener(items => {
 	api.storage.sync.get(DefaultOptions).then(options => {
 		const config = options as Config;
 		switch (e.type) {
-			case MessageEvent:
-				if (config.showBlockPopups) {
-					MakeToast(e.message, config, e.options);
-				}
-				break;
+		case MessageEvent:
+			if (config.showBlockPopups) {
+				MakeToast(e.message, config, e.options);
+			}
+			break;
 
-			case UserBlockedEvent:
-				if (config.showBlockPopups) {
-					const event = e as BlockUser;
-					const { user, user_id, reason } = event;
-					const name =
-						user.name.length > 25
-							? user.name.substring(0, 23).trim() + '...'
-							: user.name;
-					const b = document.createElement('button');
-					b.innerText = 'undo';
-					b.onclick = () => {
-						unblockUser(user, user_id, reason);
-						const parent = b.parentNode as ParentNode;
-						parent.removeChild(b);
-					};
+		case UserBlockedEvent:
+			if (config.showBlockPopups) {
+				const event = e as BlockUser;
+				const { user, user_id, reason } = event;
+				const name =
+					user.name.length > 25
+						? user.name.substring(0, 23).trim() + '...'
+						: user.name;
+				const b = document.createElement('button');
+				b.innerText = 'undo';
+				b.onclick = () => {
+					unblockUser(user, user_id, reason);
+					const parent = b.parentNode as ParentNode;
+					parent.removeChild(b);
+				};
+				const span = document.createElement("span");
+				span.appendChild(document.createTextNode(`${config.mute ? 'mut' : 'block'}ed ${EscapeHtml(name)} (`));
+				span.appendChild(((): HTMLAnchorElement => {
 					const screen_name = EscapeHtml(user.screen_name); // this shouldn't really do anything, but can't be too careful
-					MakeToast(
-						`${config.mute ? 'mut' : 'block'}ed ${EscapeHtml(
-							name,
-						)} (<a href="/${screen_name}">@${screen_name}</a>)`,
-						config,
-						{ html: true, elements: [b] },
-					);
-				}
-				break;
+					const a = document.createElement("a");
+					a.href = "/" + screen_name;
+					a.innerText = "@" + screen_name;
+					return a;
+				})());
+				span.appendChild(document.createTextNode(")"));
+				MakeToast("", config, { elements: [span, b] });
+			}
+			break;
 
-			case UserLogoutEvent:
-				if (config.showBlockPopups) {
-					MakeToast(
-						`You have been logged out, and ${
-							config.mute ? 'mut' : 'block'
-						}ing has been paused.`,
-						config,
-						{
-							warn: true,
-						},
-					);
-				}
-				break;
-
-			case ErrorEvent:
-				// skip checking options, since errors should always be shown
-				if (e.message) {
-					console.error(logstr, e.message, e);
-				}
+		case UserLogoutEvent:
+			if (config.showBlockPopups) {
 				MakeToast(
-					`<p>an error occurred! check the console and create an issue on <a href="https://github.com/kheina-com/Blue-Blocker/issues" target="_blank">GitHub</a></p>`,
+					`You have been logged out, and ${config.mute ? 'mut' : 'block'
+					}ing has been paused.`,
 					config,
-					{ html: true, error: true },
+					{
+						warn: true,
+					},
 				);
-				break;
+			}
+			break;
 
-			default:
-				console.error(logstr, 'unknown multitab event occurred:', e);
+		case ErrorEvent:
+			// skip checking options, since errors should always be shown
+			if (e.message) {
+				console.error(logstr, e.message, e);
+			}
+			const p = document.createElement("p");
+			p.appendChild(document.createTextNode("an error occurred! check the console and create an issue on "));
+			p.appendChild(((): HTMLAnchorElement => {
+				const a = document.createElement("a");
+				a.href = "https://github.com/kheina-com/Blue-Blocker/issues";
+				a.innerText = "GitHub";
+				return a;
+			})());
+			MakeToast(
+				"",
+				config,
+				{ error: true, elements: [p] },
+			);
+			break;
+
+		default:
+			console.error(logstr, 'unknown multitab event occurred:', e);
 		}
 	});
 });
@@ -319,8 +324,7 @@ function queueBlockUser(
 		.then(config =>
 			console.log(
 				logstr,
-				`queued ${FormatLegacyName(user.legacy)} for a ${
-					config.mute ? 'mute' : 'block'
+				`queued ${FormatLegacyName(user.legacy)} for a ${config.mute ? 'mute' : 'block'
 				} due to ${ReasonMap[reason]}.`,
 			),
 		);
@@ -403,10 +407,10 @@ function blockUser(user: BlockUser, attempt = 1) {
 
 		api.storage.local
 			.get({ headers: null })
-			.then(items => items.headers as { [k: string]: string })
+			.then(items => items.headers as { [k: string]: string; })
 			.then(req_headers => {
 				const body = `user_id=${user.user_id}`;
-				const headers: { [k: string]: string } = {
+				const headers: { [k: string]: string; } = {
 					'content-length': body.length.toString(),
 					'content-type': 'application/x-www-form-urlencoded',
 				};
@@ -428,7 +432,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 
 				const options: {
 					body: string;
-					headers: { [k: string]: string };
+					headers: { [k: string]: string; };
 					method: string;
 					credentials: RequestCredentials;
 				} = {
@@ -476,8 +480,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 							AddUserBlockHistory(user).catch(e => console.error(logstr, e));
 							console.log(
 								logstr,
-								`blocked ${FormatLegacyName(user.user)} due to ${
-									ReasonMap?.[user.reason] ?? user?.external_reason
+								`blocked ${FormatLegacyName(user.user)} due to ${ReasonMap?.[user.reason] ?? user?.external_reason
 								}.`,
 							);
 							api.storage.local.set({
@@ -500,7 +503,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 
 						const options: {
 							body: string;
-							headers: { [k: string]: string };
+							headers: { [k: string]: string; };
 							method: string;
 							credentials: RequestCredentials;
 						} = {
@@ -535,8 +538,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 									);
 									console.log(
 										logstr,
-										`could not ${
-											config.mute ? 'mute' : 'block'
+										`could not ${config.mute ? 'mute' : 'block'
 										} ${FormatLegacyName(user.user)}, user no longer exists`,
 									);
 								} else if (response.status >= 300) {
@@ -544,8 +546,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 									QueuePush(user);
 									console.error(
 										logstr,
-										`failed to ${
-											config.mute ? 'mute' : 'block'
+										`failed to ${config.mute ? 'mute' : 'block'
 										} ${FormatLegacyName(
 											user.user,
 										)}, consumer stopped just in case.`,
@@ -572,8 +573,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 									QueuePush(user);
 									console.error(
 										logstr,
-										`failed to ${
-											config.mute ? 'mute' : 'block'
+										`failed to ${config.mute ? 'mute' : 'block'
 										} ${FormatLegacyName(user.user)}:`,
 										user,
 										error,
@@ -621,8 +621,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 			) {
 				console.debug(
 					logstr,
-					`skipped user ${formattedUserName} because you un${
-						config.mute ? 'mut' : 'block'
+					`skipped user ${formattedUserName} because you un${config.mute ? 'mut' : 'block'
 					}ed them previously.`,
 				);
 				return true;
@@ -666,8 +665,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 				) {
 					console.log(
 						logstr,
-						`did not ${
-							config.mute ? 'mute' : 'block'
+						`did not ${config.mute ? 'mute' : 'block'
 						} Twitter Blue verified user ${formattedUserName} because they are legacy verified.`,
 					);
 				} else if (
@@ -677,8 +675,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 				) {
 					console.log(
 						logstr,
-						`did not ${
-							config.mute ? 'mute' : 'block'
+						`did not ${config.mute ? 'mute' : 'block'
 						} Twitter Blue verified user ${formattedUserName} because they are verified through an affiliated organization.`,
 					);
 				} else if (
@@ -688,8 +685,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 				) {
 					console.log(
 						logstr,
-						`did not ${
-							config.mute ? 'mute' : 'block'
+						`did not ${config.mute ? 'mute' : 'block'
 						} Twitter Blue verified user ${formattedUserName} because they have over ${commafy(
 							config.skipFollowerCount,
 						)} followers and Elon is an idiot.`,
@@ -726,8 +722,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 		queueBlockUser(user, user.rest_id, ReasonDisallowedWordsOrEmojis);
 		console.log(
 			logstr,
-			`${
-				config.mute ? 'muted' : 'blocked'
+			`${config.mute ? 'muted' : 'blocked'
 			} ${formattedUserName} for having disallowed words/emojis in their username.`,
 		);
 		return true;
@@ -767,7 +762,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 	let updateIntegrations = false;
 	api.storage.local
 		.get({ integrations: {} })
-		.then(items => items.integrations as { [id: string]: { name: string; state: number } })
+		.then(items => items.integrations as { [id: string]: { name: string; state: number; }; })
 		.then(async integrations => {
 			for (const [extensionId, integration] of Object.entries(integrations)) {
 				if (

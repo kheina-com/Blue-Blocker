@@ -55,7 +55,7 @@ async function sendMessage<T extends MessageResponse>(
 	let attempt: number = 0;
 	let response: MessageResponse | null = null;
 
-	for (;;) {
+	for (; ;) {
 		response = await api.runtime.sendMessage<RuntimeMessage, MessageResponse>(message);
 		if (response.status === SuccessStatus) {
 			return response as T;
@@ -127,7 +127,7 @@ export async function RemoveUserBlockHistory(user_id: string): Promise<void> {
 	);
 }
 
-export function FormatLegacyName(user: { name: string; screen_name: string }) {
+export function FormatLegacyName(user: { name: string; screen_name: string; }) {
 	const legacyName = user?.name;
 	const screenName = user?.screen_name;
 	return `${legacyName} (@${screenName})`;
@@ -137,7 +137,7 @@ export function MakeToast(
 	content: string,
 	config: Config,
 	options: {
-		html?: boolean;
+		html?: false;
 		warn?: boolean;
 		error?: boolean;
 		elements?: Array<HTMLElement>;
@@ -158,11 +158,7 @@ export function MakeToast(
 		t.className = 'toast';
 		popupTimer = config.popupTimer * 1000;
 	}
-	if (options?.html) {
-		t.innerHTML = content;
-	} else {
-		t.innerText = content;
-	}
+	t.innerText = content;
 
 	if (options?.elements) {
 		options.elements.forEach(e => t.appendChild(e));
@@ -228,4 +224,16 @@ export async function QueuePush(user: BlockUser): Promise<void> {
 		},
 		'unable to push user to queue',
 	);
+}
+
+export function UsernameElement(userName: string, screenName: string): HTMLParagraphElement {
+	const p = document.createElement("p");
+	const a = document.createElement("a");
+	a.href = "https://twitter.com/" + screenName;
+	a.target = "_blank";
+	a.textContent = "@" + screenName;
+	p.appendChild(document.createTextNode(userName + " ("));
+	p.appendChild(a);
+	p.appendChild(document.createTextNode(")"));
+	return p;
 }
