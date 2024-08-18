@@ -20,7 +20,12 @@ This policy may change from time to time and we will do our best to promptly upd
     -   Twitter usernames, display names, and user IDs contained in this data are additionally used to create a history of users that have been blocked by the extension, and generate a list of users to not block in the future.
     -   This data may also be used to allow other extensions or addons to add additional checks in determining if the user should be blocked.
 
-**Your data is not sent to any party without your explicit consent, and will never be used for any commercial purpose.**
+**Your data will never be used by the Extension for any analytical or commercial purpose.**
+
+## How User Data is Processed
+All processing of User Data by the Extension is done on-device. The Extension does not transmit data to an external server in order to process it.
+
+If you decide to share data with other extensions or addons, we can not guarantee how your data will be processed by those extensions or addons. You are advised to read the Privacy Policies of any other extensions or addons you share User Data with to understand how they process your User Data.
 
 ## What User Data is Stored by the Extension
 
@@ -38,7 +43,7 @@ Usernames, display names, and user IDs of unblocked users is stored within the s
 
 ## What User Data is Shared With Third Parties
 
-The public user data sent by the Twitter API are parsed by the Extension, or extensions/addons you have opted to integrate with, and determines what user IDs are transmitted back to the Twitter API in order to block the user.
+The public user data sent by the Twitter API are parsed by the Extension, and/or extensions/addons you have opted to integrate with, and determines what user IDs are transmitted back to the Twitter API in order to block the user.
 
 You can optionally configure the Extension to send the Twitter data it collects to other extensions/addons ("integrations"). Data is never shared without your explicit consent, and you may revoke consent at any time. We advise you to refer to the Privacy Policies of the extensions/addons that you enable data sharing with to understand how those extensions collect, store, and use the data you provide to them.
 
