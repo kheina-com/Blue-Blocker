@@ -1,6 +1,6 @@
 {
 	"name": "blue-blocker",
-	"version": "0.4.5",
+	"version": "0.4.6",
 	"author": "DanielleMiu",
 	"description": "Blocks all Twitter Blue verified users on twitter.com",
 	"type": "module",
@@ -36,6 +36,6 @@
 		"vite": "^2.9.18"
 	},
 	"dependencies": {
-		"html-minifier": "^4.0.0"
+		"html-minifier-terser": "^7.2.0"
 	}
 }
