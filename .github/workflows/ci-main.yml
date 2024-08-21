@@ -1,0 +1,44 @@
+---
+name: "Test (CI)"
+
+on:
+  push:
+    branches: ["main", "ci-workflow"]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: ["main", "ci-workflow"]
+
+jobs:
+  test-with-npm:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Package install
+        run: npm --version && npm install
+      - name: Package build
+        run: npm run dev && npm run build
+      - name: Firefox build
+        run: make firefox
+      - name: Package formatting
+        run: npm run fmt
+  test-with-yarn:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Package install
+        run: yarn install
+      - name: Package build
+        run: yarn
+      - name: Package test
+        run: yarn check
+      - name: Package audit
+        run: yarn audit || yarn run fmt
