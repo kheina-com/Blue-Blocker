@@ -31,6 +31,7 @@
 		"@crxjs/vite-plugin": "^1.0.14",
 		"@types/chrome": "^0.0.235",
 		"@types/firefox-webext-browser": "^111.0.1",
+		"commander": "^12.1.0",
 		"jq": "^1.7.2",
 		"prettier": "^2.8.8",
 		"typescript": "^5.0.4",
