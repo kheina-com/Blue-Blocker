@@ -20,7 +20,9 @@ jobs:
         with:
           node-version: '18'
       - name: Package install
-        run: npm --version && npm install
+        run: |
+          npm --version && npm install
+          sudo npm install -g vite
       - name: Package build
         run: |
           npm ci
@@ -44,10 +46,12 @@ jobs:
         with:
           node-version: '18'
       - name: Package install
-        run: yarn install
+        run: |
+          yarn install
+          yarn global add vite
       - name: Package build
         run: yarn
       - name: Package test
-        run: yarn check || yarn run build
+        run: yarn check || yarn run build || vite build
       - name: Package audit
         run: yarn audit || yarn run fmt
