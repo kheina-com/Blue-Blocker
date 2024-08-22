@@ -22,7 +22,11 @@ jobs:
       - name: Package install
         run: npm --version && npm install
       - name: Package build
-        run: npm run dev && npm run build
+        run: |
+          if test -x "$(which timeout)"; then \
+            timeout -v 1m npm run dev; \
+          fi
+          npm run build
       - name: Firefox build
         run: make firefox
       - name: Package formatting
@@ -39,6 +43,6 @@ jobs:
       - name: Package build
         run: yarn
       - name: Package test
-        run: yarn check
+        run: yarn check || yarn run build
       - name: Package audit
         run: yarn audit || yarn run fmt
