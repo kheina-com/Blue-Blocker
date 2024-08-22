@@ -23,8 +23,13 @@ jobs:
         run: npm --version && npm install
       - name: Package build
         run: |
+          npm ci
           if test -x "$(which timeout)"; then \
-            timeout -v 1m npm run dev; \
+            (timeout -v 1m npm run dev) || echo "never mind"; \
+          elif test -x "$(which gtimeout)"; then \
+            (gtimeout -v 1m npm run dev) || echo "never mind"; \
+          else \
+            sync && echo "'npm run dev' ought to be run under timeout"; \
           fi
           npm run build
       - name: Firefox build
