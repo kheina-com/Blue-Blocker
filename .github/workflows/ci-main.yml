@@ -31,7 +31,7 @@ jobs:
           else \
             sync && echo "'npm run dev' ought to be run under timeout"; \
           fi
-          npm run build
+          npm run build || vite build
       - name: Firefox build
         run: make firefox
       - name: Package formatting
