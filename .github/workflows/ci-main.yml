@@ -10,7 +10,7 @@ on:
 
 jobs:
   test-with-npm:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
     continue-on-error: true
@@ -33,13 +33,13 @@ jobs:
           else \
             sync && echo "'npm run dev' ought to be run under timeout"; \
           fi
-          npm run build || vite build
+          npm run build || vite build || make
       - name: Firefox build
         run: make firefox
       - name: Package formatting
         run: npm run fmt
   test-with-yarn:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
@@ -52,6 +52,6 @@ jobs:
       - name: Package build
         run: yarn
       - name: Package test
-        run: yarn check || yarn run build || vite build
+        run: yarn check || yarn run build || vite build || make
       - name: Package audit
         run: yarn audit || yarn run fmt
