@@ -4,7 +4,7 @@ This privacy policy ("policy") will help you understand how Blue Blocker collect
 
 This policy may change from time to time and we will do our best to promptly update you on changes. If you want to make sure that you are up to date with the latest changes, we advise you to visit the version of this policy hosted on [GitHub](https://github.com/kheina-com/Blue-Blocker/blob/main/privacy.md).
 
-This version of the Privacy Policy was last updated on 9/6/2024.
+This version of the Privacy Policy was last updated on September 6th, 2024.
 
 ## What User Data the Extension Collects
 
