@@ -1,4 +1,4 @@
-import { api, DefaultOptions, logstr, SoupcanExtensionId } from '../constants.js';
+import { api, DefaultOptions, logstr } from '../constants.js';
 import { abbreviate, commafy } from '../utilities.js';
 import { QueueLength } from '../background/db.js';
 import './style.css';
@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		if (!tabs.hasOwnProperty(tab)) {
-			if(tab != 'quick' && tab != 'advanced'){
+			if (tab != 'quick' && tab != 'advanced') {
 				throw new Error(
 					'invalid tab value. must be one of: ' +
 						Object.values(tabs)
@@ -294,7 +294,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	const blockPromoted = document.getElementById('block-promoted-tweets') as HTMLInputElement;
 	const blockForUse = document.getElementById('block-for-use') as HTMLInputElement;
 	const skipCheckmark = document.getElementById('skip-checkmark') as HTMLInputElement;
-	const soupcanIntegration = document.getElementById('soupcan-integration') as HTMLInputElement;
 	const disallowedWordsCheckmark = document.getElementById('blockstrings') as HTMLInputElement;
 	const disallowedWordsInput = document.getElementById('blockstrings-input') as HTMLInputElement;
 
@@ -333,9 +332,6 @@ document.addEventListener('DOMContentLoaded', () => {
 					.querySelectorAll<HTMLElement>('[data-bb-skip-checkmark]')
 					.forEach(e => (e.style.display = target.checked ? 'none' : ''));
 			},
-		});
-		checkHandler(soupcanIntegration, config, 'soupcanIntegration', {
-			optionName: '', // integration isn't controlled by the toggle, so unset
 		});
 		checkHandler(disallowedWordsCheckmark, config, 'blockDisallowedWords');
 		checkHandlerArrayToString(disallowedWordsInput, config, 'disallowedWords');
@@ -404,25 +400,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			);
 		});
 	});
-
-	// @ts-ignore
-	api.runtime
-		.sendMessage(SoupcanExtensionId, { action: 'check_twitter_user', screen_name: 'elonmusk' })
-		.then((r: any) => {
-			// we could check if response is the expected shape here, if we really wanted
-			if (!r) {
-				throw new Error('extension not enabled');
-			}
-			document
-				.getElementsByName('soupcan-integration-option')
-				.forEach(e => (e.style.display = 'flex'));
-		})
-		.catch((e: Error) => {
-			console.debug(logstr, 'soupcan response for @elonmusk:', e);
-			document
-				.getElementsByName('soupcan-integration-option')
-				.forEach(ele => (ele.style.display = 'none'));
-		});
 
 	// set the block value immediately
 	api.storage.local.get({ BlockCounter: 0 }).then(items => {
