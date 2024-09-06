@@ -4,6 +4,8 @@ This privacy policy ("policy") will help you understand how Blue Blocker collect
 
 This policy may change from time to time and we will do our best to promptly update you on changes. If you want to make sure that you are up to date with the latest changes, we advise you to visit the version of this policy hosted on [GitHub](https://github.com/kheina-com/Blue-Blocker/blob/main/privacy.md).
 
+This version of the Privacy Policy was last updated on September 6th, 2024.
+
 ## What User Data the Extension Collects
 
 -   Session cookies set by the Twitter web client.
@@ -18,9 +20,14 @@ This policy may change from time to time and we will do our best to promptly upd
 -   URLs are used to filter responses and to parse responses in order to extract Twitter user objects.
 -   Twitter data is used to determine whether a Twitter user should be blocked, and to properly form requests to the blocking/muting endpoint of the Twitter API.
     -   Twitter usernames, display names, and user IDs contained in this data are additionally used to create a history of users that have been blocked by the extension, and generate a list of users to not block in the future.
-    -   This data may also be used to allow other extensions or addons to add additional checks in determining if the user should be blocked.
+    -   This data may also be used to allow other extensions or addons to add additional checks in determining if the user should be blocked. You are advised to consult the Privacy Policies of any integrated extensions to learn what purposes they have for usage of this data.
 
-**Your data is not sent to any party without your explicit consent, and will never be used for any commercial purpose.**
+**Your data will never be used by the Extension for any analytical or commercial purpose.**
+
+## How User Data is Processed
+All processing of User Data by the Extension is done on-device. The Extension does not transmit data to an external server in order to process it.
+
+If you decide to share data with other extensions or addons, we can not guarantee how your data will be processed by those extensions or addons. You are advised to read the Privacy Policies of any other extensions or addons you share User Data with to understand how they process your User Data.
 
 ## What User Data is Stored by the Extension
 
@@ -28,17 +35,17 @@ We are committed to safeguarding all data that you provide to the Extension. We 
 
 Session cookies and CSRF tokens are stored locally by the Extension.
 
-URLs collected are discarded after their use, and never stored.
+Any URLs that are collected are discarded after their use, and never stored.
 
-Twitter data that is not the username, display name, or user ID is discarded immediately after use, and never stored.
-
-Usernames, display names, and user IDs of blocked users are stored locally.
+The usernames, display names, and/or user IDs of blocked users are stored locally.
 
 Usernames, display names, and user IDs of unblocked users is stored within the synced portion of your browser's extension data store.
 
+All other Twitter data (including, but not limited to: post contents, like counts, following/follower status, and profile description), including data from users that are not blocked, is discarded immediately after use, and never stored.
+
 ## What User Data is Shared With Third Parties
 
-The public user data sent by the Twitter API are parsed by the Extension, or extensions/addons you have opted to integrate with, and determines what user IDs are transmitted back to the Twitter API in order to block the user.
+The public user data sent by the Twitter API are parsed by the Extension, and/or extensions/addons you have opted to integrate with, and determines what user IDs are transmitted back to the Twitter API in order to block the user.
 
 You can optionally configure the Extension to send the Twitter data it collects to other extensions/addons ("integrations"). Data is never shared without your explicit consent, and you may revoke consent at any time. We advise you to refer to the Privacy Policies of the extensions/addons that you enable data sharing with to understand how those extensions collect, store, and use the data you provide to them.
 
