@@ -775,8 +775,10 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 					state: IntegrationStateSendAndReceive,
 				};
 
+				// Set the variable so we don't loop with this batch
 				config.soupcanIntegration = false;
-				api.storage.local.set({ config });
+				// Save the setting
+				api.storage.sync.set({ soupcanIntegration: false });
 			}
 
 			for (const [extensionId, integration] of Object.entries(integrations)) {
