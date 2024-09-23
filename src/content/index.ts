@@ -6,6 +6,7 @@ import { HandleForYou } from '../parsers/timeline';
 import { HandleTypeahead } from '../parsers/search';
 import { HandleUnblock } from '../parsers/unblock';
 import './startup.ts';
+import { HandleUserByScreenName } from '../parsers/user';
 
 function compileConfig(config: Config): CompiledConfig {
 	return {
@@ -91,6 +92,8 @@ document.addEventListener('blue-blocker-event', function (e: CustomEvent<BlueBlo
 					return HandleForYou(e, parsed_body, compileConfig(config));
 				case 'search/typeahead.json':
 					return HandleTypeahead(e, parsed_body, compileConfig(config));
+				case 'UserByScreenName':
+					return HandleUserByScreenName(e, parsed_body, compileConfig(config));
 				default:
 					console.error(
 						logstr,
