@@ -24,7 +24,7 @@ function compileConfig(config: Config): CompiledConfig {
 		unblocked: config.unblocked,
 		popupTimer: config.popupTimer,
 		skipFollowerCount: config.skipFollowerCount,
-		soupcanIntegration: config.blockFollowers,
+		soupcanIntegration: config.soupcanIntegration,
 		blockPromoted: config.blockPromoted,
 		blockForUse: config.blockForUse,
 		blockDisallowedWords: config.blockDisallowedWords,
