@@ -33,7 +33,7 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **Screenshots and console logs**
-If applicable, add screenshots to help explain your problem. If there's console logs related to the bug  add them here too.
+If applicable, add screenshots to help explain your problem. If there are console logs related to the bug, then please add them here, too.
 
 **Please fill in the following information:**
  - Browser [e.g. chrome, safari]
