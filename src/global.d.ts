@@ -96,12 +96,12 @@ interface BlueBlockerUser {
 		want_retweets: boolean;
 		withheld_in_countries: string[];
 	};
-	tipjar_settings: {
+	tipjar_settings?: {
 		/* TODO: figure out what gets put here */
 	};
 	super_following?: boolean;
-	has_graduated_access: boolean;
-	profile_image_shape: string;
+	has_graduated_access?: boolean;
+	profile_image_shape?: string;
 	promoted_tweet?: boolean;
 	used_blue?: boolean;
 }
