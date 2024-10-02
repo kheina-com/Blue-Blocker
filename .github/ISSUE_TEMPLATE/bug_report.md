@@ -8,7 +8,7 @@ assignees: ''
 body:
 - type: markdown
   attributes:
-    value: "Hi! Thank you for your bug report, for our own sanity we want to ask you a question."
+    value: "Hi! Thank you for your bug report. We have a question for you to answer first."
 - type: checkboxes
   id: checked-dupes
   attributes:
