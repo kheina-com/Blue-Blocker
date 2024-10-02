@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
+about: Suggest an idea for a new Blue Blocker feature
 title: "[feat]"
 labels: enhancement
 assignees: ''
