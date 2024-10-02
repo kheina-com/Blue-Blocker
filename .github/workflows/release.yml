@@ -40,7 +40,7 @@ jobs:
         addon-id: "{119be3f3-597c-4f6a-9caf-627ee431d374}"
         addon-path: "${{ steps.build.outputs.filename }}"
         source-path: "${{ steps.src.outputs.sourcefile }}"
-        approval-note: "The extension can be built and tested locally using `npm run build && make firefox`. Simply navigate to twitter.com and you should see users being queued and blocked fairly quickly."
+        approval-note: "The build process of this extension requires `jq` to be installed. (https://jqlang.github.io/jq/) After `npm install` is run, the extension can be built and tested locally using `npm run build && make firefox`. Simply navigate to twitter.com and you should see users being queued and blocked fairly quickly."
         release-note: "${{ toJSON(github.event.release.body) }}" # this should be the content of the release, make sure to include a changelog
         compatibility-firefox-min: "48.0"
         license: "MPL-2.0"
