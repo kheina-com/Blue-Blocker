@@ -23,6 +23,6 @@ makefile @kheina @cooljeanius @rougetimelord
 package-lock.json @kheina @cooljeanius @rougetimelord
 package.json @kheina @jaredcat @cooljeanius @rougetimelord
 readme.md @kheina @jaredcat @cooljeanius @rougetimelord
-tsconfig.json @kheina @jaredcat
-tsconfig.node.json @kheina @jaredcat
+tsconfig.json @kheina @jaredcat @rougetimelord
+tsconfig.node.json @kheina @jaredcat @rougetimelord
 vite.config.ts @kheina @jaredcat @cooljeanius
