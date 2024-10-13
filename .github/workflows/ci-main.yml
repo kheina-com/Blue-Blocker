@@ -21,7 +21,7 @@ jobs:
           node-version: '18'
       - name: Package install
         run: |
-          npm --version && npm install
+          npm --version && npm install --legacy-peer-deps
           sudo npm install -g vite
       - name: Package build
         run: |
