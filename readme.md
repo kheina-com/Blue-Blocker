@@ -20,7 +20,7 @@ By default, Blue Blocker does not block users you follow or who follow you that 
 
 1. Check if your `Node.js` version is >= **18**.
 2. Make sure you have [`jq`](https://jqlang.github.io/jq/) installed via your system package manager, e.g. via `apt-get install jq` on systems with `apt-get`.
-3. Run `npm install` to install the npm-managed dependencies. Note that you may need to add either the `--force` flag or the `--legacy-peer-deps` flag if `npm` has a problem resolving dependencies.
+3. Run `npm install` in the Blue-Blocker directory to install the npm-managed dependencies. Note that you may need to add either the `--force` flag or the `--legacy-peer-deps` flag if `npm` has a problem resolving dependencies.
 
 run the command
 
