@@ -1,3 +1,4 @@
+---
 name: Publish Releases
 
 on:
@@ -11,64 +12,71 @@ jobs:
       filename: ${{ steps.build.outputs.filename }}
       sourcefile: ${{ steps.src.outputs.sourcefile }}
     steps:
-    - uses: actions/checkout@v4
-    - name: zip source code
-      id: src
-      run: |
-        export SOURCE_FILENAME="blue-blocker-source-$(make version).zip"
-        zip "$SOURCE_FILENAME" -r * .* -x ".git/*" "build/*" "node_modules/*" "../*"
-        echo "sourcefile=$SOURCE_FILENAME" >> "$GITHUB_OUTPUT"
-    - name: Set up Node.js
-      uses: actions/setup-node@v4.0.2
-      with:
-        node-version: '18.x'
-    - name: Install dependencies
-      run: npm install
-    - name: build firefox
-      run: npm run build
-    - name: zip firefox
-      id: build
-      run: |
-        make firefox
-        echo "filename=blue-blocker-firefox-$(make version).zip" >> "$GITHUB_OUTPUT"
-    - name: publish firefox
-      uses: browser-actions/release-firefox-addon@v0.1.4  # https://github.com/marketplace/actions/release-firefox-addon#inputs
-      with:
-        addon-id: "{119be3f3-597c-4f6a-9caf-627ee431d374}"
-        addon-path: "${{ steps.build.outputs.filename }}"
-        source-path: "${{ steps.src.outputs.sourcefile }}"
-        approval-note: "The build process of this extension requires `jq` to be installed. (https://jqlang.github.io/jq/) After `npm install` is run, the extension can be built and tested locally using `npm run build && make firefox`. Simply navigate to twitter.com and you should see users being queued and blocked fairly quickly."
-        release-note: "${{ toJSON(github.event.release.body) }}" # this should be the content of the release, make sure to include a changelog
-        compatibility-firefox-min: "48.0"
-        license: "MPL-2.0"
-        auth-api-issuer: ${{ secrets.MOZILLA_ADDONS_JWT_ISSUER }}
-        auth-api-secret: ${{ secrets.MOZILLA_ADDONS_JWT_SECRET }}
+      - uses: actions/checkout@v4
+      - name: zip source code
+        id: src
+        run: |
+          SOURCE_FILENAME="blue-blocker-source-$(make version).zip"
+          export SOURCE_FILENAME
+          zip "$SOURCE_FILENAME" -r ./* ./.* -x ".git/*" "build/*" \
+            "node_modules/*" "../*"
+          echo "sourcefile=$SOURCE_FILENAME" >> "$GITHUB_OUTPUT"
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.0.2
+        with:
+          node-version: '18.x'
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+      - name: build firefox
+        run: npm run build
+      - name: zip firefox
+        id: build
+        run: |
+          make firefox
+          echo "filename=blue-blocker-firefox-$(make version).zip" >> \
+            "$GITHUB_OUTPUT"
+      - name: publish firefox
+        uses: browser-actions/release-firefox-addon@v0.1.4
+        # https://github.com/marketplace/actions/release-firefox-addon#inputs
+        with:
+          addon-id: "{119be3f3-597c-4f6a-9caf-627ee431d374}"
+          addon-path: "${{ steps.build.outputs.filename }}"
+          source-path: "${{ steps.src.outputs.sourcefile }}"
+          approval-note: "The build process of this extension requires `jq` to be installed. (https://jqlang.github.io/jq/) After `npm install` is run, the extension can be built and tested locally using `npm run build && make firefox`. Simply navigate to twitter.com and you should see users being queued and blocked fairly quickly."
+          release-note: "${{ toJSON(github.event.release.body) }}"
+          # the release note should be the content of the release, make sure to
+          # include a changelog
+          compatibility-firefox-min: "48.0"
+          license: "MPL-2.0"
+          auth-api-issuer: ${{ secrets.MOZILLA_ADDONS_JWT_ISSUER }}
+          auth-api-secret: ${{ secrets.MOZILLA_ADDONS_JWT_SECRET }}
 
   Release-Chrome:
     runs-on: ubuntu-latest
     outputs:
       filename: ${{ steps.build.outputs.filename }}
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Node.js
-      uses: actions/setup-node@v4.0.2
-      with:
-        node-version: '18.x'
-    - name: Install dependencies
-      run: npm install
-    - name: build chrome
-      run: npm run build
-    - name: zip chrome
-      id: build
-      run: |
-        make chrome
-        echo "filename=blue-blocker-chrome-$(make version).zip" >> "$GITHUB_OUTPUT"
-    - name: publish chrome
-      uses: mnao305/chrome-extension-upload@v5.0.0
-      with:
-        refresh-token: ${{ secrets.CHROME_WEB_STORE_REFRESH_TOKEN }}
-        client-id: ${{ secrets.CHROME_WEB_STORE_CLIENT_ID }}
-        client-secret: ${{ secrets.CHROME_WEB_STORE_CLIENT_SECRET }}
-        file-path: "${{ steps.build.outputs.filename }}"
-        extension-id: "jgpjphkbfjhlbajmmcoknjjppoamhpmm"
-        publish: true
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.0.2
+        with:
+          node-version: '18.x'
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+      - name: build chrome
+        run: npm run build
+      - name: zip chrome
+        id: build
+        run: |
+          make chrome
+          echo "filename=blue-blocker-chrome-$(make version).zip" >> \
+            "$GITHUB_OUTPUT"
+      - name: publish chrome
+        uses: mnao305/chrome-extension-upload@v5.0.0
+        with:
+          refresh-token: ${{ secrets.CHROME_WEB_STORE_REFRESH_TOKEN }}
+          client-id: ${{ secrets.CHROME_WEB_STORE_CLIENT_ID }}
+          client-secret: ${{ secrets.CHROME_WEB_STORE_CLIENT_SECRET }}
+          file-path: "${{ steps.build.outputs.filename }}"
+          extension-id: "jgpjphkbfjhlbajmmcoknjjppoamhpmm"
+          publish: true

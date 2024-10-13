@@ -1,0 +1,57 @@
+---
+name: "Test (CI)"
+
+on:
+  push:
+    branches: ["main", "ci-workflow"]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: ["main", "ci-workflow"]
+
+jobs:
+  test-with-npm:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Package install
+        run: |
+          npm --version && npm install --legacy-peer-deps
+          sudo npm install -g vite
+      - name: Package build
+        run: |
+          npm ci --legacy-peer-deps
+          if test -x "$(which timeout)"; then \
+            (timeout -v 1m npm run dev) || echo "never mind"; \
+          elif test -x "$(which gtimeout)"; then \
+            (gtimeout -v 1m npm run dev) || echo "never mind"; \
+          else \
+            sync && echo "'npm run dev' ought to be run under timeout"; \
+          fi
+          npm run build || vite build || make
+      - name: Firefox build
+        run: make firefox
+      - name: Package formatting
+        run: npm run fmt
+  test-with-yarn:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Package install
+        run: |
+          yarn install
+          yarn global add vite
+      - name: Package build
+        run: yarn
+      - name: Package test
+        run: yarn check || yarn run build || vite build || make
+      - name: Package audit
+        run: yarn audit || yarn run fmt
