@@ -6,7 +6,7 @@
 .github/workflows/release.yml @kheina @rougetimelord @cooljeanius
 .github/CODEOWNERS @kheina @cooljeanius @rougetimelord
 .github/dependabot.yml @cooljeanius
-.github/pull_request_template.md @kheina
+.github/pull_request_template.md @kheina @rougetimelord
 assets/* @kheina
 public/icon/* @kheina
 src/* @kheina @jaredcat @cooljeanius @rougetimelord
@@ -19,7 +19,7 @@ src/* @kheina @jaredcat @cooljeanius @rougetimelord
 CHANGELOG.md @kheina @rougetimelord
 LICENSE @kheina
 privacy.md @kheina @rougetimelord @cooljeanius
-makefile @kheina @cooljeanius
+makefile @kheina @cooljeanius @rougetimelord
 package-lock.json @kheina @cooljeanius @rougetimelord
 package.json @kheina @jaredcat @cooljeanius @rougetimelord
 readme.md @kheina @jaredcat @cooljeanius @rougetimelord
