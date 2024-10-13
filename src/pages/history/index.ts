@@ -39,7 +39,7 @@ blockCounter
 			queueDiv.innerText = '';
 			let blockedCount: number = 0;
 
-			const reasons: { [r: number]: number; } = {};
+			const reasons: { [r: number]: number } = {};
 			users.reverse().forEach(item => {
 				if (!reasons.hasOwnProperty(item.reason)) {
 					reasons[item.reason] = 0;
@@ -57,24 +57,24 @@ blockCounter
 				const p3 = document.createElement('p');
 				let state: string;
 				switch (item.state) {
-				case HistoryStateBlocked:
-					state = 'blocked';
-					blockedCount++;
-					reasons[item.reason]++;
-					break;
+					case HistoryStateBlocked:
+						state = 'blocked';
+						blockedCount++;
+						reasons[item.reason]++;
+						break;
 
-				case HistoryStateUnblocked:
-					state = 'unblocked';
-					blockedCount++;
-					reasons[item.reason]++;
-					break;
+					case HistoryStateUnblocked:
+						state = 'unblocked';
+						blockedCount++;
+						reasons[item.reason]++;
+						break;
 
-				case HistoryStateGone:
-					state = 'user no longer exists';
-					break;
+					case HistoryStateGone:
+						state = 'user no longer exists';
+						break;
 
-				default:
-					state = 'unreadable state';
+					default:
+						state = 'unreadable state';
 				}
 				p3.innerText = 'current state: ' + state;
 				div.appendChild(p3);

@@ -6,7 +6,6 @@ import {
 	IntegrationStateReceiveOnly,
 	IntegrationStateSendAndReceive,
 	IntegrationStateSendOnly,
-	SoupcanExtensionId,
 } from '../../constants';
 import '../style.css';
 import './style.css';
@@ -21,7 +20,7 @@ const [ExtensionStateNone, ExtensionStateDisabled, ExtensionStateEnabled] = [0, 
 
 document.addEventListener('DOMContentLoaded', () => {
 	const integrationsDiv = document.getElementById('integrations') as HTMLElement;
-	const i: { [n: string]: Integration; } = {};
+	const i: { [n: string]: Integration } = {};
 
 	function add(integration: Integration): void {
 		const refid = RefId().toString();
@@ -104,55 +103,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	integrationsDiv.innerText = '';
-	let soupcanState: number = ExtensionStateNone;
-
-	// soupcan doesn't work with the new integration system for now
-	// document.addEventListener('soupcan-event', () => {
-	// 	if (soupcanState === ExtensionStateEnabled) {
-	// 		// we don't need a placeholder if we're going to put soupcan in, so remove it
-	// 		const placeholder = document.getElementById('placeholder');
-	// 		if (placeholder) {
-	// 			// the only button in here should be the remove button
-	// 			placeholder.getElementsByTagName('button')[0].click();
-	// 		}
-	// 		add({
-	// 			id: SoupcanExtensionId,
-	// 			name: 'soupcan',
-	// 			state: IntegrationStateDisabled,
-	// 		});
-	// 	}
-	// });
 
 	api.storage.local
 		.get({ integrations: {} })
-		.then(items => items.integrations as { [id: string]: { name: string; state: number; }; })
+		.then(items => items.integrations as { [id: string]: { name: string; state: number } })
 		.then(integrations => {
 			console.debug(logstr, 'loaded integrations:', integrations);
 			const addButton = document.getElementById('add-button') as HTMLButtonElement;
 			const saveButton = document.getElementById('save-button') as HTMLButtonElement;
 			const saveStatus = document.getElementById('save-status') as HTMLButtonElement;
-
-			// it's important that this runs *after* getting local storage back
-			if (!integrations.hasOwnProperty(SoupcanExtensionId)) {
-				api.runtime
-					.sendMessage(SoupcanExtensionId, {
-						action: 'check_twitter_user',
-						screen_name: 'elonmusk',
-					})
-					.then((r: any) => {
-						// we could check if response is the expected shape here, if we really wanted
-						if (!r) {
-							soupcanState = ExtensionStateDisabled;
-							throw new Error('extension not enabled');
-						}
-						soupcanState = ExtensionStateEnabled;
-					})
-					.catch(e => console.debug(logstr, 'soupcan error:', e, soupcanState))
-					.finally(() =>
-						// @ts-ignore
-						document.dispatchEvent(new CustomEvent('soupcan-event')),
-					);
-			}
 
 			addButton.addEventListener('click', e =>
 				add({ id: '', name: '', state: IntegrationStateDisabled }),
@@ -164,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					clearTimeout(saveTimeout);
 				}
 
-				const integrations: { [id: string]: { name: string; state: number; }; } = {};
+				const integrations: { [id: string]: { name: string; state: number } } = {};
 				for (const integration of Object.values(i)) {
 					integrations[integration.id] = {
 						name: integration.name,

@@ -20,7 +20,7 @@ const InstructionsPaths: { [key: string]: string[] } = {
 	FollowersYouKnow: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
 	BlueVerifiedFollowers: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
 	TweetDetail: ['data', 'threaded_conversation_with_injections_v2', 'instructions'],
-	ModeratedTimeline: ['data', 'tweet', 'result', 'timeline_response','timeline', 'instructions' ],
+	ModeratedTimeline: ['data', 'tweet', 'result', 'timeline_response', 'timeline', 'instructions'],
 	'search/adaptive.json': ['timeline', 'instructions'],
 };
 // this is the path to retrieve the user object from the individual tweet

@@ -6,6 +6,7 @@ import { HandleForYou } from '../parsers/timeline';
 import { HandleTypeahead } from '../parsers/search';
 import { HandleUnblock } from '../parsers/unblock';
 import './startup.ts';
+import { HandleRecommendations, HandleUserByScreenName } from '../parsers/user';
 
 function compileConfig(config: Config): CompiledConfig {
 	return {
@@ -23,7 +24,7 @@ function compileConfig(config: Config): CompiledConfig {
 		unblocked: config.unblocked,
 		popupTimer: config.popupTimer,
 		skipFollowerCount: config.skipFollowerCount,
-		soupcanIntegration: config.blockFollowers,
+		soupcanIntegration: config.soupcanIntegration,
 		blockPromoted: config.blockPromoted,
 		blockForUse: config.blockForUse,
 		blockDisallowedWords: config.blockDisallowedWords,
@@ -91,6 +92,10 @@ document.addEventListener('blue-blocker-event', function (e: CustomEvent<BlueBlo
 					return HandleForYou(e, parsed_body, compileConfig(config));
 				case 'search/typeahead.json':
 					return HandleTypeahead(e, parsed_body, compileConfig(config));
+				case 'UserByScreenName':
+					return HandleUserByScreenName(e, parsed_body, compileConfig(config));
+				case 'recommendations.json':
+					return HandleRecommendations(e, parsed_body, compileConfig(config));
 				default:
 					console.error(
 						logstr,

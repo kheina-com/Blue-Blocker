@@ -89,16 +89,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	importButton.addEventListener('click', e => {
 		switch (importArrow.innerText) {
-		case '▾':
-			importBlock.style.display = 'block';
-			importArrow.innerText = '▴';
-			break;
-		case '▴':
-			importBlock.style.display = '';
-			importArrow.innerText = '▾';
-			break;
-		default:
-		// what?
+			case '▾':
+				importBlock.style.display = 'block';
+				importArrow.innerText = '▴';
+				break;
+			case '▴':
+				importBlock.style.display = '';
+				importArrow.innerText = '▾';
+				break;
+			default:
+			// what?
 		}
 	});
 
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			const payload = l.target.result as string;
 			api.storage.sync
 				.get({ unblocked: {} })
-				.then(items => items.unblocked as { [k: string]: string | null; })
+				.then(items => items.unblocked as { [k: string]: string | null })
 				.then(safelist => {
 					return new Promise<void>(async resolve => {
 						const userList = JSON.parse(payload) as BlockUser[];
