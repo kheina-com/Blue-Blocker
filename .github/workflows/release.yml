@@ -13,14 +13,6 @@ jobs:
       sourcefile: ${{ steps.src.outputs.sourcefile }}
     steps:
       - uses: actions/checkout@v4
-      - name: zip source code
-        id: src
-        run: |
-          SOURCE_FILENAME="blue-blocker-source-$(make version).zip"
-          export SOURCE_FILENAME
-          zip "$SOURCE_FILENAME" -r ./* ./.* -x ".git/*" "build/*" \
-            "node_modules/*" "../*"
-          echo "sourcefile=$SOURCE_FILENAME" >> "$GITHUB_OUTPUT"
       - name: Set up Node.js
         uses: actions/setup-node@v4.0.2
         with:
@@ -29,6 +21,14 @@ jobs:
         run: npm install --legacy-peer-deps
       - name: build firefox
         run: npm run build
+      - name: zip source code
+        id: src
+        run: |
+          SOURCE_FILENAME="blue-blocker-source-$(make version).zip"
+          export SOURCE_FILENAME
+          zip "$SOURCE_FILENAME" -r ./* ./.* -x ".git/*" "build/*" \
+            "node_modules/*" "../*"
+          echo "sourcefile=$SOURCE_FILENAME" >> "$GITHUB_OUTPUT"
       - name: zip firefox
         id: build
         run: |
