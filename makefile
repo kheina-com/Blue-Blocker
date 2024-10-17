@@ -1,7 +1,7 @@
 # Note: this makefile expects you to have run `npm install` and `npm run build`
 # first before using it.
 
-PATH=${PATH}:./node_modules/node-jq/bin
+export PATH = $(shell echo "$${PATH}:./node_modules/node-jq/bin")
 
 _ := $(shell rm -rf build && npm run build)
 VERSION := $(shell cat build/manifest.json | jq .version)
