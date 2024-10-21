@@ -19,7 +19,7 @@
 		"build": "tsc && vite build",
 		"preview": "vite preview",
 		"fmt": "prettier --write **/*.{ts,json,css,scss,md}",
-		"version": "node -e \"const fs = require('fs').promises; fs.readFile('./src/manifest.ts','utf-8').then(oldManifest => oldManifest.replace(/(?:\\d+\\.){2}(?:\\d)(?:-[\\w\\d\\-\\.]*)?/, process.env.npm_package_version)).then(newManifest => fs.writeFile('./src/manifest.ts', newManifest, 'utf-8'))\" && git add ./src/manifest.ts ./package*.json && echo updated manifest, new version:"
+		"version": "node -e \"const fs = require('fs').promises; fs.readFile('./src/manifest.ts','utf-8').then(oldManifest => oldManifest.replace(/(?:\\d+\\.){2}(?:\\d*)(?:-[\\w\\d\\-\\.]*)?/, process.env.npm_package_version)).then(newManifest => fs.writeFile('./src/manifest.ts', newManifest, 'utf-8'))\" && git add ./src/manifest.ts ./package*.json && echo updated manifest, new version:"
 	},
 	"config": {
 		"git-tag-version": false
