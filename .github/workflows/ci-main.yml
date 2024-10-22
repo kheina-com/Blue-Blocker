@@ -21,11 +21,11 @@ jobs:
           node-version: '18'
       - name: Package install
         run: |
-          npm --version && npm install --legacy-peer-deps
+          npm --version && npm install
           sudo npm install -g vite
       - name: Package build
         run: |
-          npm ci --legacy-peer-deps
+          npm ci
           if test -x "$(which timeout)"; then \
             (timeout -v 1m npm run dev) || echo "never mind"; \
           elif test -x "$(which gtimeout)"; then \
