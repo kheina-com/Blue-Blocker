@@ -38,8 +38,8 @@ jobs:
         run: make firefox
       - name: zip source code
         run: |
-          zip blue-blocker-source-$(make version).zip -r ./* -x ".git/*" "build/*" \
-            "node_modules/*" ".vscode/*" ".editorconfig"
+          zip "blue-blocker-source-$(make version).zip" -r ./* -x ".git/*" \
+           "build/*" "node_modules/*" ".vscode/*" ".editorconfig"
       - name: Package formatting
         run: npm run fmt
   test-with-yarn:
