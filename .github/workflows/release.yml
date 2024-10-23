@@ -26,8 +26,8 @@ jobs:
         run: |
           SOURCE_FILENAME="blue-blocker-source-$(make version).zip"
           export SOURCE_FILENAME
-          zip "$SOURCE_FILENAME" -r ./* ./.* -x ".git/*" "build/*" \
-            "node_modules/*" "../*"
+          zip "$SOURCE_FILENAME" -r ./* -x ".git/*" "build/*" \
+            "node_modules/*" ".vscode/*" ".editorconfig"
           echo "sourcefile=$SOURCE_FILENAME" >> "$GITHUB_OUTPUT"
       - name: zip firefox
         id: build
