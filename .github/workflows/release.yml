@@ -50,6 +50,14 @@ jobs:
           license: "MPL-2.0"
           auth-api-issuer: ${{ secrets.MOZILLA_ADDONS_JWT_ISSUER }}
           auth-api-secret: ${{ secrets.MOZILLA_ADDONS_JWT_SECRET }}
+      - name: upload zip to release
+        uses: xresloader/upload-to-github-release@v1.6.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          file: ${{ steps.build.outputs.filename }}
+          release_id: ${{ github.event.release.id }}
+        
 
   Release-Chrome:
     runs-on: ubuntu-latest
@@ -80,3 +88,10 @@ jobs:
           file-path: "${{ steps.build.outputs.filename }}"
           extension-id: "jgpjphkbfjhlbajmmcoknjjppoamhpmm"
           publish: true
+      - name: upload zip to release
+        uses: xresloader/upload-to-github-release@v1.6.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          file: ${{ steps.build.outputs.filename }}
+          release_id: ${{ github.event.release.id }}
