@@ -109,8 +109,12 @@ export function ParseTimelineTweet(tweet: any, config: CompiledConfig) {
 	}
 
 	try {
+		if (config.skipFollowingQrts && tweet?.itemContent?.tweet_results?.result?.core?.user_results?.result?.legacy?.following && (tweet?.itemContent?.tweet_results?.result?.legacy?.is_quote_status || tweet?.tweet_results?.result?.legacy?.retweeted_status_result)) {
+			const skippedUser = tweet?.itemContent?.tweet_results?.result?.legacy?.retweeted_status_result?.result?.core?.user_results?.result || tweet?.itemContent?.tweet_results?.result?.quoted_status_result?.result?.core?.user_results?.result;
+			console.log(logstr, `skipping ${skippedUser.legacy.name} (@${skippedUser.legacy.screen_name}) because they got retweeted by someone you follow`)
+		}
 		// Handle retweets and quoted tweets (check the retweeted user, too)
-		if (tweet?.itemContent?.tweet_results?.result?.quoted_status_result?.result) {
+		else if (tweet?.itemContent?.tweet_results?.result?.quoted_status_result?.result) {
 			handleTweetObject(
 				tweet.itemContent.tweet_results.result.quoted_status_result.result,
 				config,

@@ -7,6 +7,7 @@ interface Config {
 	mute: boolean;
 	blockFollowing: boolean;
 	blockFollowers: boolean;
+	skipFollowingQrts: boolean;
 	skipBlueCheckmark: boolean;
 	skipVerified: boolean;
 	skipAffiliated: boolean;
@@ -29,6 +30,7 @@ interface CompiledConfig {
 	mute: boolean;
 	blockFollowing: boolean;
 	blockFollowers: boolean;
+	skipFollowingQrts: boolean;
 	skipBlueCheckmark: boolean;
 	skipVerified: boolean;
 	skipAffiliated: boolean;

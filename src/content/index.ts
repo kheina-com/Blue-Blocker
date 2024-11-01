@@ -16,6 +16,7 @@ function compileConfig(config: Config): CompiledConfig {
 		mute: config.mute,
 		blockFollowing: config.blockFollowing,
 		blockFollowers: config.blockFollowers,
+		skipFollowingQrts: config.skipFollowingQrts,
 		skipBlueCheckmark: config.skipBlueCheckmark,
 		skipVerified: config.skipVerified,
 		skipAffiliated: config.skipAffiliated,
