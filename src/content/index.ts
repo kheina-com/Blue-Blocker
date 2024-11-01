@@ -41,7 +41,7 @@ function compileConfig(config: Config): CompiledConfig {
 							)
 							.join('|'),
 						'i',
-				  ),
+					),
 	} as CompiledConfig;
 }
 
