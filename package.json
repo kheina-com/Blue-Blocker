@@ -1,6 +1,6 @@
 {
 	"name": "blue-blocker",
-	"version": "0.4.11",
+	"version": "0.4.12",
 	"author": "DanielleMiu",
 	"description": "Blocks all Twitter Blue verified users on twitter.com",
 	"type": "module",

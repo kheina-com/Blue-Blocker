@@ -24,6 +24,7 @@ export const DefaultOptions: Config = {
 	mute: false,
 	blockFollowing: false,
 	blockFollowers: false,
+	skipFollowingQrts: false,
 	skipBlueCheckmark: false,
 	skipVerified: true,
 	skipAffiliated: true,

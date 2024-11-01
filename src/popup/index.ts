@@ -288,6 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const muteInsteadOfBlock = document.getElementById('mute-instead-of-block') as HTMLInputElement;
 	const blockFollowing = document.getElementById('block-following') as HTMLInputElement;
 	const blockFollowers = document.getElementById('block-followers') as HTMLInputElement;
+	const skipFollowingQrts = document.getElementById('skip-following-qrts') as HTMLInputElement;
 	const skipVerified = document.getElementById('skip-verified') as HTMLInputElement;
 	const skipAffiliated = document.getElementById('skip-affiliated') as HTMLInputElement;
 	const skip1Mplus = document.getElementById('skip-1mplus') as HTMLInputElement;
@@ -313,6 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		checkHandler(muteInsteadOfBlock, config, 'mute');
 		checkHandler(blockFollowing, config, 'blockFollowing');
 		checkHandler(blockFollowers, config, 'blockFollowers');
+		checkHandler(skipFollowingQrts, config, 'skipFollowingQrts');
 		checkHandler(skipVerified, config, 'skipVerified');
 		checkHandler(skipAffiliated, config, 'skipAffiliated');
 		checkHandler(skip1Mplus, config, 'skip1Mplus', {
