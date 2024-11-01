@@ -57,7 +57,6 @@ jobs:
         with:
           file: ${{ steps.build.outputs.filename }}
           release_id: ${{ github.event.release.id }}
-        
 
   Release-Chrome:
     runs-on: ubuntu-latest
