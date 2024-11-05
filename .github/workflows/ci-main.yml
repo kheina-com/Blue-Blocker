@@ -58,3 +58,16 @@ jobs:
         run: yarn check || yarn run build || vite build || make
       - name: Package audit
         run: yarn audit
+
+  linting:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: actionlint
+        uses: devops-actions/actionlint@v0.1.3
+      - name: yamllint
+        uses: reviewdog/action-yamllint@v1
+        with:
+            reporter: github-pr-review
+            yamllint_flags: '.github/'
