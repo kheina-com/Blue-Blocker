@@ -40,8 +40,7 @@ jobs:
         run: |
           zip "blue-blocker-source-$(make version).zip" -r ./* -x ".git/*" \
            "build/*" "node_modules/*" ".vscode/*" ".editorconfig"
-      - name: Package formatting
-        run: npm run fmt
+
   test-with-yarn:
     runs-on: ubuntu-22.04
     steps:
@@ -58,4 +57,4 @@ jobs:
       - name: Package test
         run: yarn check || yarn run build || vite build || make
       - name: Package audit
-        run: yarn audit || yarn run fmt
+        run: yarn audit
