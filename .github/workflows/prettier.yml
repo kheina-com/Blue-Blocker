@@ -3,7 +3,7 @@ name: Prettier
 # Runs and writes the results of prettier to changed files
 # Only runs when changes happen to main
 
-on:
+'on':
     push:
         branches:
             - main
@@ -18,6 +18,6 @@ jobs:
             - name: prettify
               uses: creyD/prettier_action@v4.3
               with:
-                prettier_options: --write **/*.{ts,json,css,scss,md}
-                only_changed: true
-                commit_message: "[chore] prettified code"
+                  prettier_options: --write **/*.{ts,json,css,scss,md}
+                  only_changed: true
+                  commit_message: "[chore] prettified code"
