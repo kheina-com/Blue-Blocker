@@ -1,13 +1,15 @@
 # Global code owners for new files/whatever
 @cooljeanius @kheina @rougetimelord
 # Specific patterns that will take precedence
-.github/workflows/ci-main.yml @cooljeanius
+.github/workflows/ci-main.yml @cooljeanius @rougetimelord
 .github/workflows/codeql.yml @cooljeanius
 .github/workflows/njsscan.yml @cooljeanius
+.github/workflows/prettier.yml @rougetimelord
 .github/workflows/release.yml @kheina @rougetimelord @cooljeanius
 .github/CODEOWNERS @kheina @cooljeanius @rougetimelord
 .github/dependabot.yml @cooljeanius
 .github/pull_request_template.md @kheina @rougetimelord
+.github/release.yaml @rougetimelord @cooljeanius
 assets/* @kheina
 public/icon/* @kheina
 src/* @kheina @jaredcat @cooljeanius @rougetimelord
@@ -17,6 +19,7 @@ src/* @kheina @jaredcat @cooljeanius @rougetimelord
 .nvmrc @kheina @jaredcat
 .prettierignore @kheina @jaredcat
 .prettierrc @kheina @jaredcat
+.yamllint.yml @cooljeanius
 CHANGELOG.md @kheina @rougetimelord
 LICENSE @kheina
 privacy.md @kheina @rougetimelord @cooljeanius
