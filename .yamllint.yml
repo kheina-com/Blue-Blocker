@@ -1,0 +1,14 @@
+---
+extends: default
+
+rules:
+  float-values: enable
+  # there's at least one really long line in this repo that I don't feel like
+  # figuring out how to break up:
+  line-length:
+    max: 99
+    level: warning
+    ignore:
+      - .github/workflows/release.yml
+  octal-values: enable
+  truthy: disable
