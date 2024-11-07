@@ -124,7 +124,18 @@ function eventHandler(e: CustomEvent<BlueBlockerEvent>) {
 	});
 }
 
-document.addEventListener('blue-blocker-event', eventHandler);
+// If we are running in Firefox, expose a function to page scripts
+// This is a good test for Firefox since it's non-standard :)
+/** @ts-ignore */
+if(api?.runtime?.getBrowserInfo) {
+	/** @ts-ignore Again, non-standard, literally only FF*/
+	exportFunction(event => {
+		eventHandler(event)
+	}, window, {defineAs: 'blueBlockerRequest'})
+}
+else {
+	document.addEventListener('blue-blocker-event', eventHandler);
+}
 
 // Add support for OldTwitter requests.
 window.addEventListener('message', async function (ev) {
