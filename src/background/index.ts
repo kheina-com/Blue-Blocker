@@ -67,6 +67,19 @@ api.storage.sync.onChanged.addListener(async items => {
 
 ConnectDb();
 
+api.runtime.onInstalled.addListener( ({reason}) => {
+	/** @ts-ignore I hate this :)*/
+	api.runtime?.getBrowserInfo().then(info => {
+		if (info.name == 'Firefox') {
+			api.storage.local.set({holdUntilConsent: true});
+			if(reason == 'install') {
+				const url = api.runtime.getURL('pages/consent.index.html');
+				api.tabs.create({url})
+			}
+		}
+	})
+})
+
 api.runtime.onMessage.addListener((m, s, r) => {
 	let response: MessageResponse;
 	(async (message: RuntimeMessage, sender) => {
