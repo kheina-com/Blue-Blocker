@@ -45,7 +45,7 @@ function compileConfig(config: Config): CompiledConfig {
 	} as CompiledConfig;
 }
 
-document.addEventListener('blue-blocker-event', function (e: CustomEvent<BlueBlockerEvent>) {
+function eventHandler(e: CustomEvent<BlueBlockerEvent>) {
 	if (e.detail.status < 300) {
 		SetHeaders(e.detail.request.headers);
 	} else {
@@ -122,7 +122,9 @@ document.addEventListener('blue-blocker-event', function (e: CustomEvent<BlueBlo
 			});
 		}
 	});
-});
+}
+
+document.addEventListener('blue-blocker-event', eventHandler);
 
 // Add support for OldTwitter requests.
 window.addEventListener('message', async function (ev) {
@@ -136,7 +138,7 @@ window.addEventListener('message', async function (ev) {
 
 	const body_str = JSON.stringify(ev.data.body);
 
-	document.dispatchEvent(
+	eventHandler(
 		new CustomEvent('blue-blocker-event', {
 			detail: {
 				parsedUrl: /(.+)/.exec(ev.data.url)!, // Have to turn the endpoint string into a regex result...
