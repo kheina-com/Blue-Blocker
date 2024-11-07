@@ -72,7 +72,7 @@ api.runtime.onInstalled.addListener( ({reason}) => {
 	api.runtime?.getBrowserInfo().then(info => {
 		if (info.name == 'Firefox') {
 			api.storage.local.set({holdUntilConsent: true});
-			if(reason == 'install') {
+			if(reason == 'install' || reason == 'update') {
 				const url = api.runtime.getURL('pages/consent.index.html');
 				api.tabs.create({url})
 			}
