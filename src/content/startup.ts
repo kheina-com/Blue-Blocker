@@ -4,18 +4,20 @@ import { api, DefaultOptions } from '../constants';
 // TODO: see if we can remove this ignore
 // @ts-ignore
 import inject from '/src/injected/inject?script&module';
-const consentNeeded = Object.keys(await api.storage.local.get('holdUntilConsent')).length != 0;
-const script = document.createElement('script');
-script.src = api.runtime.getURL(inject);
-script.id = 'injected-blue-block-xhr';
-script.type = 'text/javascript';
-if (!consentNeeded) {
-	document.head.prepend(script);
-}
-if (consentNeeded) {
-	const url = api.runtime.getURL('pages/consent.index.html');
-	api.tabs.create({url})
-}
+
+api.storage.local.get('holdUntilConsent').then(obj => {
+	const script = document.createElement('script');
+	script.src = api.runtime.getURL(inject);
+	script.id = 'injected-blue-block-xhr';
+	script.type = 'text/javascript';
+	if (!obj?.holdUntilConsent) {
+		document.head.prepend(script);
+	}
+	else if (obj.holdUntilConsent == true) {
+		const url = api.runtime.getURL('pages/consent.index.html');
+		api.tabs.create({url})
+	}
+})
 
 let l = document.createElement('link');
 l.href = api.runtime.getURL('src/injected/style.css'); // MUST BE ABSOLUTE PATH
