@@ -1,0 +1,38 @@
+p {
+    font-size: 1rem;
+}
+
+img {
+    height: 75px;
+    width: auto;
+}
+
+.bullet-list {
+    margin-left: calc(50vw - calc(41rem / 4));
+    & p {
+        text-align: left;
+    }
+}
+
+.inputs {
+    margin-top: 1.1em;
+    & button {
+        font-size: 1.1rem;
+    }
+    & div {
+        margin-top: 5px;
+    }
+}
+
+main {
+    height: 100vh;
+    width: 100vw;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.center {
+    padding: 25px;
+}
