@@ -6,6 +6,7 @@ p {
 .center {
     min-width: 50ch;
     max-width: 120ch;
+    padding: 25px;
 }
 
 img {
@@ -15,11 +16,8 @@ img {
 
 .bullet-list {
     width: fit-content;
-    display: inline-block;
-    position: relative;
-    /* I'm so sorry, this is just a magic number*/
-    left: calc(50% - 23ch);
-    transform: translateX(-50%);
+    display: block;
+    margin-left: calc(50% - 21ch);
     & p {
         text-align: left;
     }
