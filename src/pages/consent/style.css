@@ -25,11 +25,13 @@ img {
     }
 }
 
+button, button:active, button:focus {
+    font-size: 1.1rem;
+}
+
 .inputs {
     margin-top: 1.1em;
-    & button {
-        font-size: 1.1rem;
-    }
+    
     & div {
         margin-top: 5px;
     }
