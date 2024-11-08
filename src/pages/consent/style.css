@@ -1,5 +1,11 @@
 p {
     font-size: 1rem;
+    width: auto;
+}
+
+.center {
+    min-width: 50ch;
+    max-width: 120ch;
 }
 
 img {
@@ -8,7 +14,12 @@ img {
 }
 
 .bullet-list {
-    margin-left: calc(50vw - calc(41rem / 4));
+    width: fit-content;
+    display: inline-block;
+    position: relative;
+    /* I'm so sorry, this is just a magic number*/
+    left: calc(50vb - 7.5rem);
+    transform: translateX(-50%);
     & p {
         text-align: left;
     }
@@ -31,8 +42,4 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.center {
-    padding: 25px;
 }
