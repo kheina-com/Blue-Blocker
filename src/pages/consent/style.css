@@ -18,7 +18,7 @@ img {
     display: inline-block;
     position: relative;
     /* I'm so sorry, this is just a magic number*/
-    left: calc(50vb - 7.5rem);
+    left: calc(50% - 23ch);
     transform: translateX(-50%);
     & p {
         text-align: left;
