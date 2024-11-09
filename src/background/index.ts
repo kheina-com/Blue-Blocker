@@ -67,12 +67,14 @@ api.storage.sync.onChanged.addListener(async items => {
 
 ConnectDb();
 
-api.runtime.onInstalled.addListener( ({reason}) => {
+const consentRequiredVersions = ['0.3.5']
+
+api.runtime.onInstalled.addListener( ({reason, previousVersion}) => {
 	/** @ts-ignore I hate this :)*/
 	api.runtime?.getBrowserInfo().then(info => {
 		if (info.name == 'Firefox') {
 			api.storage.local.set({holdUntilConsent: true});
-			if(reason == 'install' || reason == 'update') {
+			if(reason == 'install' || (reason == 'update' && consentRequiredVersions.includes(previousVersion as string))) {
 				const url = api.runtime.getURL('pages/consent.index.html');
 				api.tabs.create({url})
 			}
