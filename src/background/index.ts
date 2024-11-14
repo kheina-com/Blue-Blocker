@@ -70,7 +70,7 @@ ConnectDb();
 const consentRequiredVersions = ['0.3.5']
 
 api.runtime.onInstalled.addListener( ({reason, previousVersion}) => {
-	/** @ts-ignore I hate this :)*/
+	/** @ts-ignore I hate that I have to use FF specific APIs to detect FF :)))*/
 	api.runtime?.getBrowserInfo().then(info => {
 		if (info.name == 'Firefox') {
 			api.storage.local.set({holdUntilConsent: true});
