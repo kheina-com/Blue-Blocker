@@ -2,6 +2,8 @@ let _api: {
 	action: typeof chrome.action | typeof browser.browserAction;
 	runtime: typeof chrome.runtime;
 	storage: typeof chrome.storage | typeof browser.storage;
+	tabs: typeof chrome.tabs | typeof browser.tabs;
+	management: typeof chrome.management | typeof browser.management;
 };
 try {
 	_api = {

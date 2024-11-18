@@ -67,6 +67,21 @@ api.storage.sync.onChanged.addListener(async items => {
 
 ConnectDb();
 
+const consentRequiredVersions = ['0.3.5']
+
+api.runtime.onInstalled.addListener( ({reason, previousVersion}) => {
+	/** @ts-ignore I hate that I have to use FF specific APIs to detect FF :)))*/
+	api.runtime?.getBrowserInfo().then(info => {
+		if (info.name == 'Firefox') {
+			api.storage.local.set({holdUntilConsent: true});
+			if(reason == 'install' || (reason == 'update' && consentRequiredVersions.includes(previousVersion as string))) {
+				const url = api.runtime.getURL('pages/consent.index.html');
+				api.tabs.create({url})
+			}
+		}
+	})
+})
+
 api.runtime.onMessage.addListener((m, s, r) => {
 	let response: MessageResponse;
 	(async (message: RuntimeMessage, sender) => {

@@ -45,7 +45,7 @@ function compileConfig(config: Config): CompiledConfig {
 	} as CompiledConfig;
 }
 
-document.addEventListener('blue-blocker-event', function (e: CustomEvent<BlueBlockerEvent>) {
+function eventHandler(e: CustomEvent<BlueBlockerEvent>) {
 	if (e.detail.status < 300) {
 		SetHeaders(e.detail.request.headers);
 	} else {
@@ -122,17 +122,34 @@ document.addEventListener('blue-blocker-event', function (e: CustomEvent<BlueBlo
 			});
 		}
 	});
-});
+}
+
+// If we are running in Firefox, expose a function to page scripts
+// This is a good test for Firefox since it's non-standard :)
+/** @ts-ignore */
+if(api?.runtime?.getBrowserInfo) {
+	/** @ts-ignore Again, non-standard, literally only FF*/
+	exportFunction(event => {
+		eventHandler(event)
+	}, window, {defineAs: 'blueBlockerRequest'})
+}
+else {
+	document.addEventListener('blue-blocker-event', eventHandler);
+}
 
 // Add support for OldTwitter requests.
-window.addEventListener('message', function (ev) {
+window.addEventListener('message', async function (ev) {
 	if (ev.data.type !== 'OLDTWITTER_REQUEST_LOAD') return;
+	if (Object.keys(await api.storage.local.get('holdUntilConsent')).length != 0) {
+		// if we still need user consent, we leave
+		return;
+	}
 	if (!ev.data.url || !ev.data.body || !ev.data.headers)
 		return console.error(logstr, 'OldTwitter sent an invalid payload.', ev.data);
 
 	const body_str = JSON.stringify(ev.data.body);
 
-	document.dispatchEvent(
+	eventHandler(
 		new CustomEvent('blue-blocker-event', {
 			detail: {
 				parsedUrl: /(.+)/.exec(ev.data.url)!, // Have to turn the endpoint string into a regex result...

@@ -29,19 +29,27 @@
 			// determine if request is a timeline/tweet-returning request
 			const parsedUrl = RequestRegex.exec(this._url);
 			if (this._url && parsedUrl && parsedUrl.length > 0) {
-				document.dispatchEvent(
-					new CustomEvent('blue-blocker-event', {
-						detail: {
-							parsedUrl,
-							url: this._url,
-							body: this.response,
-							request: {
-								headers: this._requestHeaders,
-							},
-							status: this.status,
+				const event = new CustomEvent('blue-blocker-event', {
+					detail: {
+						parsedUrl,
+						url: this._url,
+						body: this.response,
+						request: {
+							headers: this._requestHeaders,
 						},
-					}),
-				);
+						status: this.status,
+					},
+				});
+				/** @ts-ignore This feels bad... */
+				if (window?.blueBlockerRequest) {
+					/** @ts-ignore This really feels bad */
+					blueBlockerRequest(event);
+				}
+				else {
+					document.dispatchEvent(
+						event
+					);
+				}
 			}
 		});
 		// TODO: remove this ignore
