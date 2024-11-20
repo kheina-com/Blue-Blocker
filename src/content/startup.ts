@@ -5,19 +5,11 @@ import { api, DefaultOptions } from '../constants';
 // @ts-ignore
 import inject from '/src/injected/inject?script&module';
 
-api.storage.local.get('holdUntilConsent').then(obj => {
-	const script = document.createElement('script');
-	script.src = api.runtime.getURL(inject);
-	script.id = 'injected-blue-block-xhr';
-	script.type = 'text/javascript';
-	if (!obj?.holdUntilConsent) {
-		document.head.prepend(script);
-	}
-	else if (obj.holdUntilConsent == true) {
-		const url = api.runtime.getURL('pages/consent.index.html');
-		api.tabs.create({url})
-	}
-})
+const script = document.createElement('script');
+script.src = api.runtime.getURL(inject);
+script.id = 'injected-blue-block-xhr';
+script.type = 'text/javascript';
+document.head.prepend(script);
 
 let l = document.createElement('link');
 l.href = api.runtime.getURL('src/injected/style.css'); // MUST BE ABSOLUTE PATH

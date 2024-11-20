@@ -140,10 +140,6 @@ else {
 // Add support for OldTwitter requests.
 window.addEventListener('message', async function (ev) {
 	if (ev.data.type !== 'OLDTWITTER_REQUEST_LOAD') return;
-	if (Object.keys(await api.storage.local.get('holdUntilConsent')).length != 0) {
-		// if we still need user consent, we leave
-		return;
-	}
 	if (!ev.data.url || !ev.data.body || !ev.data.headers)
 		return console.error(logstr, 'OldTwitter sent an invalid payload.', ev.data);
 

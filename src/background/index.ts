@@ -15,6 +15,8 @@ import {
 	IntegrationStateSendOnly,
 	EventKey,
 	MessageEvent,
+	ConsentGranted,
+	OpenConsentPage,
 } from '../constants';
 import { abbreviate, RefId } from '../utilities';
 import {
@@ -67,19 +69,80 @@ api.storage.sync.onChanged.addListener(async items => {
 
 ConnectDb();
 
+let ContentScript: {unregister: Function};
+// @ts-ignore
+import consent from '../content/consent?script'
+async function registerConsentScript() {
+	const path = new URL(api.runtime.getURL(consent)).pathname;
+	const consentScript = {
+		matches: ['*://*.twitter.com/*', '*://twitter.com/*', '*://*.x.com/*', '*://x.com/*'],
+		js: [{file: path}],
+	}
+	// this is a method in MV2, so it's kosher here
+	// @ts-ignore
+	api.contentScripts.register(consentScript).then(
+		(newScript: any) => {
+			ContentScript = newScript;
+		}
+	);
+}
+
+// @ts-ignore
+import content from '../content/index?script'
+async function registerContentScript() {
+	const path = new URL(api.runtime.getURL(content)).pathname;
+	const contentScript = {
+		matches: ['*://*.twitter.com/*', '*://twitter.com/*', '*://*.x.com/*', '*://x.com/*'],
+		js: [{file: path}],
+	};
+	// @ts-ignore see above
+	api.contentScripts.register(contentScript).then(
+		(newScript: any) => {
+			ContentScript = newScript;
+			api.storage.local.set({canLoad: true});
+		}
+	)
+}
+
+api.runtime.onStartup.addListener(() => {
+	try{
+		// @ts-ignore
+		api.runtime?.getBrowserInfo().then(info => {
+			if(info.name == 'Firefox') {
+				api.storage.local.get("canLoad").then( val => {
+					if (!val) {
+						registerConsentScript();
+					}
+					else {
+						registerContentScript();
+					}
+				});
+			}
+		})
+	}
+	catch {
+		console.debug(logstr, "not running on Firefox!");
+	}
+})
+
 const consentRequiredVersions = ['0.3.5']
 
 api.runtime.onInstalled.addListener( ({reason, previousVersion}) => {
-	/** @ts-ignore I hate that I have to use FF specific APIs to detect FF :)))*/
-	api.runtime?.getBrowserInfo().then(info => {
-		if (info.name == 'Firefox') {
-			api.storage.local.set({holdUntilConsent: true});
-			if(reason == 'install' || (reason == 'update' && consentRequiredVersions.includes(previousVersion as string))) {
-				const url = api.runtime.getURL('pages/consent.index.html');
-				api.tabs.create({url})
+	try {
+		/** @ts-ignore I hate that I have to use FF specific APIs to detect FF :)))*/
+		api.runtime?.getBrowserInfo().then(info => {
+			if (info.name == 'Firefox') {
+				if(reason == 'install' || (reason == 'update' && consentRequiredVersions.includes(previousVersion as string))) {
+					registerConsentScript();
+					const url = api.runtime.getURL('src/pages/consent/index.html');
+					api.tabs.create({url})
+				}
 			}
-		}
-	})
+		})
+	}
+	catch {
+		console.debug(logstr, "not running on Firefox!");
+	}
 })
 
 api.runtime.onMessage.addListener((m, s, r) => {
@@ -124,6 +187,18 @@ api.runtime.onMessage.addListener((m, s, r) => {
 					// no payload with this request
 					const user = await PopUserFromQueue();
 					response = { status: SuccessStatus, result: user } as SuccessResponse;
+					break;
+
+				case ConsentGranted:
+					ContentScript?.unregister();
+					registerContentScript();
+					response = {status: SuccessStatus} as SuccessResponse;
+					break;
+
+				case OpenConsentPage:
+					const url = api.runtime.getURL('src/pages/consent/index.html');
+					api.tabs.create({url});
+					response = {status: SuccessStatus} as SuccessResponse;
 					break;
 
 				default:
