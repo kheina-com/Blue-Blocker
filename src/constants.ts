@@ -11,6 +11,8 @@ try {
 		runtime: browser.runtime,
 		storage: browser.storage,
 		action: browser.browserAction,
+		contentScripts: browser.contentScripts,
+		tabs: browser.tabs,
 	};
 } catch (ReferenceError) {
 	_api = chrome;
@@ -109,12 +111,16 @@ export const [
 	RemoveFromHistoryAction,
 	AddToQueueAction,
 	PopFromQueueAction,
+	ConsentGranted,
+	OpenConsentPage,
 ] = [
 	'is_verified',
 	'add_user_to_history',
 	'remove_user_from_history',
 	'add_user_to_queue',
 	'pop_user_from_queue',
+	"consent_granted",
+	"pop_consent",
 ];
 export const SuccessStatus: SuccessStatus = 'SUCCESS';
 export const ErrorStatus: ErrorStatus = 'ERROR';

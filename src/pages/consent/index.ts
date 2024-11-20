@@ -1,12 +1,14 @@
 import '../style.css';
 import './style.css';
-import { api } from '../../constants';
+import { api, ConsentGranted } from '../../constants';
 
 const accept = document.getElementById('accept');
 const refuse = document.getElementById('refuse');
 
 accept?.addEventListener('click', async () => {
-    await api.storage.local.remove('holdUntilConsent');
+    api.runtime.sendMessage({
+        action: ConsentGranted
+    })
     window.close();
 });
 

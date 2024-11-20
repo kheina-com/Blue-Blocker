@@ -29,6 +29,7 @@ export default defineManifest({
 				// only files that are accessed from web pages need to be listed here. ie: injected files and assets
 				'src/injected/*',
 				'icon/*',
+				'pages/consent/*'
 			],
 			matches: ['*://*.twitter.com/*', '*://twitter.com/*', '*://*.x.com/*', '*://x.com/*'],
 		},

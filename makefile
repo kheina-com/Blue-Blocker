@@ -31,6 +31,10 @@ firefox:
 	jq '.web_accessible_resources = [.web_accessible_resources[].resources[]]' firefox-manifest.json >tmp.json && mv tmp.json firefox-manifest.json
 # move action to browser_action
 	jq '.["browser_action"] = .action | del(.action)' firefox-manifest.json >tmp.json && mv tmp.json firefox-manifest.json
+# remove static content script
+	jq '.content_scripts = []' firefox-manifest.json >tmp.json && mv tmp.json firefox-manifest.json
+# add host permissions
+	jq '.permissions += ["*://*.twitter.com/*", "*://twitter.com/*", "*://*.x.com/*", "*://x.com/*"]' firefox-manifest.json >tmp.json && mv tmp.json firefox-manifest.json
 # replace chrome manifest with firefox manifest
 	jq '.browser_specific_settings = {"gecko": {"id": "{119be3f3-597c-4f6a-9caf-627ee431d374}"}}'  firefox-manifest.json >tmp.json && mv tmp.json firefox-manifest.json
 	mv firefox-manifest.json build/manifest.json
