@@ -13,6 +13,7 @@ try {
 		action: browser.browserAction,
 		contentScripts: browser.contentScripts,
 		tabs: browser.tabs,
+		management: browser.management,
 	};
 } catch (ReferenceError) {
 	_api = chrome;
