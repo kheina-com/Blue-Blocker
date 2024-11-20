@@ -105,34 +105,44 @@ async function registerContentScript() {
 }
 
 api.runtime.onStartup.addListener(() => {
-	// @ts-ignore
-	api?.runtime.getBrowserInfo().then(info => {
-		if(info.name == 'Firefox') {
-			api.storage.local.get("canLoad").then( val => {
-				if (!val) {
-					registerConsentScript();
-				}
-				else {
-					registerContentScript();
-				}
-			});
-		}
-	})
+	try{
+		// @ts-ignore
+		api.runtime?.getBrowserInfo().then(info => {
+			if(info.name == 'Firefox') {
+				api.storage.local.get("canLoad").then( val => {
+					if (!val) {
+						registerConsentScript();
+					}
+					else {
+						registerContentScript();
+					}
+				});
+			}
+		})
+	}
+	catch {
+		console.debug(logstr, "not running on Firefox!");
+	}
 })
 
 const consentRequiredVersions = ['0.3.5']
 
 api.runtime.onInstalled.addListener( ({reason, previousVersion}) => {
-	/** @ts-ignore I hate that I have to use FF specific APIs to detect FF :)))*/
-	api.runtime?.getBrowserInfo().then(info => {
-		if (info.name == 'Firefox') {
-			if(reason == 'install' || (reason == 'update' && consentRequiredVersions.includes(previousVersion as string))) {
-				registerConsentScript();
-				const url = api.runtime.getURL('src/pages/consent/index.html');
-				api.tabs.create({url})
+	try {
+		/** @ts-ignore I hate that I have to use FF specific APIs to detect FF :)))*/
+		api.runtime?.getBrowserInfo().then(info => {
+			if (info.name == 'Firefox') {
+				if(reason == 'install' || (reason == 'update' && consentRequiredVersions.includes(previousVersion as string))) {
+					registerConsentScript();
+					const url = api.runtime.getURL('src/pages/consent/index.html');
+					api.tabs.create({url})
+				}
 			}
-		}
-	})
+		})
+	}
+	catch {
+		console.debug(logstr, "not running on Firefox!");
+	}
 })
 
 api.runtime.onMessage.addListener((m, s, r) => {
