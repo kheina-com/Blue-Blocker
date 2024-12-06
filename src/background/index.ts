@@ -109,7 +109,7 @@ api.runtime.onStartup.addListener(() => {
 		// @ts-ignore
 		api.runtime?.getBrowserInfo().then(info => {
 			if(info.name == 'Firefox') {
-				api.storage.local.get("canLoad").then( val => {
+				api.storage.local.get({"canLoad": false}).then( val => {
 					if (!val) {
 						registerConsentScript();
 					}
@@ -117,6 +117,10 @@ api.runtime.onStartup.addListener(() => {
 						registerContentScript();
 					}
 				});
+			}
+			else {
+				// In a FF based browser, that isn't FF
+				registerConsentScript();
 			}
 		})
 	}
@@ -152,6 +156,10 @@ api.runtime.onInstalled.addListener( ({reason, previousVersion}) => {
 					const url = api.runtime.getURL('src/pages/consent/index.html');
 					api.tabs.create({url})
 				}
+			}
+			else {
+				// In a FF based browser, that isn't FF
+				registerConsentScript();
 			}
 		})
 	}
