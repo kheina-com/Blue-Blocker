@@ -125,14 +125,29 @@ api.runtime.onStartup.addListener(() => {
 	}
 })
 
-const consentRequiredVersions = ['0.3.5']
+const minConsentVersion = '0.4.14';
+
+function isBelowMinVer(newVersion: string, minVersion: string) {
+	const [newMajor, newMinor, newPatch] = String(newVersion).split('.').map(Number);
+	const [minMajor, minMinor, minPatch] = String(minVersion).split('.').map(Number);
+
+	if (newMajor !== minMajor) {
+		return newMajor < minMajor;
+	}
+
+	if (newMinor !== minMinor) {
+		return newMinor < minMinor;
+	}
+
+	return newPatch < minPatch;
+}
 
 api.runtime.onInstalled.addListener( ({reason, previousVersion}) => {
 	try {
 		/** @ts-ignore I hate that I have to use FF specific APIs to detect FF :)))*/
 		api.runtime?.getBrowserInfo().then(info => {
 			if (info.name == 'Firefox') {
-				if(reason == 'install' || (reason == 'update' && consentRequiredVersions.includes(previousVersion as string))) {
+				if(reason == 'install' || (reason == 'update' && isBelowMinVer(previousVersion as string, minConsentVersion))) {
 					registerConsentScript();
 					const url = api.runtime.getURL('src/pages/consent/index.html');
 					api.tabs.create({url})
