@@ -25,4 +25,4 @@ jobs:
               with:
                   prettier_options: --write **/*.{ts,json,css,scss,md}
                   only_changed: true
-                  commit_message: "[chore] prettified code"
+                  same_commit: true
