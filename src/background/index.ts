@@ -108,7 +108,7 @@ api.runtime.onStartup.addListener(() => {
 	try{
 		// @ts-ignore
 		api.runtime?.getBrowserInfo().then(info => {
-			if(info.name == 'Firefox') {
+			if(/Firefox/.test(info.name)) {
 				api.storage.local.get({"canLoad": false}).then( val => {
 					if (!val) {
 						registerConsentScript();
@@ -120,7 +120,7 @@ api.runtime.onStartup.addListener(() => {
 			}
 			else {
 				// In a FF based browser, that isn't FF
-				registerConsentScript();
+				registerContentScript();
 			}
 		})
 	}
