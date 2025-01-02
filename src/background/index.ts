@@ -120,7 +120,7 @@ api.runtime.onStartup.addListener(() => {
 			}
 			else {
 				// In a FF based browser, that isn't FF
-				registerConsentScript();
+				registerContentScript();
 			}
 		})
 	}
