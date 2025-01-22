@@ -16,7 +16,7 @@ function TranslateUserObject(obj: RecommendationUser) {
 
 	// Pull together a normal object
 	for(const t of keyTranslations) {
-		if (!obj[t[1]]) {
+		if (obj?.[t[1]] == undefined) {
 			console.log(logstr, `object missing key: ${t[1]}`);
 			return;
 		}
