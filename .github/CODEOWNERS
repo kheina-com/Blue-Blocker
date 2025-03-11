@@ -1,32 +1,28 @@
 # Global code owners for new files/whatever
-@cooljeanius @kheina @rougetimelord
+@kheina @rougetimelord
 # Specific patterns that will take precedence
-.github/workflows/ci-main.yml @cooljeanius @rougetimelord
-.github/workflows/codeql.yml @cooljeanius
-.github/workflows/njsscan.yml @cooljeanius
+.github/workflows/ci-main.yml @rougetimelord
 .github/workflows/prettier.yml @rougetimelord
-.github/workflows/release.yml @kheina @rougetimelord @cooljeanius
-.github/CODEOWNERS @kheina @cooljeanius @rougetimelord
-.github/dependabot.yml @cooljeanius
+.github/workflows/release.yml @kheina @rougetimelord
+.github/CODEOWNERS @kheina @rougetimelord
 .github/pull_request_template.md @kheina @rougetimelord
-.github/release.yaml @rougetimelord @cooljeanius
+.github/release.yaml @rougetimelord
 assets/* @kheina
 public/icon/* @kheina
-src/* @kheina @jaredcat @cooljeanius @rougetimelord
+src/* @kheina @jaredcat @rougetimelord
 .editorconfig @kheina @jaredcat
-.gitignore @kheina @jaredcat @cooljeanius
-.npmignore @kheina @jaredcat @cooljeanius
+.gitignore @kheina @jaredcat
+.npmignore @kheina @jaredcat
 .nvmrc @kheina @jaredcat
 .prettierignore @kheina @jaredcat
 .prettierrc @kheina @jaredcat
-.yamllint.yml @cooljeanius
 CHANGELOG.md @kheina @rougetimelord
 LICENSE @kheina
-privacy.md @kheina @rougetimelord @cooljeanius
-makefile @kheina @cooljeanius @rougetimelord
-package-lock.json @kheina @cooljeanius @rougetimelord
-package.json @kheina @jaredcat @cooljeanius @rougetimelord
-readme.md @kheina @jaredcat @cooljeanius @rougetimelord
+privacy.md @kheina @rougetimelord
+makefile @kheina @rougetimelord
+package-lock.json @kheina @rougetimelord
+package.json @kheina @jaredcat @rougetimelord
+readme.md @kheina @jaredcat @rougetimelord
 tsconfig.json @kheina @jaredcat @rougetimelord
 tsconfig.node.json @kheina @jaredcat @rougetimelord
-vite.config.ts @kheina @jaredcat @cooljeanius
+vite.config.ts @kheina @jaredcat
