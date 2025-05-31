@@ -187,13 +187,9 @@ export function HandleInstructionsResponse(
 		}
 	}
 	if (isFailed) {
-		console.error(
-			logstr,
-			'failed to find instructions in response body',
-			e.detail.parsedUrl[1],
-			body,
-		);
-		return;
+		throw new Error(
+			`failed to find instructions in response body for ${e.detail.parsedUrl[1]}`,
+		)
 	}
 
 	// TODO: figure out how to do this cleanly
