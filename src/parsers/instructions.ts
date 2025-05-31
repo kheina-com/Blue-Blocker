@@ -1,5 +1,6 @@
 import { api, logstr, EventKey, ErrorEvent } from '../constants';
 import { BlockBlueVerified } from '../shared';
+import { getScreenName, getUserName, isFollowing } from '../utilities';
 // This file contains a bit of a special case for responses. many responses
 // on twitter contain a shared type stored in an "instructions" key within
 // the response body. since it doesn't match one specific request, it has
@@ -109,10 +110,13 @@ export function ParseTimelineTweet(tweet: any, config: CompiledConfig) {
 	}
 
 	try {
+		const userResult =
+			tweet?.itemContent?.tweet_results?.result?.core?.user_results?.result ||
+			tweet?.itemContent?.tweet_results?.result?.tweet?.core?.user_results?.result;
+		const following = isFollowing(userResult);
 		if (
 			config.skipFollowingQrts &&
-			tweet?.itemContent?.tweet_results?.result?.core?.user_results?.result?.legacy
-				?.following &&
+			following &&
 			(tweet?.itemContent?.tweet_results?.result?.legacy?.is_quote_status ||
 				tweet?.tweet_results?.result?.legacy?.retweeted_status_result)
 		) {
@@ -121,9 +125,11 @@ export function ParseTimelineTweet(tweet: any, config: CompiledConfig) {
 					?.core?.user_results?.result ||
 				tweet?.itemContent?.tweet_results?.result?.quoted_status_result?.result?.core
 					?.user_results?.result;
+			const username = getUserName(skippedUser);
+			const screenName = getScreenName(skippedUser);
 			console.log(
 				logstr,
-				`skipping ${skippedUser.legacy.name} (@${skippedUser.legacy.screen_name}) because they got retweeted by someone you follow`,
+				`skipping ${username} (@${screenName}) because they got retweeted by someone you follow`,
 			);
 		}
 		// Handle retweets and quoted tweets (check the retweeted user, too)
@@ -144,7 +150,7 @@ export function ParseTimelineTweet(tweet: any, config: CompiledConfig) {
 		}
 		handleTweetObject(tweet.itemContent, config, promoted);
 	} catch (e) {
-		console.error(logstr, 'found unexpected tweet shape:', tweet);
+		console.error(logstr, 'found unexpected tweet shape:', JSON.stringify(tweet), e);
 		api.storage.local.set({
 			[EventKey]: {
 				type: ErrorEvent,

@@ -11,7 +11,6 @@ import {
 	ErrorEvent,
 	EventKey,
 	MessageEvent,
-	ReasonTransphobia,
 	ReasonPromoted,
 	HistoryStateGone,
 	SuccessStatus,
@@ -35,6 +34,13 @@ import {
 	QueuePop,
 	QueuePush,
 	RefId,
+	getUserName,
+	getScreenName,
+	FormatBlueBlockerUser,
+	isFollowing,
+	isFollowedBy,
+	isBlocking,
+	isMuting,
 } from './utilities';
 
 // TODO: tbh this file shouldn't even exist anymore and should be
@@ -323,8 +329,8 @@ function queueBlockUser(
 		user_id,
 		reason,
 		user: {
-			name: user.legacy.name,
-			screen_name: user.legacy.screen_name,
+			name: getUserName(user),
+			screen_name: getScreenName(user),
 		},
 	};
 
@@ -339,7 +345,7 @@ function queueBlockUser(
 		.then(config =>
 			console.log(
 				logstr,
-				`queued ${FormatLegacyName(user.legacy)} for a ${
+				`queued ${FormatBlueBlockerUser(user)} for a ${
 					config.mute ? 'mute' : 'block'
 				} due to ${ReasonMap[reason]}.`,
 			),
@@ -395,7 +401,7 @@ const consumer = new QueueConsumer(api.storage.local, checkBlockQueue, async () 
 });
 consumer.start();
 
-const CsrfTokenRegex = /ct0=\s*(\w+);/;
+const CsrfTokenRegex = /ct0=\s*(\w+)(?:;|$)/;
 
 function blockUser(user: BlockUser, attempt = 1) {
 	const match = window.location.href.match(twitterWindowRegex);
@@ -613,15 +619,15 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 		return;
 	}
 
-	const formattedUserName = FormatLegacyName(user.legacy);
+	const formattedUserName = FormatBlueBlockerUser(user);
 
 	// set up this funky little function so that we can return to exit early from verified block but continue with other steps
 	const done: boolean = await (async (): Promise<boolean> => {
 		try {
 			if (
 				user?.rest_id === undefined ||
-				user?.legacy?.name === undefined ||
-				user?.legacy?.screen_name === undefined
+				getUserName(user) === undefined ||
+				getScreenName(user) === undefined
 			) {
 				throw new Error('invalid user object passed to BlockBlueVerified');
 			}
@@ -649,18 +655,18 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 			} else if (
 				// group for block-following option
 				!config.blockFollowing &&
-				(user.legacy?.following || user.super_following)
+				(isFollowing(user) || user.super_following)
 			) {
 				console.debug(logstr, `skipped user ${formattedUserName} because you follow them.`);
 				return true;
 			} else if (
 				// group for block-followers option
 				!config.blockFollowers &&
-				user.legacy?.followed_by
+				isFollowedBy(user)
 			) {
 				console.debug(logstr, `skipped user ${formattedUserName} because they follow you.`);
 				return true;
-			} else if (user.legacy?.blocking || (config.mute && user.legacy?.muting)) {
+			} else if (isBlocking(user) || (config.mute && isMuting(user))) {
 				return true;
 			}
 
@@ -682,7 +688,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 				if (
 					// group for skip-verified option
 					config.skipVerified &&
-					(await IsUserLegacyVerified(user.rest_id, user.legacy.screen_name))
+					(await IsUserLegacyVerified(user.rest_id, getScreenName(user)))
 				) {
 					console.log(
 						logstr,
@@ -739,9 +745,10 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 	}
 
 	// Step 1.5: Check for disallowed words or emojis in usernames.
+	const username = getUserName(user);
 	if (
 		config.blockDisallowedWords &&
-		config.disallowedWords?.test(user.legacy.name.replace(/\s{2,}/g, ' '))
+		config.disallowedWords?.test(username.replace(/\s{2,}/g, ' '))
 	) {
 		queueBlockUser(user, user.rest_id, ReasonDisallowedWordsOrEmojis);
 		console.log(

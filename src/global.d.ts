@@ -57,12 +57,17 @@ interface BlueBlockerUser {
 			userLabelType?: string;
 		};
 	};
-	legacy: {
-		blocking?: boolean;
-		followed_by: boolean;
-		following: boolean;
+	core: {
+		created_at: string;
 		name: string;
 		screen_name: string;
+	};
+	legacy: {
+		blocking?: boolean;
+		followed_by?: boolean;
+		following?: boolean;
+		name?: string;
+		screen_name?: string;
 		verified: boolean;
 		verified_type?: string;
 		followers_count: number;
@@ -106,6 +111,12 @@ interface BlueBlockerUser {
 	profile_image_shape?: string;
 	promoted_tweet?: boolean;
 	used_blue?: boolean;
+	relationship_perspectives?: {
+		following: boolean;
+		followed_by?: boolean;
+		blocking?: boolean;
+		muting?: boolean;
+	};
 }
 
 // extension message types
