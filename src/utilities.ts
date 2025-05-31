@@ -248,67 +248,40 @@ export function UsernameElement(userName: string, screenName: string): HTMLParag
 }
 
 export function getUserName(user: BlueBlockerUser) {
-	if (user.legacy.name) {
-		return user.legacy.name;
-	}
-	if (user.core.name) {
-		return user.core.name;
+	const username = user?.legacy?.name || user?.core?.name;
+	if (!username) {
+		throw new Error(`Unable to get user name for user ${user.rest_id}`);
 	}
 
-	throw new Error(`Unable to get user name for user ${user.rest_id}`);
+	return username;
 }
 
 export function getScreenName(user: BlueBlockerUser) {
-	if (user.legacy.screen_name) {
-		return user.legacy.screen_name;
-	}
-	if (user.core.screen_name) {
-		return user.core.screen_name;
+	const screen_name = user?.legacy?.screen_name || user?.core?.screen_name;
+	if (!screen_name) {
+		throw new Error(`Unable to get screen name for user ${user.rest_id}`);
 	}
 
-	throw new Error(`Unable to get screen name for user ${user.rest_id}`);
+	return screen_name;
 }
 
 export function isFollowing(user: BlueBlockerUser): boolean {
-	if (user.legacy.following !== undefined) {
-		return user.legacy.following;
-	}
-	if (user.relationship_perspectives?.following !== undefined) {
-		return user.relationship_perspectives.following;
+	const following = user?.legacy?.following || user?.relationship_perspectives?.following;
+	if (following === undefined) {
+		throw new Error(`Unable to get following status for user ${user.rest_id}`); // if we can't determine following, throw an error. because one of these keys must exist.
 	}
 
-	throw new Error(`Unable to get following status for user ${user.rest_id}`); // if we can't determine following, throw an error. because one of these keys must exist.
+	return following;
 }
 
 export function isFollowedBy(user: BlueBlockerUser): boolean {
-	if (user.legacy.followed_by !== undefined) {
-		return user.legacy.followed_by;
-	}
-	if (user.relationship_perspectives?.followed_by !== undefined) {
-		return user.relationship_perspectives.followed_by;
-	}
-
-	return false; // if we can't determine followed by, assume not followed by
+	return user?.legacy?.followed_by || user?.relationship_perspectives?.followed_by || false; // if we can't determine followed by, assume not followed by
 }
 
 export function isBlocking(user: BlueBlockerUser): boolean {
-	if (user.legacy.blocking !== undefined) {
-		return user.legacy.blocking;
-	}
-	if (user.relationship_perspectives?.blocking !== undefined) {
-		return user.relationship_perspectives.blocking;
-	}
-
-	return false; // if we can't determine blocking, assume not blocking
+	return user?.legacy?.blocking || user?.relationship_perspectives?.blocking || false; // if we can't determine blocking, assume not blocking
 }
 
 export function isMuting(user: BlueBlockerUser): boolean {
-	if (user.legacy.muting !== undefined) {
-		return user.legacy.muting;
-	}
-	if (user.relationship_perspectives?.muting !== undefined) {
-		return user.relationship_perspectives.muting;
-	}
-
-	return false; // if we can't determine muting, assume not muting
+	return user?.legacy?.muting || user?.relationship_perspectives?.muting || false; // if we can't determine muting, assume not muting
 }
