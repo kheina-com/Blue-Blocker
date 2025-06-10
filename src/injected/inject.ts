@@ -44,11 +44,8 @@
 				if (window?.blueBlockerRequest) {
 					/** @ts-ignore This really feels bad */
 					blueBlockerRequest(event);
-				}
-				else {
-					document.dispatchEvent(
-						event
-					);
+				} else {
+					document.dispatchEvent(event);
 				}
 			}
 		});

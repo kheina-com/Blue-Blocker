@@ -46,6 +46,7 @@ export const DefaultOptions: Config = {
 	// TODO: when migrating to firefox manifest v3, check to see if sets can be stored yet
 	unblocked: {},
 	blockForUse: false,
+	blockForGrok: false,
 };
 export const Headers = [
 	// set by function:
@@ -84,6 +85,7 @@ export const ReasonTransphobia: number = 3;
 export const ReasonPromoted: number = 4;
 export const ReasonDisallowedWordsOrEmojis: number = 5;
 export const ReasonUsingBlueFeatures: number = 6;
+export const ReasonUsingGrok: number = 7;
 export const ReasonMap = {
 	[ReasonBlueVerified]: 'Twitter Blue verified',
 	[ReasonNftAvatar]: 'NFT avatar',
@@ -92,6 +94,7 @@ export const ReasonMap = {
 	[ReasonPromoted]: 'promoting tweets',
 	[ReasonDisallowedWordsOrEmojis]: 'disallowed words or emojis',
 	[ReasonUsingBlueFeatures]: 'using Twitter Blue features',
+	[ReasonUsingGrok]: 'using Grok',
 };
 
 export const emojiRegExp = RegExp(/^[\p{Emoji_Presentation}\u200d]+$/u, 'u');
@@ -120,8 +123,8 @@ export const [
 	'remove_user_from_history',
 	'add_user_to_queue',
 	'pop_user_from_queue',
-	"consent_granted",
-	"pop_consent",
+	'consent_granted',
+	'pop_consent',
 ];
 export const SuccessStatus: SuccessStatus = 'SUCCESS';
 export const ErrorStatus: ErrorStatus = 'ERROR';

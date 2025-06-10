@@ -6,16 +6,16 @@ const keyTranslations = [
 	['rest_id', 'id_str'],
 	['id', 'id_str'],
 	['affiliates_highlighted_label', 'ext_highlighted_label'],
-	['is_blue_verified', 'ext_is_blue_verified']
-]
+	['is_blue_verified', 'ext_is_blue_verified'],
+];
 
 function TranslateUserObject(obj: RecommendationUser) {
 	let newUserObj = {
-		__typename: 'User'
-	} as {[k: string]: any};
+		__typename: 'User',
+	} as { [k: string]: any };
 
 	// Pull together a normal object
-	for(const t of keyTranslations) {
+	for (const t of keyTranslations) {
 		if (obj?.[t[1]] == undefined) {
 			console.log(logstr, `object missing key: ${t[1]}`);
 			return;
@@ -29,10 +29,10 @@ function TranslateUserObject(obj: RecommendationUser) {
 	return newUserObj as BlueBlockerUser;
 }
 
-export function HandleRecommendations (
+export function HandleRecommendations(
 	e: CustomEvent<BlueBlockerEvent>,
 	body: any,
-	config: CompiledConfig
+	config: CompiledConfig,
 ) {
 	if (!Array.isArray(body)) {
 		console.log(logstr, 'recommendations are not an array');
@@ -44,7 +44,7 @@ export function HandleRecommendations (
 		let userObj = obj.user as RecommendationUser | undefined;
 
 		if (!userObj) {
-			console.log(logstr, 'no user object')
+			console.log(logstr, 'no user object');
 			continue;
 		}
 
@@ -61,7 +61,7 @@ interface RecommendationUser {
 	ext_highlighted_label: {
 		label?: {
 			userLabelType?: string;
-		}
+		};
 	};
 	[k: string]: any;
 }

@@ -73,6 +73,7 @@
 		<input type="checkbox" id="skip-1mplus" />
 		<input type="checkbox" id="block-promoted-tweets" />
 		<input type="checkbox" id="block-for-use" />
+		<input type="checkbox" id="block-for-grok" />
 		<input type="checkbox" id="blockstrings" />
 		<input type="checkbox" id="skip-following-qrts">
 		<div class="tab" id="general">
@@ -284,6 +285,15 @@
 			</div>
 		</div>
 		<div class="tab" id="moderation">
+			<div class="option" data-bb-skip-checkmark="">
+				<label for="block-for-grok" name="block-for-grok">
+					<div class="checkmark">
+						<div></div>
+					</div>
+					<p>block users that use Grok</p>
+				</label>
+				<span name="block-for-grok-status"></span>
+			</div>
 			<div class="option">
 				<label for="block-promoted-tweets" name="block-promoted-tweets">
 					<div class="checkmark">

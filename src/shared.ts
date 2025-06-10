@@ -19,6 +19,7 @@ import {
 	IntegrationStateReceiveOnly,
 	ReasonDisallowedWordsOrEmojis,
 	ReasonUsingBlueFeatures,
+	ReasonUsingGrok,
 	SoupcanExtensionId,
 	IntegrationStateSendAndReceive,
 } from './constants';
@@ -741,6 +742,11 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 
 	if (config.blockForUse && user.used_blue) {
 		queueBlockUser(user, String(user.rest_id), ReasonUsingBlueFeatures);
+		return;
+	}
+
+	if (config.blockForGrok && user.used_grok) {
+		queueBlockUser(user, String(user.rest_id), ReasonUsingGrok);
 		return;
 	}
 

@@ -25,6 +25,7 @@ This version of the Privacy Policy was last updated on September 6th, 2024.
 **Your data will never be used by the Extension for any analytical or commercial purpose.**
 
 ## How User Data is Processed
+
 All processing of User Data by the Extension is done on-device. The Extension does not transmit data to an external server in order to process it.
 
 If you decide to share data with other extensions or addons, we can not guarantee how your data will be processed by those extensions or addons. You are advised to read the Privacy Policies of any other extensions or addons you share User Data with to understand how they process your User Data.

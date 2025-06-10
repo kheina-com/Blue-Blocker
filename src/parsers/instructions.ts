@@ -9,16 +9,16 @@ import { getScreenName, getUserName, isFollowing } from '../utilities';
 // when parsing a timeline response body, these are the paths to navigate in the json to retrieve the "instructions" object
 // the key to this object is the capture group from the request regex in inject.js
 const InstructionsPaths: { [key: string]: string[][] } = {
-	HomeLatestTimeline: [
-		['data', 'home', 'home_timeline_urt', 'instructions']
-	],
+	HomeLatestTimeline: [['data', 'home', 'home_timeline_urt', 'instructions']],
 	HomeTimeline: [['data', 'home', 'home_timeline_urt', 'instructions']],
-	SearchTimeline: [['data', 'search_by_raw_query', 'search_timeline', 'timeline', 'instructions']],
+	SearchTimeline: [
+		['data', 'search_by_raw_query', 'search_timeline', 'timeline', 'instructions'],
+	],
 	Favoriters: [['data', 'favoriters_timeline', 'timeline', 'instructions']],
 	Retweeters: [['data', 'retweeters_timeline', 'timeline', 'instructions']],
 	UserTweets: [
 		['data', 'user', 'result', 'timeline_v2', 'timeline', 'instructions'],
-		['data', 'user', 'result', 'timeline', 'timeline', 'instructions']
+		['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
 	],
 	Followers: [['data', 'user', 'result', 'timeline', 'timeline', 'instructions']],
 	Following: [['data', 'user', 'result', 'timeline', 'timeline', 'instructions']],
@@ -26,7 +26,9 @@ const InstructionsPaths: { [key: string]: string[][] } = {
 	FollowersYouKnow: [['data', 'user', 'result', 'timeline', 'timeline', 'instructions']],
 	BlueVerifiedFollowers: [['data', 'user', 'result', 'timeline', 'timeline', 'instructions']],
 	TweetDetail: [['data', 'threaded_conversation_with_injections_v2', 'instructions']],
-	ModeratedTimeline: [['data', 'tweet', 'result', 'timeline_response', 'timeline', 'instructions']],
+	ModeratedTimeline: [
+		['data', 'tweet', 'result', 'timeline_response', 'timeline', 'instructions'],
+	],
 	'search/adaptive.json': [['timeline', 'instructions']],
 };
 // this is the path to retrieve the user object from the individual tweet
@@ -38,7 +40,12 @@ const UserObjectPath: string[] = [
 	'user_results',
 	'result',
 ];
-const IgnoreTweetTypes = new Set(['TimelineTimelineCursor', 'TimelineUser']);
+const IgnoreTweetTypes = new Set([
+	'TimelineTimelineCursor',
+	'TimelineUser',
+	'TimelineCommunity',
+	'TimelineTweetComposer',
+]);
 const PromotedStrings = new Set(['suggest_promoted', 'Promoted', 'promoted']);
 
 function handleUserObject(obj: any, config: CompiledConfig, from_blue: boolean) {
@@ -71,20 +78,21 @@ export function ParseTimelineUser(obj: any, config: CompiledConfig, from_blue: b
 
 function handleTweetObject(obj: any, config: CompiledConfig, promoted: boolean) {
 	let ptr = obj,
-		uses_blue_feats = false;
+		uses_blue_feats = false,
+		uses_grok = false;
 	for (const key of UserObjectPath) {
-		if (ptr.__typename == 'TweetTombstone') {
-			// If we hit a deleted tweet, we bail
-			return;
-		}
 		if (ptr.hasOwnProperty(key)) {
 			ptr = ptr[key];
-			if (
-				ptr.__typename == 'Tweet' &&
-				(ptr?.note_tweet?.is_expandable == true ||
-					typeof ptr?.edit_control?.edit_tweet_ids?.initial_tweet_id == 'string')
-			) {
-				uses_blue_feats = true;
+			if (ptr.__typename == 'Tweet') {
+				if (
+					ptr?.note_tweet?.is_expandable == true ||
+					typeof ptr?.edit_control?.edit_tweet_ids?.initial_tweet_id == 'string'
+				) {
+					uses_blue_feats = true;
+				}
+				if ((ptr?.legacy?.full_text as string).match(/@grok/i)) {
+					uses_grok = true;
+				}
 			}
 		}
 	}
@@ -95,6 +103,7 @@ function handleTweetObject(obj: any, config: CompiledConfig, promoted: boolean) 
 	ptr.promoted_tweet = promoted;
 	ptr.is_blue_verified = ptr.is_blue_verified || uses_blue_feats;
 	ptr.used_blue = uses_blue_feats;
+	ptr.used_grok = uses_grok;
 	BlockBlueVerified(ptr as BlueBlockerUser, config);
 }
 
@@ -115,6 +124,13 @@ export function ParseTimelineTweet(tweet: any, config: CompiledConfig) {
 	}
 
 	try {
+		if (tweet?.itemContent?.tweet_results?.result?.__typename == 'TweetTombstone') {
+			/**
+			 * the tweet is deleted or hidden, therefore has no user attached
+			 * trying to check anything else will throw an error
+			 */
+			return;
+		}
 		const userResult =
 			tweet?.itemContent?.tweet_results?.result?.core?.user_results?.result ||
 			tweet?.itemContent?.tweet_results?.result?.tweet?.core?.user_results?.result;
@@ -128,7 +144,7 @@ export function ParseTimelineTweet(tweet: any, config: CompiledConfig) {
 			const skippedUser =
 				tweet?.itemContent?.tweet_results?.result?.legacy?.retweeted_status_result?.result
 					?.core?.user_results?.result ||
-				tweet?.itemContent?.tweet_results?.result?.quoted_status_result?.result?.core
+				tweet?.itemContent?.tweet_results?.result?.quoted_status_result?.result?.tweet?.core
 					?.user_results?.result;
 			const username = getUserName(skippedUser);
 			const screenName = getScreenName(skippedUser);
@@ -179,7 +195,7 @@ export function HandleInstructionsResponse(
 				_instructions = _instructions[key];
 			}
 			isFailed = false;
-			break
+			break;
 		} catch (err) {
 			// if we can't find the instructions, we just continue
 			_instructions = body;
@@ -189,7 +205,7 @@ export function HandleInstructionsResponse(
 	if (isFailed) {
 		throw new Error(
 			`failed to find instructions in response body for ${e.detail.parsedUrl[1]}`,
-		)
+		);
 	}
 
 	// TODO: figure out how to do this cleanly

@@ -17,7 +17,7 @@ export default defineConfig(() => {
 					safelist: './src/pages/safelist/index.html',
 					history: './src/pages/history/index.html',
 					integrations: './src/pages/integrations/index.html',
-					consent: './src/pages/consent/index.html'
+					consent: './src/pages/consent/index.html',
 				},
 				output: {
 					chunkFileNames: 'assets/chunk-[hash].js',

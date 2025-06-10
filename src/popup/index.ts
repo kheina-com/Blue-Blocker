@@ -294,6 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const skip1Mplus = document.getElementById('skip-1mplus') as HTMLInputElement;
 	const blockPromoted = document.getElementById('block-promoted-tweets') as HTMLInputElement;
 	const blockForUse = document.getElementById('block-for-use') as HTMLInputElement;
+	const blockForGrok = document.getElementById('block-for-grok') as HTMLInputElement;
 	const skipCheckmark = document.getElementById('skip-checkmark') as HTMLInputElement;
 	const disallowedWordsCheckmark = document.getElementById('blockstrings') as HTMLInputElement;
 	const disallowedWordsInput = document.getElementById('blockstrings-input') as HTMLInputElement;
@@ -322,6 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 		checkHandler(blockPromoted, config, 'blockPromoted');
 		checkHandler(blockForUse, config, 'blockForUse');
+		checkHandler(blockForGrok, config, 'blockForGrok');
 		checkHandler(skipCheckmark, config, 'skipBlueCheckmark', {
 			callback(target: HTMLInputElement, startup: boolean) {
 				if (!startup) {

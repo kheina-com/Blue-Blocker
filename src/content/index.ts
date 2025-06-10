@@ -28,6 +28,7 @@ function compileConfig(config: Config): CompiledConfig {
 		soupcanIntegration: config.soupcanIntegration,
 		blockPromoted: config.blockPromoted,
 		blockForUse: config.blockForUse,
+		blockForGrok: config.blockForGrok,
 		blockDisallowedWords: config.blockDisallowedWords,
 		disallowedWords:
 			config.disallowedWords.length === 0
@@ -41,7 +42,7 @@ function compileConfig(config: Config): CompiledConfig {
 							)
 							.join('|'),
 						'i',
-					),
+				  ),
 	} as CompiledConfig;
 }
 
@@ -127,13 +128,17 @@ function eventHandler(e: CustomEvent<BlueBlockerEvent>) {
 // If we are running in Firefox, expose a function to page scripts
 // This is a good test for Firefox since it's non-standard :)
 /** @ts-ignore */
-if(api?.runtime?.getBrowserInfo) {
+if (api?.runtime?.getBrowserInfo) {
 	/** @ts-ignore Again, non-standard, literally only FF*/
-	exportFunction(event => {
-		eventHandler(event)
-	}, window, {defineAs: 'blueBlockerRequest'})
-}
-else {
+	exportFunction(
+		/** @ts-ignore */
+		event => {
+			eventHandler(event);
+		},
+		window,
+		{ defineAs: 'blueBlockerRequest' },
+	);
+} else {
 	document.addEventListener('blue-blocker-event', eventHandler);
 }
 

@@ -19,6 +19,7 @@ interface Config {
 	soupcanIntegration: boolean;
 	blockPromoted: boolean;
 	blockForUse: boolean;
+	blockForGrok: boolean;
 	blockDisallowedWords: boolean;
 	disallowedWords: string[];
 }
@@ -42,6 +43,7 @@ interface CompiledConfig {
 	soupcanIntegration: boolean;
 	blockPromoted: boolean;
 	blockForUse: boolean;
+	blockForGrok: boolean;
 	blockDisallowedWords: boolean;
 	disallowedWords: RegExp | null;
 }
@@ -111,6 +113,7 @@ interface BlueBlockerUser {
 	profile_image_shape?: string;
 	promoted_tweet?: boolean;
 	used_blue?: boolean;
+	used_grok?: boolean;
 	relationship_perspectives?: {
 		following: boolean;
 		followed_by?: boolean;
