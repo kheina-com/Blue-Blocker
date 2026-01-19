@@ -143,23 +143,20 @@ function unblockUser(
 						if (response.status === 403) {
 							// user has been logged out, we need to stop queue and re-add
 							MakeToast(
-								`could not un${config.mute ? 'mute' : 'block'} @${
-									user.screen_name
+								`could not un${config.mute ? 'mute' : 'block'} @${user.screen_name
 								}, you may have been logged out.`,
 								config,
 							);
 							console.log(
 								logstr,
-								`user is logged out, failed to un${
-									config.mute ? 'mute' : 'block'
+								`user is logged out, failed to un${config.mute ? 'mute' : 'block'
 								} user.`,
 							);
 						} else if (response.status === 404) {
 							// notice the wording here is different than the blocked 404. the difference is that if the user
 							// is unbanned, they will still be blocked and we want the user to know about that
 							MakeToast(
-								`could not un${config.mute ? 'mute' : 'block'} @${
-									user.screen_name
+								`could not un${config.mute ? 'mute' : 'block'} @${user.screen_name
 								}, user has been suspended or no longer exists.`,
 								config,
 							);
@@ -171,8 +168,7 @@ function unblockUser(
 							);
 						} else if (response.status >= 300) {
 							MakeToast(
-								`could not un${config.mute ? 'mute' : 'block'} @${
-									user.screen_name
+								`could not un${config.mute ? 'mute' : 'block'} @${user.screen_name
 								}, twitter gave an unfamiliar response code.`,
 								config,
 							);
@@ -191,8 +187,7 @@ function unblockUser(
 								`un${config.mute ? 'mut' : 'block'}ed ${FormatLegacyName(user)}`,
 							);
 							MakeToast(
-								`un${config.mute ? 'mut' : 'block'}ed @${
-									user.screen_name
+								`un${config.mute ? 'mut' : 'block'}ed @${user.screen_name
 								}, they won't be ${config.mute ? 'mut' : 'block'}ed again.`,
 								config,
 							);
@@ -230,6 +225,10 @@ api.storage.local.onChanged.addListener(items => {
 
 	api.storage.sync.get(DefaultOptions).then(options => {
 		const config = options as Config;
+		if (config.silenceNotifications) {
+			return;
+		}
+
 		switch (e.type) {
 			case MessageEvent:
 				if (config.showBlockPopups) {
@@ -275,8 +274,7 @@ api.storage.local.onChanged.addListener(items => {
 			case UserLogoutEvent:
 				if (config.showBlockPopups) {
 					MakeToast(
-						`You have been logged out, and ${
-							config.mute ? 'mut' : 'block'
+						`You have been logged out, and ${config.mute ? 'mut' : 'block'
 						}ing has been paused.`,
 						config,
 						{
@@ -345,8 +343,7 @@ function queueBlockUser(
 		.then(config =>
 			console.log(
 				logstr,
-				`queued ${FormatBlueBlockerUser(user)} for a ${
-					config.mute ? 'mute' : 'block'
+				`queued ${FormatBlueBlockerUser(user)} for a ${config.mute ? 'mute' : 'block'
 				} due to ${ReasonMap[reason]}.`,
 			),
 		);
@@ -502,8 +499,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 							AddUserBlockHistory(user).catch(e => console.error(logstr, e));
 							console.log(
 								logstr,
-								`blocked ${FormatLegacyName(user.user)} due to ${
-									ReasonMap?.[user.reason] ?? user?.external_reason
+								`blocked ${FormatLegacyName(user.user)} due to ${ReasonMap?.[user.reason] ?? user?.external_reason
 								}.`,
 							);
 							api.storage.local.set({
@@ -561,8 +557,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 									);
 									console.log(
 										logstr,
-										`could not ${
-											config.mute ? 'mute' : 'block'
+										`could not ${config.mute ? 'mute' : 'block'
 										} ${FormatLegacyName(user.user)}, user no longer exists`,
 									);
 								} else if (response.status >= 300) {
@@ -570,8 +565,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 									QueuePush(user);
 									console.error(
 										logstr,
-										`failed to ${
-											config.mute ? 'mute' : 'block'
+										`failed to ${config.mute ? 'mute' : 'block'
 										} ${FormatLegacyName(
 											user.user,
 										)}, consumer stopped just in case.`,
@@ -598,8 +592,7 @@ function blockUser(user: BlockUser, attempt = 1) {
 									QueuePush(user);
 									console.error(
 										logstr,
-										`failed to ${
-											config.mute ? 'mute' : 'block'
+										`failed to ${config.mute ? 'mute' : 'block'
 										} ${FormatLegacyName(user.user)}:`,
 										user,
 										error,
@@ -647,8 +640,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 			) {
 				console.debug(
 					logstr,
-					`skipped user ${formattedUserName} because you un${
-						config.mute ? 'mut' : 'block'
+					`skipped user ${formattedUserName} because you un${config.mute ? 'mut' : 'block'
 					}ed them previously.`,
 				);
 				return true;
@@ -692,8 +684,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 				) {
 					console.log(
 						logstr,
-						`did not ${
-							config.mute ? 'mute' : 'block'
+						`did not ${config.mute ? 'mute' : 'block'
 						} Twitter Blue verified user ${formattedUserName} because they are legacy verified.`,
 					);
 				} else if (
@@ -703,8 +694,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 				) {
 					console.log(
 						logstr,
-						`did not ${
-							config.mute ? 'mute' : 'block'
+						`did not ${config.mute ? 'mute' : 'block'
 						} Twitter Blue verified user ${formattedUserName} because they are verified through an affiliated organization.`,
 					);
 				} else if (
@@ -714,8 +704,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 				) {
 					console.log(
 						logstr,
-						`did not ${
-							config.mute ? 'mute' : 'block'
+						`did not ${config.mute ? 'mute' : 'block'
 						} Twitter Blue verified user ${formattedUserName} because they have over ${commafy(
 							config.skipFollowerCount,
 						)} followers and Elon is an idiot.`,
@@ -753,8 +742,7 @@ export async function BlockBlueVerified(user: BlueBlockerUser, config: CompiledC
 		queueBlockUser(user, user.rest_id, ReasonDisallowedWordsOrEmojis);
 		console.log(
 			logstr,
-			`${
-				config.mute ? 'muted' : 'blocked'
+			`${config.mute ? 'muted' : 'blocked'
 			} ${formattedUserName} for having disallowed words/emojis in their username.`,
 		);
 		return true;
