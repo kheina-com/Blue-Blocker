@@ -9,10 +9,6 @@ Summary
 	5. version timestamp follow the yyyy.MM.dd format
 ```
 
-# v0.4.18 [2026.01.19]
-
--   feat: add option to silence all on-screen notifications
-
 # v0.3.4 [2023.07.04]
 
 -   feat: show alert when user is logged out
