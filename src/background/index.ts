@@ -69,7 +69,7 @@ api.storage.sync.onChanged.addListener(async items => {
 
 ConnectDb();
 
-let ContentScript: { unregister: Function };
+let ContentScript: {unregister: Function};
 // @ts-ignore
 import consent from '../content/consent?script';
 async function registerConsentScript() {
