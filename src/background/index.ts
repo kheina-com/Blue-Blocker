@@ -71,22 +71,24 @@ ConnectDb();
 
 let ContentScript: {unregister: Function};
 // @ts-ignore
-import consent from '../content/consent?script';
+import consent from '../content/consent?script'
 async function registerConsentScript() {
 	const path = new URL(api.runtime.getURL(consent)).pathname;
 	const consentScript = {
 		matches: ['*://*.twitter.com/*', '*://twitter.com/*', '*://*.x.com/*', '*://x.com/*'],
 		js: [{ file: path }],
-	};
+	}
 	// this is a method in MV2, so it's kosher here
 	// @ts-ignore
-	api.contentScripts.register(consentScript).then((newScript: any) => {
-		ContentScript = newScript;
-	});
+	api.contentScripts.register(consentScript).then(
+		(newScript: any) => {
+			ContentScript = newScript;
+		}
+	);
 }
 
 // @ts-ignore
-import content from '../content/index?script';
+import content from '../content/index?script'
 async function registerContentScript() {
 	const path = new URL(api.runtime.getURL(content)).pathname;
 	const contentScript = {
@@ -94,18 +96,20 @@ async function registerContentScript() {
 		js: [{ file: path }],
 	};
 	// @ts-ignore see above
-	api.contentScripts.register(contentScript).then((newScript: any) => {
-		ContentScript = newScript;
-		api.storage.local.set({ canLoad: true });
-	});
+	api.contentScripts.register(contentScript).then(
+		(newScript: any) => {
+			ContentScript = newScript;
+			api.storage.local.set({canLoad: true});
+		}
+	)
 }
 
 api.runtime.onStartup.addListener(() => {
 	try {
 		// @ts-ignore
 		api.runtime?.getBrowserInfo().then(info => {
-			if (/Firefox/.test(info.name)) {
-				api.storage.local.get({ canLoad: false }).then(val => {
+			if(/Firefox/.test(info.name)) {
+				api.storage.local.get({"canLoad": false}).then( val => {
 					if (!val) {
 						registerConsentScript();
 					} else {
@@ -116,7 +120,7 @@ api.runtime.onStartup.addListener(() => {
 				// In a FF based browser, that isn't FF
 				registerContentScript();
 			}
-		});
+		})
 	} catch {
 		console.debug(logstr, 'not running on Firefox!');
 	}
@@ -139,7 +143,7 @@ function isBelowMinVer(newVersion: string, minVersion: string) {
 	return newPatch < minPatch;
 }
 
-api.runtime.onInstalled.addListener(({ reason, previousVersion }) => {
+api.runtime.onInstalled.addListener( ({reason, previousVersion}) => {
 	try {
 		/** @ts-ignore I hate that I have to use FF specific APIs to detect FF :)))*/
 		api.runtime?.getBrowserInfo().then(info => {
@@ -151,13 +155,13 @@ api.runtime.onInstalled.addListener(({ reason, previousVersion }) => {
 				) {
 					registerConsentScript();
 					const url = api.runtime.getURL('src/pages/consent/index.html');
-					api.tabs.create({ url });
+					api.tabs.create({url});
 				}
 			} else {
 				// In a FF based browser, that isn't FF
 				registerConsentScript();
 			}
-		});
+		})
 	} catch {
 		console.debug(logstr, 'not running on Firefox!');
 	}
@@ -210,13 +214,13 @@ api.runtime.onMessage.addListener((m, s, r) => {
 				case ConsentGranted:
 					ContentScript?.unregister();
 					registerContentScript();
-					response = { status: SuccessStatus } as SuccessResponse;
+					response = {status: SuccessStatus} as SuccessResponse;
 					break;
 
 				case OpenConsentPage:
 					const url = api.runtime.getURL('src/pages/consent/index.html');
-					api.tabs.create({ url });
-					response = { status: SuccessStatus } as SuccessResponse;
+					api.tabs.create({url});
+					response = {status: SuccessStatus} as SuccessResponse;
 					break;
 
 				default:
