@@ -1,45 +1,47 @@
 p {
-    font-size: 1rem;
-    width: auto;
+	font-size: 1rem;
+	width: auto;
 }
 
 .center {
-    min-width: 50ch;
-    max-width: 120ch;
-    padding: 25px;
+	min-width: 50ch;
+	max-width: 120ch;
+	padding: 25px;
 }
 
 img {
-    height: 75px;
-    width: auto;
+	height: 75px;
+	width: auto;
 }
 
 .bullet-list {
-    width: fit-content;
-    display: block;
-    margin-left: calc(50% - 21ch);
-    & p {
-        text-align: left;
-    }
+	width: fit-content;
+	display: block;
+	margin-left: calc(50% - 21ch);
+	& p {
+		text-align: left;
+	}
 }
 
-button, button:active, button:focus {
-    font-size: 1.1rem;
+button,
+button:active,
+button:focus {
+	font-size: 1.1rem;
 }
 
 .inputs {
-    margin-top: 1.1em;
-    
-    & div {
-        margin-top: 5px;
-    }
+	margin-top: 1.1em;
+
+	& div {
+		margin-top: 5px;
+	}
 }
 
 .main {
-    height: 100vh;
-    width: 100vw;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+	height: 100vh;
+	width: 100vw;
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
