@@ -13,7 +13,7 @@ interface Config {
 	skipAffiliated: boolean;
 	skip1Mplus: boolean;
 	blockInterval: number;
-	unblocked: { [k: string]: string?};
+	unblocked: { [k: string]: string? };
 	popupTimer: number;
 	skipFollowerCount: number;
 	soupcanIntegration: boolean;
@@ -37,7 +37,7 @@ interface CompiledConfig {
 	skipAffiliated: boolean;
 	skip1Mplus: boolean;
 	blockInterval: number;
-	unblocked: { [k: string]: string?};
+	unblocked: { [k: string]: string? };
 	popupTimer: number;
 	skipFollowerCount: number;
 	soupcanIntegration: boolean;

@@ -116,14 +116,14 @@ export const [
 	ConsentGranted,
 	OpenConsentPage,
 ] = [
-		'is_verified',
-		'add_user_to_history',
-		'remove_user_from_history',
-		'add_user_to_queue',
-		'pop_user_from_queue',
-		"consent_granted",
-		"pop_consent",
-	];
+'is_verified',
+'add_user_to_history',
+'remove_user_from_history',
+'add_user_to_queue',
+'pop_user_from_queue',
+'consent_granted',
+'pop_consent',
+];
 export const SuccessStatus: SuccessStatus = 'SUCCESS';
 export const ErrorStatus: ErrorStatus = 'ERROR';
 

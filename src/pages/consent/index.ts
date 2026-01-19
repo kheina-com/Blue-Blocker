@@ -7,7 +7,7 @@ const refuse = document.getElementById('refuse');
 
 accept?.addEventListener('click', async () => {
     api.runtime.sendMessage({
-        action: ConsentGranted
+        action: ConsentGranted,
     })
     window.close();
 });

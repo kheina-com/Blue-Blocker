@@ -76,7 +76,7 @@ async function registerConsentScript() {
 	const path = new URL(api.runtime.getURL(consent)).pathname;
 	const consentScript = {
 		matches: ['*://*.twitter.com/*', '*://twitter.com/*', '*://*.x.com/*', '*://x.com/*'],
-		js: [{file: path}],
+		js: [{ file: path }],
 	}
 	// this is a method in MV2, so it's kosher here
 	// @ts-ignore
@@ -93,7 +93,7 @@ async function registerContentScript() {
 	const path = new URL(api.runtime.getURL(content)).pathname;
 	const contentScript = {
 		matches: ['*://*.twitter.com/*', '*://twitter.com/*', '*://*.x.com/*', '*://x.com/*'],
-		js: [{file: path}],
+		js: [{ file: path }],
 	};
 	// @ts-ignore see above
 	api.contentScripts.register(contentScript).then(
@@ -105,29 +105,26 @@ async function registerContentScript() {
 }
 
 api.runtime.onStartup.addListener(() => {
-	try{
+	try {
 		// @ts-ignore
 		api.runtime?.getBrowserInfo().then(info => {
 			if(/Firefox/.test(info.name)) {
 				api.storage.local.get({"canLoad": false}).then( val => {
 					if (!val) {
 						registerConsentScript();
-					}
-					else {
+					} else {
 						registerContentScript();
 					}
 				});
-			}
-			else {
+			} else {
 				// In a FF based browser, that isn't FF
 				registerContentScript();
 			}
 		})
+	} catch {
+		console.debug(logstr, 'not running on Firefox!');
 	}
-	catch {
-		console.debug(logstr, "not running on Firefox!");
-	}
-})
+});
 
 const minConsentVersion = '0.4.14';
 
@@ -151,22 +148,24 @@ api.runtime.onInstalled.addListener( ({reason, previousVersion}) => {
 		/** @ts-ignore I hate that I have to use FF specific APIs to detect FF :)))*/
 		api.runtime?.getBrowserInfo().then(info => {
 			if (info.name == 'Firefox') {
-				if(reason == 'install' || (reason == 'update' && isBelowMinVer(previousVersion as string, minConsentVersion))) {
+				if (
+					reason == 'install' ||
+					(reason == 'update' &&
+						isBelowMinVer(previousVersion as string, minConsentVersion))
+				) {
 					registerConsentScript();
 					const url = api.runtime.getURL('src/pages/consent/index.html');
-					api.tabs.create({url})
+					api.tabs.create({url});
 				}
-			}
-			else {
+			} else {
 				// In a FF based browser, that isn't FF
 				registerConsentScript();
 			}
 		})
+	} catch {
+		console.debug(logstr, 'not running on Firefox!');
 	}
-	catch {
-		console.debug(logstr, "not running on Firefox!");
-	}
-})
+});
 
 api.runtime.onMessage.addListener((m, s, r) => {
 	let response: MessageResponse;

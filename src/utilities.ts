@@ -55,7 +55,7 @@ async function sendMessage<T extends MessageResponse>(
 	let attempt: number = 0;
 	let response: MessageResponse | null = null;
 
-	for (; ;) {
+	for (;;) {
 		response = await api.runtime.sendMessage<RuntimeMessage, MessageResponse>(message);
 		if (response.status === SuccessStatus) {
 			return response as T;
