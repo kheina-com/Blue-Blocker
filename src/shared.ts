@@ -228,7 +228,6 @@ api.storage.local.onChanged.addListener(items => {
 		if (config.silenceNotifications) {
 			return;
 		}
-
 		switch (e.type) {
 			case MessageEvent:
 				if (config.showBlockPopups) {

@@ -19,9 +19,9 @@ interface Config {
 	soupcanIntegration: boolean;
 	blockPromoted: boolean;
 	blockForUse: boolean;
+	silenceNotifications: boolean;
 	blockDisallowedWords: boolean;
 	disallowedWords: string[];
-	silenceNotifications: boolean;
 }
 
 interface CompiledConfig {
@@ -43,9 +43,9 @@ interface CompiledConfig {
 	soupcanIntegration: boolean;
 	blockPromoted: boolean;
 	blockForUse: boolean;
+	silenceNotifications: boolean;
 	blockDisallowedWords: boolean;
 	disallowedWords: RegExp | null;
-	silenceNotifications: boolean;
 }
 
 interface BlueBlockerUser {

@@ -295,9 +295,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	const blockPromoted = document.getElementById('block-promoted-tweets') as HTMLInputElement;
 	const blockForUse = document.getElementById('block-for-use') as HTMLInputElement;
 	const skipCheckmark = document.getElementById('skip-checkmark') as HTMLInputElement;
+	const silenceNotifications = document.getElementById('silence-notifications') as HTMLInputElement;
 	const disallowedWordsCheckmark = document.getElementById('blockstrings') as HTMLInputElement;
 	const disallowedWordsInput = document.getElementById('blockstrings-input') as HTMLInputElement;
-	const silenceNotifications = document.getElementById('silence-notifications') as HTMLInputElement;
 
 	api.storage.sync.get(DefaultOptions).then(_config => {
 		const config = _config as Config;
@@ -323,6 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 		checkHandler(blockPromoted, config, 'blockPromoted');
 		checkHandler(blockForUse, config, 'blockForUse');
+		checkHandler(silenceNotifications, config, 'silenceNotifications');
 		checkHandler(skipCheckmark, config, 'skipBlueCheckmark', {
 			callback(target: HTMLInputElement, startup: boolean) {
 				if (!startup) {
@@ -337,7 +338,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			},
 		});
 		checkHandler(disallowedWordsCheckmark, config, 'blockDisallowedWords');
-		checkHandler(silenceNotifications, config, 'silenceNotifications');
 		checkHandlerArrayToString(disallowedWordsInput, config, 'disallowedWords');
 
 		document
