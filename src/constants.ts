@@ -10,7 +10,7 @@ try {
 		// @ts-ignore
 		runtime: browser.runtime,
 		storage: browser.storage,
-		action: browser.browserAction,
+		action: browser.action || chrome.action,
 		contentScripts: browser.contentScripts,
 		tabs: browser.tabs,
 		management: browser.management,
@@ -98,10 +98,17 @@ export const emojiRegExp = RegExp(/^[\p{Emoji_Presentation}\u200d]+$/u, 'u');
 
 export const LegacyVerifiedUrl: string =
 	'https://gist.githubusercontent.com/travisbrown/b50d6745298cccd6b1f4697e4ec22103/raw/012009351630dc351e3a763b49bf24fa50ca3eb7/legacy-verified.csv';
-export const Browser =
-	api.runtime.getManifest()?.browser_specific_settings?.gecko === undefined
-		? 'chrome'
-		: 'firefox';
+export const Browser = (() => {
+	if (api.runtime.getManifest()?.browser_specific_settings?.gecko !== 'undefined') {
+		return 'firefox';
+	}
+	// @ts-ignore
+	if (typeof safari !== 'undefined' || /Apple Computer/.test(navigator.vendor)) {
+		return 'safari';
+	}
+	
+	return 'chrome';
+})();
 export const SoupcanExtensionId =
 	Browser === 'chrome' ? 'hcneafegcikghlbibfmlgadahjfckonj' : 'soupcan@beth.lgbt';
 

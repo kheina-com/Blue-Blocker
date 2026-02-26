@@ -44,6 +44,15 @@ npm run dev
     1. (or enter `about:debugging#/runtime/this-firefox` in the Firefox url bar)
 4. Click `Load Temporary Add-on` in the top right and select `manifest.json` in the `blue-blocker/build` folder
 
+### Safari
+
+1. Run `npm run build`
+2. Run `make safari`
+3. Run `xcrun safari-web-extension-converter ./build` and follow the instructions to create a Safari App Extension.
+4. Open the generated project in Xcode and run the app.
+5. In Safari, go to `Safari > Settings > Extensions` and ensure "Allow Unsigned Extensions" is enabled in the Develop menu (if necessary).
+6. Enable "Blue Blocker" in the Extensions settings.
+
 ## License
 
 This work is licensed under the [Mozilla Public License 2.0](https://choosealicense.com/licenses/mpl-2.0/), allowing for public, private, and commercial use so long as access to this library's source code is provided. If this library's source code is modified, then the modified source code must be licensed under the same license or an [applicable GNU license](https://www.mozilla.org/en-US/MPL/2.0/#1.12) and made publicly available.
