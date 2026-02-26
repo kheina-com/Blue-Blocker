@@ -21,3 +21,4 @@ vite.config.ts.*
 
 # secrets
 secrets.*.js
+/Blue Blocker

@@ -54,3 +54,13 @@ chrome:
 	cp readme.md build/readme.md
 	cd build; zip "blue-blocker-chrome-${VERSION}.zip" -r *
 	mv "build/blue-blocker-chrome-${VERSION}.zip" "blue-blocker-chrome-${VERSION}.zip"
+
+.PHONY: safari
+safari:
+	cp build/manifest.json safari-manifest.json
+	jq '.browser_specific_settings = {"safari": {strict_min_version: '17.0'}}' safari-manifest.json >tmp.json && mv tmp.json safari-manifest.json
+	mv safari-manifest.json build/manifest.json
+	cp LICENSE build/LICENSE
+	cp readme.md build/readme.md
+	@echo "Safari build ready in ./build"
+	@echo "To convert to a Safari App Extension, run: xcrun safari-web-extension-converter ./build"
