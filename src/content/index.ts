@@ -42,6 +42,7 @@ function compileConfig(config: Config): CompiledConfig {
 							.join('|'),
 						'i',
 					),
+		silentMode: config.silentMode,
 	} as CompiledConfig;
 }
 
@@ -127,13 +128,16 @@ function eventHandler(e: CustomEvent<BlueBlockerEvent>) {
 // If we are running in Firefox, expose a function to page scripts
 // This is a good test for Firefox since it's non-standard :)
 /** @ts-ignore */
-if(api?.runtime?.getBrowserInfo) {
+if (api?.runtime?.getBrowserInfo) {
 	/** @ts-ignore Again, non-standard, literally only FF*/
-	exportFunction(event => {
-		eventHandler(event)
-	}, window, {defineAs: 'blueBlockerRequest'})
-}
-else {
+	exportFunction(
+		event => {
+			eventHandler(event);
+		},
+		window,
+		{ defineAs: 'blueBlockerRequest' },
+	);
+} else {
 	document.addEventListener('blue-blocker-event', eventHandler);
 }
 
