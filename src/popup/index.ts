@@ -285,6 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		'suspend-block-collection',
 	) as HTMLInputElement;
 	const showBlockPopups = document.getElementById('show-block-popups') as HTMLInputElement;
+	const silentMode = document.getElementById('silent-mode') as HTMLInputElement;
 	const muteInsteadOfBlock = document.getElementById('mute-instead-of-block') as HTMLInputElement;
 	const blockFollowing = document.getElementById('block-following') as HTMLInputElement;
 	const blockFollowers = document.getElementById('block-followers') as HTMLInputElement;
@@ -311,6 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			},
 		});
 		checkHandler(showBlockPopups, config, 'showBlockPopups');
+		checkHandler(silentMode, config, 'silentMode');
 		checkHandler(muteInsteadOfBlock, config, 'mute');
 		checkHandler(blockFollowing, config, 'blockFollowing');
 		checkHandler(blockFollowers, config, 'blockFollowers');

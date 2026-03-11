@@ -42,6 +42,7 @@ function compileConfig(config: Config): CompiledConfig {
 							.join('|'),
 						'i',
 					),
+		silentMode: config.silentMode,
 	} as CompiledConfig;
 }
 

@@ -21,6 +21,7 @@ interface Config {
 	blockForUse: boolean;
 	blockDisallowedWords: boolean;
 	disallowedWords: string[];
+	silentMode: boolean;
 }
 
 interface CompiledConfig {
@@ -44,6 +45,7 @@ interface CompiledConfig {
 	blockForUse: boolean;
 	blockDisallowedWords: boolean;
 	disallowedWords: RegExp | null;
+	silentMode: boolean;
 }
 
 interface BlueBlockerUser {
